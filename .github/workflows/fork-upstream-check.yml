@@ -1,0 +1,88 @@
+name: Fork upstream check
+
+# Fork-only (W00). Weekly report of upstream commits not yet in this fork's main.
+# Read-only on code: never merges, never pushes, never deploys.
+# Only GITHUB_TOKEN is used (contents: read, issues: write). No other secrets.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: fork-upstream-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    # Do not run on the upstream repository itself.
+    if: github.repository != 'Portabase/agent'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    env:
+      UPSTREAM_URL: https://github.com/Portabase/agent.git
+      ISSUE_TITLE: "Upstream changes pending (fork-upstream-check)"
+    steps:
+      - name: Checkout (full history, no persisted credentials)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          ref: main
+          persist-credentials: false
+
+      - name: Fetch upstream and list commits not in main
+        run: |
+          set -euo pipefail
+          git remote add upstream "$UPSTREAM_URL"
+          git fetch --no-tags upstream main
+          git log --oneline main..upstream/main | head -n 200 > pending.txt
+          git rev-list --count main..upstream/main > count.txt
+          echo "pending upstream commits: $(cat count.txt)"
+          cat pending.txt
+
+      - name: Open, update or close the tracking issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          count="$(cat count.txt)"
+          {
+            echo "### Upstream commits not in main: $count"
+            echo '```'
+            cat pending.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          # Forks have issues disabled by default; the job summary above is the fallback report.
+          if [ "$(gh api "repos/$GH_REPO" --jq .has_issues)" != "true" ]; then
+            echo "Issues are disabled on $GH_REPO; report is in the job summary only."
+            exit 0
+          fi
+          existing="$(gh issue list --state open --search "\"$ISSUE_TITLE\" in:title" --json number,title --jq "[.[] | select(.title == \"$ISSUE_TITLE\")][0].number // empty")"
+          if [ "$count" = "0" ]; then
+            if [ -n "$existing" ]; then
+              gh issue close "$existing" --comment "Fork main contains all upstream/main commits."
+            fi
+            echo "Up to date with upstream/main."
+            exit 0
+          fi
+          {
+            echo "Upstream \`main\` has **$count** commit(s) not in this fork's \`main\` (checked $(date -u +%FT%TZ))."
+            echo
+            echo "Run the upstream sync runbook (merge on a \`sync/upstream-YYYYMMDD\` branch). This workflow never merges or deploys."
+            echo
+            echo '```'
+            cat pending.txt
+            echo '```'
+            if [ "$count" -gt 200 ]; then echo; echo "(list truncated to 200 of $count)"; fi
+          } > body.md
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --body-file body.md
+          else
+            gh issue create --title "$ISSUE_TITLE" --body-file body.md
+          fi

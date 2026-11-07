@@ -1,4 +1,4 @@
-# Fork agent image build (W15b). Builds ONLY: no registry login, no secrets, nothing is published. Manual trigger.
+# Fork agent image build (W15b). Builds ONLY: no registry access, no secrets, nothing is published. Manual trigger.
 # The digest it prints/uploads is the OCI manifest digest of the archive; publishing is a manual owner step (docs/fork/README.md).
 name: Fork image (build only)
 on:

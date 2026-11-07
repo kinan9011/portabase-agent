@@ -26,7 +26,6 @@ pub enum YamlReject {
     Syntax,
     Unsupported,
     DuplicateKey,
-    NotAMapping,
 }
 impl YamlReject {
     /// The TS `REASON` table of `raw.ts`.

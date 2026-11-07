@@ -134,7 +134,10 @@ CMD ["/entrypoint.sh"]
 FROM base AS builder
 
 COPY . .
-RUN cargo build --release
+# FORK(stack-recovery): A04 optional cargo features for the fork build (empty = stock build, byte-identical behaviour)
+ARG CARGO_FEATURES=""
+# FORK(stack-recovery): A04 build the fork agent with --features fork-stacks (CARGO_FEATURES empty = stock build)
+RUN cargo build --release ${CARGO_FEATURES:+--features "$CARGO_FEATURES"}
 
 RUN echo "APP_VERSION=$(cargo pkgid | awk -F# '{print $2}')" > /app/version.env
 

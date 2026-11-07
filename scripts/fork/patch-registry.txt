@@ -1,0 +1,9 @@
+# Machine-readable mirror of the Obsidian "02-Patch-Registry" (agent section). One row per upstream hook — same mechanism as the dashboard fork.
+# Format:  id | file | anchor symbol (must appear in the file; NOT a line number) | markers
+#   markers = number of `FORK(stack-recovery): <id> ...` markers expected in that file.
+# Add a row in the SAME commit that adds a hook; scripts/fork/check-patches.sh fails on any mismatch.
+# Cargo.lock gains one dependency edge (aws-lc-rs, already locked through rustls) — generated, no marker possible.
+A01|src/main.rs|crate::fork::start|2
+A02|Cargo.toml|fork-stacks|2
+A03|src/services/backup/uploader.rs|report_plaintext|1
+A04|docker/Dockerfile|CARGO_FEATURES|2

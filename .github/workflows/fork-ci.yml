@@ -1,0 +1,21 @@
+# Fork-owned CI (W15). Does NOT touch the upstream release/docker workflows. Runs on PRs and pushes to the fork's main.
+name: Fork CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  fork-channel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Patch registry <-> markers
+        run: bash scripts/fork/check-patches.sh
+      - name: Stock build still compiles without the fork feature
+        run: cargo build
+      - name: Fork task channel tests (unit + mock-dashboard integration)
+        run: cargo test --features fork-stacks fork::

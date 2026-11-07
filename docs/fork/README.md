@@ -40,3 +40,17 @@ K2 (dashboard signing key) rotation: generate the new pair offline → `pin_add(
 ### Publishing (owner decision)
 
 Nothing is pushed by the fork tooling. To publish, pick a registry and name (recommendation: GHCR under your own account, e.g. `ghcr.io/<you>/portabase-agent:<version>-fork`), then copy the archive **preserving the digest**: `skopeo copy --preserve-digests oci-archive:target/fork-image/image.oci.tar docker://<registry>/<name>:<tag>` (or `crane push target/fork-image/image.oci.tar <ref>`). Check: `docker buildx imagetools inspect <ref>` must show the digest recorded in `image.json`. Deploy by `@sha256:<digest>`. For multi-arch, dispatch `fork-image.yml`, then combine the per-arch images with `docker buildx imagetools create` at publish time. Record the published digest in the fork's compatibility matrix.
+
+## Restore target configuration (W17-i, ADR-007 A13)
+An agent becomes a **restore target** only when its host is configured for it. Until then it is a plain backup agent: it does **not** report `restore.target.v1`, the dashboard's restore planner blocks with `target_capability_missing`, and any restore task is refused by the agent (`capability_missing`).
+
+| Env var | Meaning |
+|---|---|
+| `FORK_ALLOWED_PATH_ROOTS` | Colon list of absolute directories restores may write under (default empty = not a restore target). Each must exist, be a real directory (no symlink in the path), and must not be, contain or lie under `/`, `/etc`, `/proc`, `/sys`, `/dev`, `/run`, `/var/run`, `/boot`, `/usr`, `/bin`, `/sbin`, `/lib*`, `/root`, `/var/lib/docker`, the docker socket or the agent state directory. One invalid root disables the whole feature (one log line). |
+| `FORK_HOST_ROLE` | `test` (default) or `production`. A task whose plan says `production` is refused on a `test` host (`host_role_mismatch`); a `production` task also needs the dashboard's `production_target` approval (`approval_missing`). A production restore therefore needs the dashboard approval **and** this explicit host-side opt-in. |
+| `FORK_ARTIFACT_HTTP_HOSTS` | Comma list of exact artifact hosts that may be fetched over plain `http` (default empty = https only; e.g. a LAN MinIO). Redirects are never followed. |
+
+Requirements: the Docker socket is mounted (restores create labelled volumes and run hardened helper containers from the agent's own image), and **every root is bind-mounted into the agent container at the same host path** (`-v /srv/restore:/srv/restore`): the agent proves it at start of every stage with a probe file read back through a helper container (`root_not_shared` otherwise), because compose bind sources are *host* paths.
+
+What the four tasks do (all signed, target-addressed, idempotent per `restore_id`, bounded by a deadline, heartbeating while they run):
+`restore_probe` (roots, free space, workspace state) · `restore_stage` (verify the signed manifest with a pinned key, download each artifact with a size cap and no redirects, decrypt, compare SHA-256/size with the manifest, audit the tar, extract into the planned destinations) · `restore_apply` (labelled Docker volumes/networks, sqlite file placement, non-PostgreSQL dump unpack) · `restore_cleanup` (removes only resources carrying this run's `restore_id` + `agent_id` labels, and the workspace only if `.portabase/owner.json` carries this run). PostgreSQL restore, compose render and `compose_up` arrive with W17-ii. The agent's journal and replay state live next to the channel state file (`${DATA_PATH:-/config}`); keep that directory out of any backed-up volume.

@@ -90,6 +90,12 @@ pub fn verify_signature(pin: &Pin, envelope_text: &str, signature_b64: &str) -> 
     UnparsedPublicKey::new(&RSA_PKCS1_2048_8192_SHA256, &pin.pkcs1_der).verify(&msg, &sig).is_ok()
 }
 
+/// W17-i: the signed recovery-point manifest. RSASSA-PKCS1-v1_5 / SHA-256 over the RAW manifest bytes — NO task domain prefix (a task signature can never
+/// verify as a manifest signature or vice versa, because the signed byte strings differ).
+pub fn verify_manifest(pin: &Pin, bytes: &[u8], sig: &[u8]) -> bool {
+    !sig.is_empty() && UnparsedPublicKey::new(&RSA_PKCS1_2048_8192_SHA256, &pin.pkcs1_der).verify(bytes, sig).is_ok()
+}
+
 /// base64(nonce(12) ‖ ciphertext ‖ tag(16)) under the agent task key, AAD = `task_id|agent_id|type`.
 pub fn decrypt_payload(task_key: &[u8; 32], task_id: &str, agent_id: &str, task_type: &str, b64: &str) -> Option<Vec<u8>> {
     let data = STANDARD.decode(b64.as_bytes()).ok()?;

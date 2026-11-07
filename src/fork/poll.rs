@@ -2,7 +2,9 @@
 use super::capabilities;
 use super::config::ChannelConfig;
 use super::crypto::Pin;
+use super::exec::{self, Ended};
 use super::maint;
+use super::restore::{self, docker_ops::DockerOps};
 use super::state::{self, Outcome, State};
 use super::tasks;
 use super::transport::{CallError, Leased, Transport};
@@ -25,6 +27,9 @@ pub struct Runtime {
     pub state: State,
     pub state_path: PathBuf,
     pub transport: Transport,
+    /// W17-i: restore configuration + Docker access. `None` until `init_restore` proved the host is configured (then `restore.target.v1` is reported).
+    pub renv: Option<restore::RestoreEnv>,
+    pub ops: Option<Arc<dyn DockerOps>>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -49,7 +54,55 @@ impl Runtime {
         let state = state::load(&cfg.state_path, &cfg.enroll_id).map_err(|e| e.to_string())?;
         let pins = maint::effective_pins(&cfg.pins, &state).map_err(|e| e.to_string())?;
         let transport = Transport::new(&cfg.server_url, &cfg.agent_id, maint::effective_credential(&cfg.credential, &state), cfg.insecure_lab).map_err(|_| "cannot build the http client".to_string())?;
-        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(), state, state_path: cfg.state_path, transport })
+        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false), state, state_path: cfg.state_path, transport, renv: None, ops: None })
+    }
+
+    /// W17-i (DD20): decide, once at start-up, whether this host can be a restore target — valid `FORK_ALLOWED_PATH_ROOTS` (non-empty) AND a Docker daemon that answers.
+    /// Only then `restore.target.v1` is reported; then the crash leftovers are swept (SEC-14). Misconfiguration degrades honestly (one log line, no capability).
+    pub async fn init_restore(&mut self, now: i64) {
+        let env = |k: &str| std::env::var(k).ok();
+        let mut renv = match restore::RestoreEnv::from_env(&env, &self.state_path, &self.agent_id) {
+            Ok(r) if !r.roots.is_empty() => r,
+            Ok(_) => {
+                info!("Fork channel: restore target not enabled (FORK_ALLOWED_PATH_ROOTS is empty)");
+                return;
+            }
+            Err(e) => {
+                error!("Fork channel: restore target NOT enabled: {e}");
+                return;
+            }
+        };
+        let ops: Arc<dyn DockerOps> = match restore::docker_ops::RealDocker::connect() {
+            Ok(d) => Arc::new(d),
+            Err(_) => {
+                error!("Fork channel: restore target NOT enabled: the Docker daemon is not reachable");
+                return;
+            }
+        };
+        if !ops.ping().await {
+            error!("Fork channel: restore target NOT enabled: the Docker daemon does not answer");
+            return;
+        }
+        renv.master_b64 = crate::utils::edge_key::decode_edge_key(&crate::settings::CONFIG.edge_key).ok().map(|k| super::state::Redacted(k.master_key_b64));
+        let swept = restore::sweep::startup_sweep(&renv, Some(ops.as_ref()), now).await;
+        info!("Fork channel: restore target enabled ({} root(s), host role {:?}); startup sweep: {:?}", renv.roots.len(), renv.host_role, swept);
+        self.renv = Some(renv);
+        self.ops = Some(ops);
+        self.capabilities = capabilities::reported(true);
+    }
+
+    /// Run one restore-class task under the heartbeat loop and its deadline. Never panics; every failure is a closed code.
+    async fn run_restore(&self, v: &super::verify::Verified, leased: &Leased, now: i64) -> Outcome {
+        let failed = |code: &str, result: Option<serde_json::Value>| Outcome { status: "failed".into(), reason: Some(code.into()), result };
+        let (Some(renv), Some(ops)) = (&self.renv, &self.ops) else { return failed("execution_error", None) };
+        let ty = v.envelope.task_type.as_str();
+        let task = restore::Task { id: &v.envelope.task_id, ty, now };
+        let fut = restore::execute(renv, ops.as_ref(), &self.pins, &task, &v.payload);
+        match exec::run_with_heartbeat(&self.transport, &leased.task_id, &leased.lease_id, restore::deadline_of(ty), fut).await {
+            Ended::Done(Ok(result)) => Outcome { status: "succeeded".into(), reason: None, result: Some(result) },
+            Ended::Done(Err(f)) => failed(f.code.as_str(), f.result()),
+            Ended::Deadline => failed(restore::Code::DeadlineExceeded.as_str(), None),
+        }
     }
 
     async fn report(&self, leased: &Leased, o: &Outcome) {
@@ -119,9 +172,13 @@ impl Runtime {
                 let outcome = if maint::is_maint(ty) {
                     self.apply_maint(&v.envelope.task_id, &v.envelope.kid, ty, &v.payload)
                 } else {
-                    let outcome = match tasks::execute(ty, &v.payload) {
-                        Ok(result) => Outcome { status: "succeeded".into(), reason: None, result: Some(result) },
-                        Err(code) => Outcome { status: "failed".into(), reason: Some(code.into()), result: None },
+                    let outcome = if capabilities::is_targeted(ty) {
+                        self.run_restore(&v, leased, now).await
+                    } else {
+                        match tasks::execute(ty, &v.payload) {
+                            Ok(result) => Outcome { status: "succeeded".into(), reason: None, result: Some(result) },
+                            Err(code) => Outcome { status: "failed".into(), reason: Some(code.into()), result: None },
+                        }
                     };
                     self.state.set_outcome(&v.envelope.task_id, outcome.clone());
                     if state::save(&self.state_path, &self.state).is_err() {
@@ -171,6 +228,7 @@ pub async fn run(cfg: ChannelConfig) {
         }
     };
     info!("Fork channel: pinned dashboard keys (kid): {}", rt.pins.iter().map(|p| p.kid.as_str()).collect::<Vec<_>>().join(", "));
+    rt.init_restore(now_secs()).await;
     super::set_active(Arc::new(super::Active { client: rt.transport.clone(), capabilities: rt.capabilities.clone() }));
     loop {
         let wait = rt.poll_once(poll, now_secs()).await;

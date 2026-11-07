@@ -744,3 +744,34 @@ mod channel_level {
         assert!(matches!(out, Ended::Deadline));
     }
 }
+
+// ---- SEC-14 argv audit harness (W17-i part) ---------------------------------------------------------------------------------------------
+/// The restore engine starts NO external process: Docker is driven through the API (bollard), data moves through files and streams. So no secret, URL,
+/// path from a payload or override value can reach an argv / process list from this module, by construction. This guard fails the day someone adds one;
+/// W17-ii (compose CLI) extends it with the fake-binary argv/env capture test.
+#[test]
+fn the_restore_engine_never_spawns_a_process() {
+    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/fork/restore");
+    for e in std::fs::read_dir(dir).unwrap().flatten() {
+        let p = e.path();
+        if p.extension().and_then(|x| x.to_str()) != Some("rs") || p.file_name().unwrap() == "tests.rs" {
+            continue;
+        }
+        let src = std::fs::read_to_string(&p).unwrap();
+        for banned in ["Command::new", "std::process", "tokio::process", "libc::system", "libc::exec", "sh -c"] {
+            let code: String = src.lines().filter(|l| !l.trim_start().starts_with("//")).collect::<Vec<_>>().join("\n");
+            // the ONE allowed literal: the fixed volume wipe script run INSIDE the hardened helper container (no user data in it)
+            let code = code.replace("rm -rf /vol/* /vol/.[!.]* /vol/..?*; true", "");
+            assert!(!code.contains(banned) || (banned == "sh -c" && p.file_name().unwrap() == "docker_ops.rs"), "{} contains `{banned}`", p.display());
+        }
+    }
+}
+
+/// Secrets never show up in Debug output of the environment or failures (Redacted master key, no URLs in Failure).
+#[test]
+fn debug_output_hides_the_master_key_and_failures_carry_no_urls() {
+    let r = rig(HostRole::Test, &[]);
+    assert!(!format!("{:?}", r.env).contains(&fixtures_key()));
+    let f = Failure::with(Code::ArtifactUnavailable, "https://h/x?X-Amz-Signature=abc");
+    assert!(!f.detail.unwrap().contains('/') && !Failure::with(Code::RestoreFailed, "A B").detail.unwrap().contains(' '));
+}

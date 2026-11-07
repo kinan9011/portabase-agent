@@ -25,6 +25,9 @@ impl BackupService {
             bail!("backup_already_in_progress");
         }
 
+        #[cfg(feature = "fork-stacks")]
+        crate::fork::hash::report_plaintext(result.backup_file.as_deref(), backup_id, encrypt).await; // FORK(stack-recovery): A03 D45 plaintext SHA-256 + size before encryption
+
         let ctx = self.ctx.clone();
 
         let futures = storages.into_iter().map(|storage| {

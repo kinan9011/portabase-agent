@@ -3638,6 +3638,7 @@ dependencies = [
  "async-stream",
  "async-trait",
  "aws-config",
+ "aws-lc-rs",
  "aws-sdk-s3",
  "azure_core",
  "azure_storage_blob",

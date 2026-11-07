@@ -1,0 +1,137 @@
+//! The channel's own loop (independent of the stock 5 s ping: one failing stock ping cannot starve fork tasks, and vice versa).
+use super::capabilities;
+use super::config::ChannelConfig;
+use super::crypto::Pin;
+use super::state::{self, Outcome, State};
+use super::tasks;
+use super::transport::{CallError, Leased, Transport};
+use super::verify::{Ctx, Decision, Reject, evaluate};
+use std::path::PathBuf;
+use std::sync::Arc;
+use std::time::Duration;
+use tracing::{error, info, warn};
+
+pub struct Runtime {
+    pub agent_id: String,
+    pub enroll_id: String,
+    pub pins: Vec<Pin>,
+    pub task_key: [u8; 32],
+    pub capabilities: Vec<String>,
+    pub state: State,
+    pub state_path: PathBuf,
+    pub transport: Transport,
+}
+
+#[derive(Debug, PartialEq, Eq)]
+pub enum Handled {
+    Executed(String),
+    Duplicate,
+    Rejected(&'static str),
+}
+
+/// A disabled channel refuses EVERYTHING it is handed, before any parsing, signature check, state access or network call.
+#[allow(dead_code)] // the real guarantee is "a disabled channel never polls"; this is the explicit refusal path, pinned by tests
+pub fn process_when_disabled(_leased: &Leased) -> Handled {
+    Handled::Rejected(Reject::ChannelDisabled.code())
+}
+
+fn now_secs() -> i64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0)
+}
+
+impl Runtime {
+    pub fn from_config(cfg: ChannelConfig) -> Result<Self, String> {
+        let state = state::load(&cfg.state_path, &cfg.enroll_id).map_err(|e| e.to_string())?;
+        let transport = Transport::new(&cfg.server_url, &cfg.agent_id, &cfg.credential, cfg.insecure_lab).map_err(|_| "cannot build the http client".to_string())?;
+        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins: cfg.pins, task_key: cfg.task_key, capabilities: capabilities::reported(), state, state_path: cfg.state_path, transport })
+    }
+
+    async fn report(&self, leased: &Leased, o: &Outcome) {
+        if let Err(e) = self.transport.result(&leased.task_id, &leased.lease_id, o).await {
+            warn!("Fork channel: could not report the result of task {} ({e:?}); the dashboard will offer it again", leased.task_id);
+        }
+    }
+
+    /// Verify → (accept → persist → execute → persist → report) | (reject → report). Never executes anything that did not pass every check.
+    pub async fn process(&mut self, leased: &Leased, now: i64) -> Handled {
+        let decision = {
+            let c = Ctx { agent_id: &self.agent_id, enroll_id: &self.enroll_id, pins: &self.pins, task_key: &self.task_key, capabilities: &self.capabilities, state: &self.state, now };
+            evaluate(&c, &leased.envelope, &leased.signature, leased.payload_enc.as_deref())
+        };
+        match decision {
+            Decision::Reject(r) => {
+                warn!("Fork channel: refused task {} ({})", leased.task_id, r.code());
+                self.report(leased, &Outcome { status: "rejected".into(), reason: Some(r.code().into()), result: None }).await;
+                Handled::Rejected(r.code())
+            }
+            Decision::Duplicate(a) => {
+                // never run again; re-report what happened (or that the agent restarted mid-task)
+                let o = a.outcome.clone().unwrap_or(Outcome { status: "failed".into(), reason: Some("execution_error".into()), result: None });
+                info!("Fork channel: task {} already handled, re-reporting its outcome", leased.task_id);
+                self.report(leased, &o).await;
+                Handled::Duplicate
+            }
+            Decision::Accept(v) => {
+                self.state.accept(&v.envelope.task_id, v.envelope.seq);
+                if state::save(&self.state_path, &self.state).is_err() {
+                    // without durable replay state nothing may run
+                    error!("Fork channel: cannot persist replay state; refusing task {}", leased.task_id);
+                    self.report(leased, &Outcome { status: "rejected".into(), reason: Some(Reject::StateUnavailable.code().into()), result: None }).await;
+                    return Handled::Rejected(Reject::StateUnavailable.code());
+                }
+                let _ = self.transport.heartbeat(&leased.task_id, &leased.lease_id).await;
+                let outcome = match tasks::execute(&v.envelope.task_type, &v.payload) {
+                    Ok(result) => Outcome { status: "succeeded".into(), reason: None, result: Some(result) },
+                    Err(code) => Outcome { status: "failed".into(), reason: Some(code.into()), result: None },
+                };
+                self.state.set_outcome(&v.envelope.task_id, outcome.clone());
+                if state::save(&self.state_path, &self.state).is_err() {
+                    warn!("Fork channel: cannot persist the outcome of task {}", leased.task_id);
+                }
+                self.report(leased, &outcome).await;
+                info!("Fork channel: task {} ({}) {}", leased.task_id, v.envelope.task_type, outcome.status);
+                Handled::Executed(outcome.status)
+            }
+        }
+    }
+
+    /// One iteration. Returns how long to wait before the next one.
+    pub async fn poll_once(&mut self, poll: Duration, now: i64) -> Duration {
+        match self.transport.lease(&self.capabilities).await {
+            Ok(None) => poll,
+            Ok(Some(leased)) => {
+                self.process(&leased, now).await;
+                Duration::from_millis(200) // more may be queued
+            }
+            Err(CallError::RateLimited(s)) => Duration::from_secs(s.clamp(1, 300)),
+            Err(CallError::Unauthorized) => {
+                error!("Fork channel: the dashboard rejected this agent's credential (revoked, rotated or wrong bundle). Re-enrol the agent.");
+                Duration::from_secs(60)
+            }
+            Err(CallError::Disabled) => {
+                info!("Fork channel: switched off for this agent by the operator");
+                Duration::from_secs(60)
+            }
+            Err(e) => {
+                warn!("Fork channel: lease failed ({e:?})");
+                (poll * 3).min(Duration::from_secs(120))
+            }
+        }
+    }
+}
+
+pub async fn run(cfg: ChannelConfig) {
+    let poll = Duration::from_secs(cfg.poll_seconds);
+    let mut rt = match Runtime::from_config(cfg) {
+        Ok(r) => r,
+        Err(e) => {
+            error!("Fork task channel NOT started: {e}");
+            return;
+        }
+    };
+    super::set_active(Arc::new(super::Active { client: rt.transport.clone(), capabilities: rt.capabilities.clone() }));
+    loop {
+        let wait = rt.poll_once(poll, now_secs()).await;
+        tokio::time::sleep(wait).await;
+    }
+}

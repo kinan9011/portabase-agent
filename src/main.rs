@@ -1,5 +1,7 @@
 mod core;
 mod domain;
+#[cfg(feature = "fork-stacks")]
+mod fork; // FORK(stack-recovery): A01 fork task channel module (feature fork-stacks)
 mod services;
 mod settings;
 mod tasks;
@@ -31,6 +33,9 @@ async fn main() {
         },
         Err(e) => tracing::debug!("Docker socket unavailable, skipping helper sweep: {e}"),
     }
+
+    #[cfg(feature = "fork-stacks")]
+    tokio::spawn(crate::fork::start()); // FORK(stack-recovery): A01 start the fork task channel (own loop; no-op unless FORK_CHANNEL_ENABLED=true)
 
     tokio::join!(ping_server(), async {
         let conn = redis_client::redis_connection().await;

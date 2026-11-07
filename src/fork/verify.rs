@@ -1,6 +1,6 @@
 //! The decision function of the channel: given what the dashboard sent and what the agent knows, accept or refuse (never partially).
 //! Pure (no I/O, injected clock) so every refusal class is a unit-test fixture, including the cross-language vectors signed by the dashboard.
-use super::capabilities::task_requires;
+use super::capabilities::{is_targeted, task_requires};
 use super::crypto::{Pin, decrypt_payload, sha256_hex, verify_signature};
 use super::envelope::{Envelope, parse};
 use super::state::{Accepted, State};
@@ -91,6 +91,10 @@ pub fn evaluate(c: &Ctx, envelope_text: &str, signature_b64: &str, payload_enc: 
         return R(Reject::EnrollMismatch);
     }
     if env.target_agent_id.as_deref().is_some_and(|t| t != c.agent_id) {
+        return R(Reject::TargetMismatch);
+    }
+    // W17-i (DD2, ADR-007 D8b): restore-class tasks MUST name this agent. A signed task without a target is refused, so a task meant for one host can never run on another.
+    if is_targeted(&env.task_type) && env.target_agent_id.is_none() {
         return R(Reject::TargetMismatch);
     }
     if let Some(a) = c.state.known(&env.task_id) {

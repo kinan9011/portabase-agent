@@ -8,6 +8,7 @@ pub const HARD_IDS: [&str; 8] = ["read_outside_root", "path_ambiguous", "yaml_in
 
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
+#[allow(dead_code)]
 pub struct RuleEntry {
     pub id: String,
     pub directive: String,
@@ -15,12 +16,14 @@ pub struct RuleEntry {
 }
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
+#[allow(dead_code)]
 pub struct HardEntry {
     pub id: String,
     pub plain: String,
 }
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
+#[allow(dead_code)]
 pub struct RawScope {
     pub description: String,
     pub keys: Vec<String>,
@@ -30,6 +33,7 @@ pub struct RawScope {
 }
 #[derive(Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
+#[allow(dead_code)]
 pub struct Rules {
     pub version: u32,
     pub description: String,

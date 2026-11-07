@@ -47,33 +47,33 @@ struct MCase {
     min_sequence: Option<u64>,
 }
 #[derive(Deserialize, Clone)]
-struct StageWorld {
-    json: String,
-    sig_b64: String,
-    sha256: String,
-    rp_id: String,
-    stack_id: String,
-    volume_index: usize,
-    db_index: usize,
+pub(crate) struct StageWorld {
+    pub(crate) json: String,
+    pub(crate) sig_b64: String,
+    pub(crate) sha256: String,
+    pub(crate) rp_id: String,
+    pub(crate) stack_id: String,
+    pub(crate) volume_index: usize,
+    pub(crate) db_index: usize,
 }
 #[derive(Deserialize, Clone)]
-struct RV {
-    now: i64,
-    agent_id: String,
-    enroll_id: String,
-    own_capabilities: Vec<String>,
-    pins: Vec<VPin>,
+pub(crate) struct RV {
+    pub(crate) now: i64,
+    pub(crate) agent_id: String,
+    pub(crate) enroll_id: String,
+    pub(crate) own_capabilities: Vec<String>,
+    pub(crate) pins: Vec<VPin>,
     task_key_b64: String,
-    ids: BTreeMap<String, String>,
-    codes: Vec<String>,
-    types: BTreeMap<String, Vec<String>>,
-    targeted: Vec<String>,
-    cases: Vec<EnvCase>,
-    payload_cases: Vec<PCase>,
-    manifests: Vec<MCase>,
-    stage_world: StageWorld,
+    pub(crate) ids: BTreeMap<String, String>,
+    pub(crate) codes: Vec<String>,
+    pub(crate) types: BTreeMap<String, Vec<String>>,
+    pub(crate) targeted: Vec<String>,
+    pub(crate) cases: Vec<EnvCase>,
+    pub(crate) payload_cases: Vec<PCase>,
+    pub(crate) manifests: Vec<MCase>,
+    pub(crate) stage_world: StageWorld,
 }
-fn rv() -> RV {
+pub(crate) fn rv() -> RV {
     serde_json::from_str(include_str!("../tests/restore_vectors.json")).expect("restore_vectors.json")
 }
 fn pins_of(v: &RV) -> Vec<Pin> {
@@ -139,19 +139,28 @@ fn manifest_vectors() {
 
 // ---- fake Docker -----------------------------------------------------------------------------------------------------------------------
 #[derive(Default)]
-struct FakeState {
-    volumes: BTreeMap<String, Labels>,
-    networks: BTreeMap<String, Labels>,
-    extracted: Vec<String>,
-    wiped: Vec<String>,
-    puts: Vec<(String, String, Vec<u8>)>,
-    fail_extract_for: Option<String>,
-    shared: bool,
+pub(crate) struct FakeState {
+    pub(crate) volumes: BTreeMap<String, Labels>,
+    pub(crate) networks: BTreeMap<String, Labels>,
+    pub(crate) extracted: Vec<String>,
+    pub(crate) wiped: Vec<String>,
+    pub(crate) puts: Vec<(String, String, Vec<u8>)>,
+    pub(crate) put_metas: Vec<super::docker_ops::FileMeta>,
+    pub(crate) fail_extract_for: Option<String>,
+    pub(crate) shared: bool,
+    /// W17-ii: existing file metadata per (volume, relative path), `helper_rm` calls (in order with puts), render specs + canned render outputs, containers
+    pub(crate) file_metas: BTreeMap<(String, String), super::docker_ops::FileMeta>,
+    pub(crate) events: Vec<String>,
+    pub(crate) renders: Vec<super::docker_ops::RenderSpec>,
+    pub(crate) render_out: std::collections::VecDeque<Result<Vec<u8>, super::docker_ops::RenderError>>,
+    pub(crate) containers: Vec<super::docker_ops::ContainerFacts>,
+    pub(crate) removed_containers: Vec<String>,
+    pub(crate) own_image: String,
 }
-struct Fake(Mutex<FakeState>);
+pub(crate) struct Fake(pub(crate) Mutex<FakeState>);
 impl Fake {
-    fn new() -> Self {
-        Fake(Mutex::new(FakeState { shared: true, ..Default::default() }))
+    pub(crate) fn new() -> Self {
+        Fake(Mutex::new(FakeState { shared: true, own_image: "sha256:".to_string() + &"1".repeat(64), ..Default::default() }))
     }
 }
 #[async_trait]
@@ -203,9 +212,36 @@ impl DockerOps for Fake {
         s.extracted.push(v.into());
         Ok(())
     }
-    async fn helper_put_file(&self, v: &str, rel: &str, f: &Path) -> Result<(), Code> {
-        self.0.lock().unwrap().puts.push((v.into(), rel.into(), std::fs::read(f).unwrap()));
+    async fn helper_put_file(&self, v: &str, rel: &str, f: &Path, meta: super::docker_ops::FileMeta) -> Result<(), Code> {
+        let mut s = self.0.lock().unwrap();
+        s.events.push(format!("put:{v}:{rel}"));
+        s.put_metas.push(meta);
+        s.puts.push((v.into(), rel.into(), std::fs::read(f).unwrap()));
         Ok(())
+    }
+    async fn file_meta(&self, v: &str, rel: &str) -> Result<Option<super::docker_ops::FileMeta>, Code> {
+        Ok(self.0.lock().unwrap().file_metas.get(&(v.to_string(), rel.to_string())).copied())
+    }
+    async fn helper_rm(&self, v: &str, paths: &[String]) -> Result<(), Code> {
+        self.0.lock().unwrap().events.push(format!("rm:{v}:{}", paths.join(",")));
+        Ok(())
+    }
+    async fn render(&self, spec: &super::docker_ops::RenderSpec) -> Result<Vec<u8>, super::docker_ops::RenderError> {
+        let mut s = self.0.lock().unwrap();
+        s.renders.push(spec.clone());
+        s.render_out.pop_front().unwrap_or(Err(super::docker_ops::RenderError::Failed("no canned render".into())))
+    }
+    async fn containers(&self) -> Result<Vec<super::docker_ops::ContainerFacts>, Code> {
+        Ok(self.0.lock().unwrap().containers.clone())
+    }
+    async fn stop_remove(&self, id: &str) -> Result<(), Code> {
+        let mut s = self.0.lock().unwrap();
+        s.removed_containers.push(id.to_string());
+        s.containers.retain(|c| c.id != id);
+        Ok(())
+    }
+    async fn image_of_container(&self, _own_id: &str) -> Result<String, Code> {
+        Ok(self.0.lock().unwrap().own_image.clone())
     }
     async fn remove_helpers(&self) -> usize {
         3
@@ -213,41 +249,41 @@ impl DockerOps for Fake {
 }
 
 // ---- rig -------------------------------------------------------------------------------------------------------------------------------
-struct Rig {
-    _root_dir: tempfile::TempDir,
-    _state_dir: tempfile::TempDir,
-    root: PathBuf,
-    env: RestoreEnv,
-    v: RV,
-    pins: Vec<Pin>,
+pub(crate) struct Rig {
+    pub(crate) _root_dir: tempfile::TempDir,
+    pub(crate) _state_dir: tempfile::TempDir,
+    pub(crate) root: PathBuf,
+    pub(crate) env: RestoreEnv,
+    pub(crate) v: RV,
+    pub(crate) pins: Vec<Pin>,
 }
 fn fixtures_key() -> String {
     let j: Value = serde_json::from_str(include_str!("../tests/fixtures.json")).unwrap();
     j["master_key_b64"].as_str().unwrap().to_string()
 }
-fn rig(host_role: HostRole, http_hosts: &[&str]) -> Rig {
+pub(crate) fn rig(host_role: HostRole, http_hosts: &[&str]) -> Rig {
     let v = rv();
     let rd = tempfile::tempdir().unwrap();
     let sd = tempfile::tempdir().unwrap();
     let root = std::fs::canonicalize(rd.path()).unwrap();
-    let env = RestoreEnv { roots: vec![root.clone()], host_role, http_hosts: http_hosts.iter().map(|s| s.to_string()).collect(), state_dir: std::fs::canonicalize(sd.path()).unwrap(), agent_id: v.agent_id.clone(), master_b64: Some(Redacted(fixtures_key())) };
+    let env = RestoreEnv { roots: vec![root.clone()], host_role, http_hosts: http_hosts.iter().map(|s| s.to_string()).collect(), state_dir: std::fs::canonicalize(sd.path()).unwrap(), agent_id: v.agent_id.clone(), master_b64: Some(Redacted(fixtures_key())), compose: None };
     let pins = pins_of(&v);
     Rig { _root_dir: rd, _state_dir: sd, root, env, v, pins }
 }
-const NOW: i64 = 1_794_052_800;
-fn task<'a>(ty: &'a str) -> Task<'a> {
+pub(crate) const NOW: i64 = 1_794_052_800;
+pub(crate) fn task<'a>(ty: &'a str) -> Task<'a> {
     Task { id: "00000000-0000-4000-8000-000000000001", ty, now: NOW }
 }
-fn header(r: &Rig, restore_id: &str) -> Value {
+pub(crate) fn header(r: &Rig, restore_id: &str) -> Value {
     json!({"v":1,"restore_id":restore_id,"plan_id":r.v.ids["plan_id"],"plan_hash":"a".repeat(64),"stack_id":r.v.ids["stack_id"],"rp_id":r.v.ids["rp_id"],"purpose":"restore","mode":"selective",
         "host_role": if r.env.host_role == HostRole::Test {"test"} else {"production"}, "approvals": if r.env.host_role == HostRole::Test {json!([])} else {json!(["production_target"])},
         "workspace": format!("{}/restore/app", r.root.display()), "project":"app"})
 }
-fn merge(mut a: Value, b: Value) -> Vec<u8> {
+pub(crate) fn merge(mut a: Value, b: Value) -> Vec<u8> {
     a.as_object_mut().unwrap().extend(b.as_object().unwrap().clone());
     serde_json::to_vec(&a).unwrap()
 }
-const RID: &str = "77777777-7777-4777-8777-777777777777";
+pub(crate) const RID: &str = "77777777-7777-4777-8777-777777777777";
 const RID2: &str = "99999999-9999-4999-8999-999999999999";
 
 fn stage_payload(r: &Rig, rid: &str, vol_url: &str, db_url: &str, sha_override: Option<&str>) -> Vec<u8> {
@@ -482,10 +518,16 @@ async fn payload_vectors_get_the_expected_agent_decision() {
         let text = serde_json::to_string(&c.payload).unwrap().replace("/srv/restore", &format!("{}/restore", r.root.display()));
         let ops = Fake::new();
         let ty = c.ty.as_str();
-        let got = execute(&r.env, &ops, &r.pins, &task(ty), text.as_bytes()).await;
+        let mut env = r.env.clone();
+        env.compose = Some(crate::fork::compose::tests::compose_env());
+        let got = if matches!(ty, "compose_render" | "restore_db" | "compose_up") {
+            crate::fork::compose::execute(&env, &ops, &r.pins, &crate::fork::compose::tests::NullSink, &task(ty), text.as_bytes()).await
+        } else {
+            execute(&r.env, &ops, &r.pins, &task(ty), text.as_bytes()).await
+        };
         if c.agent == "ok" {
             if let Err(f) = got {
-                assert!(!matches!(f.code, Code::PayloadInvalid | Code::PathNotAllowed | Code::ModeUnsupported | Code::HostRoleMismatch | Code::ApprovalMissing), "{}: {:?}", c.name, f);
+                assert!(!matches!(f.code, Code::PayloadInvalid | Code::PathNotAllowed | Code::ModeUnsupported | Code::HostRoleMismatch | Code::ApprovalMissing | Code::OverrideInvalid), "{}: {:?}", c.name, f);
             }
         } else {
             assert_eq!(got.unwrap_err().code.as_str(), c.agent, "{}", c.name);
@@ -674,7 +716,7 @@ mod channel_level {
             bundle_pins: pins_of(v),
             bundle_credential: CRED.to_string(),
             task_key: key,
-            capabilities: capabilities::reported(configured),
+            capabilities: capabilities::reported(configured, false),
             state: state::load(&state_path, &v.enroll_id).unwrap(),
             state_path,
             transport: Transport::new(server_url, &v.agent_id, CRED, true).unwrap(),
@@ -722,7 +764,11 @@ mod channel_level {
             assert_eq!(bodies(&server, "/result").await[0]["status"], "rejected", "{name}");
         }
         // an agent that is not configured for restores does not report the capability at all
-        assert!(!capabilities::reported(false).iter().any(|c| c == "restore.target.v1") && capabilities::reported(true).iter().any(|c| c == "restore.target.v1"));
+        assert!(!capabilities::reported(false, false).iter().any(|c| c == "restore.target.v1") && capabilities::reported(true, false).iter().any(|c| c == "restore.target.v1"));
+        // W17-ii: compose.render.v1 only on top of a working restore target and only when compose is ok
+        assert!(!capabilities::reported(true, false).iter().any(|c| c == "compose.render.v1"));
+        assert!(capabilities::reported(true, true).iter().any(|c| c == "compose.render.v1"));
+        assert!(!capabilities::reported(false, true).iter().any(|c| c == "compose.render.v1"));
     }
 
     #[tokio::test]
@@ -751,20 +797,38 @@ mod channel_level {
 /// W17-ii (compose CLI) extends it with the fake-binary argv/env capture test.
 #[test]
 fn the_restore_engine_never_spawns_a_process() {
-    let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/fork/restore");
-    for e in std::fs::read_dir(dir).unwrap().flatten() {
-        let p = e.path();
-        if p.extension().and_then(|x| x.to_str()) != Some("rs") || p.file_name().unwrap() == "tests.rs" {
-            continue;
-        }
-        let src = std::fs::read_to_string(&p).unwrap();
-        for banned in ["Command::new", "std::process", "tokio::process", "libc::system", "libc::exec", "sh -c"] {
+    // W17-ii: process spawning is confined to ONE file (`compose/run.rs`); the shell literals are the fixed scripts (wipe + the PostgreSQL ones in compose/db.rs)
+    let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/fork");
+    let mut scanned = 0;
+    for sub in ["restore", "compose", "policy"] {
+        for e in std::fs::read_dir(base.join(sub)).unwrap().flatten() {
+            let p = e.path();
+            let name = p.file_name().unwrap().to_string_lossy().into_owned();
+            if p.extension().and_then(|x| x.to_str()) != Some("rs") || name == "tests.rs" {
+                continue;
+            }
+            scanned += 1;
+            let src = std::fs::read_to_string(&p).unwrap();
             let code: String = src.lines().filter(|l| !l.trim_start().starts_with("//")).collect::<Vec<_>>().join("\n");
-            // the ONE allowed literal: the fixed volume wipe script run INSIDE the hardened helper container (no user data in it)
+            // the allowed `sh -c` literals: the fixed volume wipe script inside the hardened helper (docker_ops.rs) and the const scripts of db.rs
             let code = code.replace("rm -rf /vol/* /vol/.[!.]* /vol/..?*; true", "");
-            assert!(!code.contains(banned) || (banned == "sh -c" && p.file_name().unwrap() == "docker_ops.rs"), "{} contains `{banned}`", p.display());
+            let is_run = sub == "compose" && name == "run.rs";
+            for banned in ["Command::new", "std::process", "tokio::process", "libc::system", "libc::exec"] {
+                assert!(!code.contains(banned) || is_run, "{} contains `{banned}`", p.display());
+            }
+            if name != "docker_ops.rs" && name != "db.rs" {
+                assert!(!code.contains("sh -c"), "{} contains a shell literal", p.display());
+            }
+            if name == "db.rs" {
+                // the only `"sh", "-c"` argument pair of db.rs carries one of the three fixed consts, never a formatted string
+                for l in code.lines().filter(|l| l.contains("\"sh\", \"-c\"")) {
+                    assert!(l.contains("PG_ISREADY") || l.contains("PG_RESTORE_FD"), "db.rs shell argument is not a fixed const: {l}");
+                }
+                assert!(!code.contains("format!(\"u=") && !code.contains("PG_RESTORE_FC.replace"));
+            }
         }
     }
+    assert!(scanned >= 20, "scanned {scanned} files");
 }
 
 /// Secrets never show up in Debug output of the environment or failures (Redacted master key, no URLs in Failure).

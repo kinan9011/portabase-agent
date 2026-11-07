@@ -12,11 +12,43 @@ pub const LABEL_HELPER: &str = "com.portabase.fork.helper";
 
 pub type Labels = HashMap<String, String>;
 
+/// One container as the D29 guard sees it (W17-ii E8): full 64-hex id, names without the leading `/`, image reference, labels, docker-socket mount.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct ContainerFacts {
+    pub id: String,
+    pub names: Vec<String>,
+    pub image: String,
+    pub labels: Labels,
+    pub mounts_docker_sock: bool,
+    pub running: bool,
+}
+
+/// The sandboxed `docker-compose config` helper (W17-ii E3). `image` = the agent's OWN image id; `cmd` is the closed argument list; `env` = payload pairs only.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RenderSpec {
+    pub image: String,
+    pub bin: String,
+    pub workspace: std::path::PathBuf,
+    pub cmd: Vec<String>,
+    pub env: Vec<(String, String)>,
+}
+/// (uid, gid, mode) of a file inside a volume.
+pub type FileMeta = (u64, u64, u32);
+pub const RENDER_STDOUT_CAP: usize = 2 * 1024 * 1024;
+pub const RENDER_STDERR_CAP: usize = 4096;
+
 pub fn owner_labels(restore_id: &str, agent_id: &str) -> Labels {
     HashMap::from([(LABEL_RESTORE.to_string(), restore_id.to_string()), (LABEL_AGENT.to_string(), agent_id.to_string())])
 }
 pub fn owned_by(labels: &Labels, restore_id: &str, agent_id: &str) -> bool {
     labels.get(LABEL_RESTORE).map(String::as_str) == Some(restore_id) && labels.get(LABEL_AGENT).map(String::as_str) == Some(agent_id)
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum RenderError {
+    TooLarge,
+    Failed(String),
+    Docker,
 }
 
 #[async_trait]
@@ -36,8 +68,20 @@ pub trait DockerOps: Send + Sync {
     async fn helper_wipe(&self, volume: &str) -> Result<(), Code>;
     /// Upload an AUDITED `tar.gz` whose members live under `vol/` into the volume (decompressed on the fly).
     async fn helper_extract(&self, volume: &str, tar_gz: &Path) -> Result<(), Code>;
-    /// Put one file at `relative_path` inside the volume.
-    async fn helper_put_file(&self, volume: &str, relative_path: &str, file: &Path) -> Result<(), Code>;
+    /// Put one file at `relative_path` inside the volume with the given owner / mode.
+    async fn helper_put_file(&self, volume: &str, relative_path: &str, file: &Path, meta: FileMeta) -> Result<(), Code>;
+    /// Owner / mode of `relative_path` inside the volume (`None` when it does not exist).
+    async fn file_meta(&self, volume: &str, relative_path: &str) -> Result<Option<FileMeta>, Code>;
+    /// `rm -f -- <paths>` inside the volume (argument list, no shell). Paths are absolute inside the helper (`/vol/...`).
+    async fn helper_rm(&self, volume: &str, paths: &[String]) -> Result<(), Code>;
+    /// Sandboxed compose render (E3): returns stdout (≤ 2 MiB) or `RenderTooLarge` / `RenderFailed(first stderr line)`.
+    async fn render(&self, spec: &RenderSpec) -> Result<Vec<u8>, RenderError>;
+    /// Every container incl. stopped ones, with the facts the D29 guard needs.
+    async fn containers(&self) -> Result<Vec<ContainerFacts>, Code>;
+    /// Stop (10 s) then remove (with anonymous volumes) one container by FULL id.
+    async fn stop_remove(&self, id: &str) -> Result<(), Code>;
+    /// Image id (`sha256:…`) the container `own_id` runs (self-inspect).
+    async fn image_of_container(&self, own_id: &str) -> Result<String, Code>;
     /// Remove every helper container (startup sweep). Returns how many.
     async fn remove_helpers(&self) -> usize;
 }
@@ -191,18 +235,160 @@ mod real {
             self.drop_helper(&id).await;
             r
         }
-        async fn helper_put_file(&self, volume: &str, relative_path: &str, file: &Path) -> Result<(), Code> {
+        async fn helper_put_file(&self, volume: &str, relative_path: &str, file: &Path, meta: FileMeta) -> Result<(), Code> {
             let id = self.make_helper(vec![format!("{volume}:/vol")], &["CHOWN", "DAC_OVERRIDE", "FOWNER"], false, None).await?;
             let r = async {
                 let mut b = tar::Builder::new(Vec::new());
                 let mut f = std::fs::File::open(file).map_err(|_| Code::RestoreFailed)?;
-                b.append_file(format!("vol/{relative_path}"), &mut f).map_err(|_| Code::RestoreFailed)?;
+                let mut hdr = tar::Header::new_gnu();
+                hdr.set_size(f.metadata().map_err(|_| Code::RestoreFailed)?.len());
+                hdr.set_uid(meta.0);
+                hdr.set_gid(meta.1);
+                hdr.set_mode(meta.2);
+                hdr.set_mtime(0);
+                hdr.set_entry_type(tar::EntryType::Regular);
+                b.append_data(&mut hdr, format!("vol/{relative_path}"), &mut f).map_err(|_| Code::RestoreFailed)?;
                 let bytes = b.into_inner().map_err(|_| Code::RestoreFailed)?;
                 self.upload_tar(&id, futures_util::stream::once(async move { Ok(bytes::Bytes::from(bytes)) })).await
             }
             .await;
             self.drop_helper(&id).await;
             r
+        }
+        async fn file_meta(&self, volume: &str, relative_path: &str) -> Result<Option<FileMeta>, Code> {
+            let id = self.make_helper(vec![format!("{volume}:/vol:ro")], &[], true, None).await?;
+            let r = async {
+                let mut s = self.docker.download_from_container(&id, Some(DownloadFromContainerOptions { path: format!("/vol/{relative_path}") }));
+                let mut tar_bytes = Vec::new();
+                while let Some(c) = s.next().await {
+                    match c {
+                        Ok(b) => tar_bytes.extend_from_slice(&b),
+                        Err(bollard::errors::Error::DockerResponseServerError { status_code: 404, .. }) => return Ok(None),
+                        Err(_) => return Err(Code::DockerUnavailable),
+                    }
+                    if tar_bytes.len() > 1024 * 1024 * 1024 {
+                        return Ok(None); // only the first header matters; a huge database is not buffered further
+                    }
+                }
+                let mut ar = tar::Archive::new(std::io::Cursor::new(tar_bytes));
+                for e in ar.entries().map_err(|_| Code::RestoreFailed)? {
+                    let e = e.map_err(|_| Code::RestoreFailed)?;
+                    if e.header().entry_type().is_file() {
+                        return Ok(Some((e.header().uid().unwrap_or(0), e.header().gid().unwrap_or(0), e.header().mode().unwrap_or(0o644))));
+                    }
+                }
+                Ok(None)
+            }
+            .await;
+            self.drop_helper(&id).await;
+            r
+        }
+        async fn helper_rm(&self, volume: &str, paths: &[String]) -> Result<(), Code> {
+            let mut cmd = vec!["rm".to_string(), "-f".to_string(), "--".to_string()];
+            cmd.extend(paths.iter().cloned());
+            let id = self.make_helper(vec![format!("{volume}:/vol")], &["DAC_OVERRIDE", "FOWNER"], true, Some(cmd)).await?;
+            let r = async {
+                self.docker.start_container(&id, None::<StartContainerOptions>).await.map_err(dk)?;
+                let mut w = self.docker.wait_container(&id, None::<bollard::query_parameters::WaitContainerOptions>);
+                match w.next().await {
+                    Some(Ok(res)) if res.status_code == 0 => Ok(()),
+                    _ => Err(Code::RestoreFailed),
+                }
+            }
+            .await;
+            self.drop_helper(&id).await;
+            r
+        }
+        async fn render(&self, spec: &RenderSpec) -> Result<Vec<u8>, RenderError> {
+            use bollard::models::{HostConfigLogConfig};
+            use bollard::container::LogOutput;
+            let ws = spec.workspace.display().to_string();
+            let body = ContainerCreateBody {
+                image: Some(spec.image.clone()),
+                entrypoint: Some(vec![spec.bin.clone()]),
+                cmd: Some(spec.cmd.clone()),
+                env: Some(spec.env.iter().map(|(k, v)| format!("{k}={v}")).collect()),
+                hostname: Some("portabase-render".into()),
+                user: Some("0:0".into()),
+                network_disabled: Some(true),
+                attach_stdout: Some(true),
+                attach_stderr: Some(true),
+                labels: Some(HashMap::from([(LABEL_HELPER.to_string(), "true".to_string()), ("com.docker.compose.project".to_string(), String::new())])),
+                host_config: Some(HostConfig {
+                    binds: Some(vec![format!("{ws}:{ws}:ro")]),
+                    network_mode: Some("none".into()),
+                    cap_drop: Some(vec!["ALL".into()]),
+                    cap_add: Some(vec!["DAC_READ_SEARCH".into()]),
+                    security_opt: Some(vec!["no-new-privileges".into()]),
+                    readonly_rootfs: Some(true),
+                    tmpfs: Some(HashMap::from([("/tmp".to_string(), "rw,nosuid,nodev,noexec,size=16m".to_string())])),
+                    log_config: Some(HostConfigLogConfig { typ: Some("none".into()), config: None }),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            };
+            let name = format!("portabase-fork-render-{}", &uuid::Uuid::new_v4().to_string()[..8]);
+            let id = self.docker.create_container(Some(CreateContainerOptions { name: Some(name), ..Default::default() }), body).await.map_err(|_| RenderError::Docker)?.id;
+            let r = async {
+                // attach BEFORE start: the output is never written to the daemon's log driver (log type none)
+                let mut att = self.docker.attach_container(&id, Some(bollard::query_parameters::AttachContainerOptions { stream: true, stdout: true, stderr: true, ..Default::default() })).await.map_err(|_| RenderError::Docker)?;
+                self.docker.start_container(&id, None::<StartContainerOptions>).await.map_err(|_| RenderError::Docker)?;
+                let (mut out, mut err) = (Vec::new(), Vec::new());
+                while let Some(c) = att.output.next().await {
+                    match c.map_err(|_| RenderError::Docker)? {
+                        LogOutput::StdOut { message } => {
+                            if out.len() + message.len() > RENDER_STDOUT_CAP {
+                                return Err(RenderError::TooLarge);
+                            }
+                            out.extend_from_slice(&message);
+                        }
+                        LogOutput::StdErr { message } => {
+                            if err.len() < RENDER_STDERR_CAP {
+                                err.extend_from_slice(&message[..message.len().min(RENDER_STDERR_CAP - err.len())]);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                let mut w = self.docker.wait_container(&id, None::<bollard::query_parameters::WaitContainerOptions>);
+                let code = match w.next().await {
+                    Some(Ok(res)) => res.status_code,
+                    Some(Err(bollard::errors::Error::DockerContainerWaitError { code, .. })) => code,
+                    _ => return Err(RenderError::Docker),
+                };
+                if code != 0 {
+                    let first = String::from_utf8_lossy(&err).lines().next().unwrap_or("").to_string();
+                    return Err(RenderError::Failed(first));
+                }
+                Ok(out)
+            }
+            .await;
+            self.drop_helper(&id).await;
+            r
+        }
+        async fn containers(&self) -> Result<Vec<ContainerFacts>, Code> {
+            let list = self.docker.list_containers(Some(ListContainersOptions { all: true, ..Default::default() })).await.map_err(dk)?;
+            Ok(list
+                .into_iter()
+                .filter_map(|c| {
+                    let sock = c.mounts.unwrap_or_default().iter().any(|m| matches!(m.source.as_deref(), Some("/var/run/docker.sock") | Some("/run/docker.sock")));
+                    Some(ContainerFacts {
+                        id: c.id?,
+                        names: c.names.unwrap_or_default().into_iter().map(|n| n.trim_start_matches('/').to_string()).collect(),
+                        image: c.image.unwrap_or_default(),
+                        labels: c.labels.unwrap_or_default(),
+                        mounts_docker_sock: sock,
+                        running: c.state.map(|s| s.to_string() == "running").unwrap_or(false),
+                    })
+                })
+                .collect())
+        }
+        async fn stop_remove(&self, id: &str) -> Result<(), Code> {
+            let _ = self.docker.stop_container(id, Some(bollard::query_parameters::StopContainerOptions { t: Some(10), ..Default::default() })).await;
+            self.docker.remove_container(id, Some(RemoveContainerOptions { force: false, v: true, ..Default::default() })).await.map_err(dk)
+        }
+        async fn image_of_container(&self, own_id: &str) -> Result<String, Code> {
+            self.docker.inspect_container(own_id, None::<bollard::query_parameters::InspectContainerOptions>).await.map_err(dk)?.image.ok_or(Code::DockerUnavailable)
         }
         async fn remove_helpers(&self) -> usize {
             let filters = HashMap::from([("label".to_string(), vec![format!("{LABEL_HELPER}=true")])]);

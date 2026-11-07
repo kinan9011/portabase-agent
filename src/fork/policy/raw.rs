@@ -19,6 +19,7 @@ pub struct RawResult {
     pub reason: Option<&'static str>,
 }
 impl RawResult {
+    #[allow(dead_code)]
     pub fn clean() -> Self {
         RawResult { refused: false, violations: vec![], reason: None }
     }

@@ -104,8 +104,10 @@ async fn apply_inner(env: &RestoreEnv, ops: &dyn DockerOps, pins: &[Pin], t: &Ta
         }
         let file = staged_file(&ws, s.index);
         let single = ws.tmp().join(format!("sq{}.db", s.index));
-        single_file(&file, &single).map_err(|c| Failure::from(c).at(s.index))?;
-        ops.helper_put_file(&s.volume, &s.relative_path, &single).await.map_err(|c| Failure::from(c).at(s.index))?;
+        let entry_meta = single_file(&file, &single).map_err(|c| Failure::from(c).at(s.index))?;
+        // W17-ii (OD-W17-14): the file the volume artifact restored at this path decides owner / mode (a non-root app must be able to open its database);
+        // stale `-wal` / `-shm` / `-journal` siblings of the volume artifact would be replayed onto the consistent dump on first open ⇒ removed first.
+        place_sqlite(ops, &s.volume, &s.relative_path, &single, entry_meta).await.map_err(|c| Failure::from(c).at(s.index))?;
         let _ = std::fs::remove_file(&single);
         j.step(t.id, t.ty, &step, true, None);
         consumed.push(s.index);
@@ -153,12 +155,22 @@ async fn apply_inner(env: &RestoreEnv, ops: &dyn DockerOps, pins: &[Pin], t: &Ta
     Ok(json!({"volumes": vols, "sqlite": sqlite, "networks": nets, "unpacked": unpacked}))
 }
 
+/// Stale-WAL-safe, ownership-preserving sqlite placement (OD-W17-14): remove `<db>-wal|-shm|-journal` of the volume artifact, then put the consistent dump with the
+/// owner / mode of the file the volume artifact restored at that path (else the archive entry's, else `0:0 0644`).
+pub(crate) async fn place_sqlite(ops: &dyn DockerOps, volume: &str, rel: &str, file: &std::path::Path, entry_meta: Option<super::docker_ops::FileMeta>) -> Result<(), Code> {
+    let existing = ops.file_meta(volume, rel).await?;
+    let siblings: Vec<String> = ["-wal", "-shm", "-journal"].iter().map(|x| format!("/vol/{rel}{x}")).collect();
+    ops.helper_rm(volume, &siblings).await?;
+    ops.helper_put_file(volume, rel, file, existing.or(entry_meta).unwrap_or((0, 0, 0o644))).await
+}
+
 /// The staged archive of an agent sqlite backup holds exactly one regular file: write its content to `out` (0600).
-fn single_file(tar_gz: &std::path::Path, out: &std::path::Path) -> Result<(), Code> {
+pub(crate) fn single_file(tar_gz: &std::path::Path, out: &std::path::Path) -> Result<Option<super::docker_ops::FileMeta>, Code> {
     use flate2::read::GzDecoder;
     let f = std::fs::File::open(tar_gz).map_err(|_| Code::RestoreFailed)?;
     let mut ar = tar::Archive::new(GzDecoder::new(std::io::BufReader::new(f)));
     let mut found = false;
+    let mut meta = None;
     for e in ar.entries().map_err(|_| Code::ArchiveInvalid)? {
         let mut e = e.map_err(|_| Code::ArchiveInvalid)?;
         if e.header().entry_type().is_dir() {
@@ -169,24 +181,44 @@ fn single_file(tar_gz: &std::path::Path, out: &std::path::Path) -> Result<(), Co
         }
         let mut data = Vec::new();
         std::io::Read::read_to_end(&mut e, &mut data).map_err(|_| Code::ArchiveInvalid)?;
+        meta = Some((e.header().uid().unwrap_or(0), e.header().gid().unwrap_or(0), e.header().mode().unwrap_or(0o644)));
         write_0600(out, &data).map_err(|f| f.code)?;
         found = true;
     }
-    found.then_some(()).ok_or(Code::ArchiveInvalid)
+    found.then_some(meta).ok_or(Code::ArchiveInvalid)
 }
 
 pub async fn run_cleanup(env: &RestoreEnv, ops: &dyn DockerOps, t: &Task<'_>, payload: &[u8]) -> R<Value> {
     let (h, b): (Header, CleanupBody) = split(payload)?;
     h.check(env)?;
-    if b.containers {
-        return Err(Code::ModeUnsupported.into()); // W17-ii owns container cleanup
+    // W17-ii: `containers: true` removes ONLY containers that carry this restore's owner labels AND belong to this project; it needs the compose guard
+    // (own container id) so that the agent, Portabase and Arcane can never be among them.
+    if b.containers && env.compose.is_none() {
+        return Err(Code::ModeUnsupported.into());
     }
     let ws_path = paths::check_task_path(&env.roots, &env.state_dir, &h.workspace)?;
     let mut j = Journal::open(&env.state_dir, &h.restore_id)?;
     j.begin(t.id, t.ty);
     let prefix = format!("{}_", h.project);
     let (mut vols, mut nets, mut kept) = (0usize, 0usize, 0usize);
+    let mut conts = 0usize;
     let r: R<bool> = async {
+        if b.containers {
+            let ce = env.compose.as_ref().ok_or(Failure::from(Code::ModeUnsupported))?;
+            let all = ops.containers().await?;
+            let protected = crate::fork::compose::guard::protected_ids(&all, &ce.own_id, &ce.protected_extra);
+            for c in &all {
+                if c.labels.get("com.docker.compose.project").map(String::as_str) != Some(h.project.as_str()) {
+                    continue;
+                }
+                if owned_by(&c.labels, &h.restore_id, &env.agent_id) && !protected.contains(&c.id) {
+                    ops.stop_remove(&c.id).await?;
+                    conts += 1;
+                } else {
+                    kept += 1;
+                }
+            }
+        }
         if b.volumes {
             for (name, l) in ops.list_volumes().await? {
                 if owned_by(&l, &h.restore_id, &env.agent_id) {
@@ -224,5 +256,5 @@ pub async fn run_cleanup(env: &RestoreEnv, ops: &dyn DockerOps, t: &Task<'_>, pa
     j.end(t.id, t.ty, r.is_ok());
     let removed_ws = r?;
     let _: Option<PathBuf> = None;
-    Ok(json!({"removed": {"volumes": vols, "networks": nets, "containers": 0, "workspace": removed_ws}, "kept_foreign": kept}))
+    Ok(json!({"removed": {"volumes": vols, "networks": nets, "containers": conts, "workspace": removed_ws}, "kept_foreign": kept}))
 }

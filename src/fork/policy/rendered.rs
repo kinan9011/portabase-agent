@@ -32,6 +32,7 @@ pub struct Verdict {
     pub findings: Vec<Finding>,
 }
 impl Verdict {
+    #[allow(dead_code)]
     pub fn services_needing_override(&self) -> Vec<String> {
         let mut s: Vec<String> = self.findings.iter().map(|f| f.service.clone()).collect();
         s.sort();

@@ -129,6 +129,23 @@ impl Transport {
     }
 
     /// D45: plaintext SHA-256 + size of an archive, before encryption.
+    /// W17-ii E13: upload the policy view of a `compose_render` task. 3 tries (1 s, 4 s) on network errors / 5xx; a 4xx answer is final.
+    pub async fn render(&self, task_id: &str, lease_id: &str, mut body: serde_json::Value) -> Result<(), CallError> {
+        body["lease_id"] = json!(lease_id);
+        let mut last = CallError::Network;
+        for wait in [0u64, 1, 4] {
+            if wait > 0 {
+                tokio::time::sleep(std::time::Duration::from_secs(wait)).await;
+            }
+            match self.post(&format!("tasks/{task_id}/render"), body.clone()).await {
+                Ok(_) => return Ok(()),
+                Err(e @ (CallError::Network | CallError::Http(500..=599))) => last = e,
+                Err(e) => return Err(e),
+            }
+        }
+        Err(last)
+    }
+
     pub async fn hash_report(&self, backup_id: &str, sha256: &str, size_bytes: u64) -> Result<(), CallError> {
         self.post("hash-report", json!({"backup_id": backup_id, "sha256": sha256, "size_bytes": size_bytes})).await.map(|_| ())
     }

@@ -29,16 +29,40 @@ pub struct Accepted {
     pub outcome: Option<Outcome>,
 }
 
+/// A secret string whose `Debug` never prints it (the rotated credential lives in the state file; `State` derives `Debug`).
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(transparent)]
+pub struct Redacted(pub String);
+impl std::fmt::Debug for Redacted {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("[redacted]")
+    }
+}
+
+/// A dashboard public key pinned at runtime by a signed `pin_add` (public data: kid + SPKI PEM).
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct StoredPin {
+    pub kid: String,
+    pub pem: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct State {
     pub enroll_id: String,
     pub last_seq: u64,
     pub accepted: Vec<Accepted>,
+    /// W15b maintenance effects (ADR-007 A11). `serde(default)`: state files written by W15 builds still load. A new `enroll_id` resets all of it.
+    #[serde(default)]
+    pub credential: Option<Redacted>,
+    #[serde(default)]
+    pub extra_pins: Vec<StoredPin>,
+    #[serde(default)]
+    pub revoked_kids: Vec<String>,
 }
 
 impl State {
     pub fn fresh(enroll_id: &str) -> Self {
-        State { enroll_id: enroll_id.to_string(), last_seq: 0, accepted: Vec::new() }
+        State { enroll_id: enroll_id.to_string(), last_seq: 0, accepted: Vec::new(), credential: None, extra_pins: Vec::new(), revoked_kids: Vec::new() }
     }
     pub fn known(&self, task_id: &str) -> Option<&Accepted> {
         self.accepted.iter().find(|a| a.task_id == task_id)

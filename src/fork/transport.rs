@@ -5,6 +5,7 @@ use reqwest::header::{AUTHORIZATION, HeaderValue};
 use reqwest::redirect::Policy;
 use serde::Deserialize;
 use serde_json::json;
+use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 const MAX_BODY: usize = 1024 * 1024;
@@ -41,7 +42,8 @@ pub struct Transport {
     http: reqwest::Client,
     base: String,
     agent_id: String,
-    auth: HeaderValue,
+    /// Shared by every clone: a rotated credential (signed `rotate_credential`) must reach the clone the D45 hook uses too.
+    auth: Arc<RwLock<HeaderValue>>,
 }
 
 impl std::fmt::Debug for Transport {
@@ -58,9 +60,21 @@ impl Transport {
             .https_only(!insecure_lab)
             .build()
             .map_err(|_| CallError::Network)?;
+        let auth = Self::header(credential)?;
+        Ok(Self { http, base: server_url.trim_end_matches('/').to_string(), agent_id: agent_id.to_string(), auth: Arc::new(RwLock::new(auth)) })
+    }
+
+    fn header(credential: &str) -> Result<HeaderValue, CallError> {
         let mut auth = HeaderValue::from_str(&format!("Bearer {credential}")).map_err(|_| CallError::BadBody)?;
         auth.set_sensitive(true);
-        Ok(Self { http, base: server_url.trim_end_matches('/').to_string(), agent_id: agent_id.to_string(), auth })
+        Ok(auth)
+    }
+
+    /// Swap the bearer for ALL clones (after a rotation was persisted).
+    pub fn set_credential(&self, credential: &str) -> Result<(), CallError> {
+        let h = Self::header(credential)?;
+        *self.auth.write().map_err(|_| CallError::BadBody)? = h;
+        Ok(())
     }
 
     fn url(&self, tail: &str) -> String {
@@ -68,7 +82,9 @@ impl Transport {
     }
 
     async fn post(&self, tail: &str, body: serde_json::Value) -> Result<(u16, Vec<u8>), CallError> {
-        let res = self.http.post(self.url(tail)).header(AUTHORIZATION, self.auth.clone()).json(&body).send().await.map_err(|_| CallError::Network)?;
+        // clone under the read lock, never hold it across an await
+        let auth = self.auth.read().map_err(|_| CallError::BadBody)?.clone();
+        let res = self.http.post(self.url(tail)).header(AUTHORIZATION, auth).json(&body).send().await.map_err(|_| CallError::Network)?;
         let status = res.status().as_u16();
         let retry = res.headers().get("retry-after").and_then(|v| v.to_str().ok()).and_then(|s| s.parse::<u64>().ok()).unwrap_or(30);
         if res.content_length().is_some_and(|l| l as usize > MAX_BODY) {

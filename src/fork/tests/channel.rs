@@ -32,6 +32,8 @@ fn runtime(v: &Vectors, server_url: &str, state_path: PathBuf, insecure_lab: boo
         agent_id: v.agent_id.clone(),
         enroll_id: v.enroll_id.clone(),
         pins: pins(v),
+        bundle_pins: pins(v),
+        bundle_credential: AGENT_CRED.to_string(),
         task_key: task_key(v),
         capabilities: capabilities::reported(),
         state: state::load(&state_path, &v.enroll_id).unwrap(),
@@ -67,7 +69,7 @@ async fn signed_noop_round_trip_lease_heartbeat_result() {
         assert_eq!(q.headers.get("authorization").unwrap().to_str().unwrap(), format!("Bearer {AGENT_CRED}"));
     }
     let lease = &bodies(&r.server, "/lease").await[0];
-    assert_eq!(lease["capabilities"], serde_json::json!(["channel.v1", "noop.v1", "plaintext-hash.v1"]));
+    assert_eq!(lease["capabilities"], serde_json::json!(["channel.v1", "noop.v1", "plaintext-hash.v1", "channel-maint.v1"]));
     assert_eq!(bodies(&r.server, "/heartbeat").await.len(), 1);
     let res = bodies(&r.server, "/result").await;
     assert_eq!(res.len(), 1);
@@ -256,4 +258,121 @@ async fn plaintext_hash_before_encryption_equals_what_decrypting_a_real_agent_ar
     decrypt_file_stream_gcm(enc_path, dec.clone(), FIXTURE_MASTER_B64.into()).await.unwrap();
     assert_eq!(plaintext_hash(&dec).await.unwrap(), before);
     assert_eq!(before.1, 2_500_000);
+}
+
+// ---- W15b: signed channel maintenance (pin_add / pin_revoke / rotate_credential) ----
+
+fn plain(c: &VCase) -> Value {
+    serde_json::from_str(c.payload_plain.as_deref().unwrap()).unwrap()
+}
+fn channel_config(v: &Vectors, server_url: &str, state_path: PathBuf) -> crate::fork::config::ChannelConfig {
+    crate::fork::config::ChannelConfig {
+        agent_id: v.agent_id.clone(),
+        enroll_id: v.enroll_id.clone(),
+        server_url: server_url.to_string(),
+        credential: AGENT_CRED.to_string(),
+        task_key: task_key(v),
+        pins: pins(v),
+        pin_fingerprint: String::new(),
+        insecure_lab: true,
+        poll_seconds: 5,
+        state_path,
+    }
+}
+fn auth_headers(reqs: &[wiremock::Request], suffix: &str) -> Vec<String> {
+    reqs.iter().filter(|q| q.url.path().ends_with(suffix)).map(|q| q.headers.get("authorization").unwrap().to_str().unwrap().to_string()).collect()
+}
+
+#[tokio::test]
+async fn pin_add_round_trip_then_a_task_signed_by_the_new_key_is_accepted_and_persisted() {
+    let mut r = rig().await;
+    mount_ok(&r.server).await;
+    let second = case(&r.v, "signed_by_second_key").clone();
+    // before the pin: refused
+    assert_eq!(r.rt.process(&leased(&second), r.v.now).await, Handled::Rejected("unknown_kid"));
+    let add = case(&r.v, "maint_pin_add").clone();
+    assert_eq!(r.rt.process(&leased(&add), r.v.now).await, Handled::Executed("succeeded".into()));
+    let res = bodies(&r.server, "/result").await;
+    let added = plain(&add)["kid"].as_str().unwrap().to_string();
+    assert!(res[1]["result"]["pinned"].as_array().unwrap().iter().any(|k| k == added.as_str()), "{res:?}");
+    assert!(!res[1].to_string().contains("BEGIN"), "no key material in a result");
+    assert_eq!(r.rt.process(&leased(&second), r.v.now).await, Handled::Executed("succeeded".into()));
+    // a restart (fresh runtime from the same config + state file) still trusts the added key
+    let rt2 = Runtime::from_config(channel_config(&r.v, &r.server.uri(), r.dir.path().join("state.json"))).unwrap();
+    assert_eq!(rt2.pins.len(), 2);
+}
+
+#[tokio::test]
+async fn pin_revoke_makes_the_revoked_key_unknown_again() {
+    let mut r = rig().await;
+    mount_ok(&r.server).await;
+    let add = case(&r.v, "maint_pin_add").clone();
+    let revoke = case(&r.v, "maint_pin_revoke").clone();
+    let second = case(&r.v, "signed_by_second_key").clone();
+    assert_eq!(r.rt.process(&leased(&add), r.v.now).await, Handled::Executed("succeeded".into()));
+    assert_eq!(r.rt.process(&leased(&revoke), r.v.now).await, Handled::Executed("succeeded".into()));
+    assert_eq!(r.rt.process(&leased(&second), r.v.now).await, Handled::Rejected("unknown_kid"));
+    assert_eq!(r.rt.pins.len(), 1);
+}
+
+#[tokio::test]
+async fn rotate_credential_switches_every_later_request_and_every_clone_to_the_new_bearer_and_survives_a_restart() {
+    let mut r = rig().await;
+    mount_ok(&r.server).await;
+    Mock::given(method("POST")).and(path(format!("/api/fork/agent/{}/hash-report", r.v.agent_id))).respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({"ok": true}))).mount(&r.server).await;
+    let active_clone = r.rt.transport.clone(); // what the D45 hook holds
+    let rotate = case(&r.v, "maint_rotate").clone();
+    let new = plain(&rotate)["credential"].as_str().unwrap().to_string();
+    assert_eq!(r.rt.process(&leased(&rotate), r.v.now).await, Handled::Executed("succeeded".into()));
+    let res = bodies(&r.server, "/result").await;
+    assert_eq!(res[0]["result"], serde_json::json!({"rotated": true}));
+    assert!(!res[0].to_string().contains(&new[new.len() - 43..]), "the credential is never reported back");
+    let reqs = r.server.received_requests().await.unwrap();
+    assert_eq!(auth_headers(&reqs, "/heartbeat"), vec![format!("Bearer {AGENT_CRED}")], "accepted under the old bearer");
+    assert_eq!(auth_headers(&reqs, "/result"), vec![format!("Bearer {new}")], "the result already proves the new one");
+    // every later request, including the clone the D45 hook uses
+    active_clone.hash_report("b", &"0".repeat(64), 1).await.unwrap();
+    let _ = r.rt.transport.lease(&[]).await;
+    let reqs = r.server.received_requests().await.unwrap();
+    assert_eq!(auth_headers(&reqs, "/hash-report"), vec![format!("Bearer {new}")]);
+    assert_eq!(auth_headers(&reqs, "/lease"), vec![format!("Bearer {new}")]);
+    // persisted, and a restart uses it
+    let text = std::fs::read_to_string(r.dir.path().join("state.json")).unwrap();
+    assert!(text.contains(&new));
+    let rt2 = Runtime::from_config(channel_config(&r.v, &r.server.uri(), r.dir.path().join("state.json"))).unwrap();
+    let _ = rt2.transport.lease(&[]).await;
+    let reqs = r.server.received_requests().await.unwrap();
+    assert_eq!(auth_headers(&reqs, "/lease").last().unwrap(), &format!("Bearer {new}"));
+    // the state file is private
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        assert_eq!(std::fs::metadata(r.dir.path().join("state.json")).unwrap().permissions().mode() & 0o077, 0);
+    }
+}
+
+#[tokio::test]
+async fn rotate_with_an_unwritable_state_applies_nothing_and_keeps_the_old_bearer() {
+    let mut r = rig().await;
+    mount_ok(&r.server).await;
+    r.rt.state_path = r.dir.path().join("no-such-dir").join("state.json");
+    let rotate = case(&r.v, "maint_rotate").clone();
+    let payload = plain(&rotate).to_string();
+    let out = r.rt.apply_maint("task-1", &r.v.pins[0].kid, "rotate_credential", payload.as_bytes());
+    assert_eq!((out.status.as_str(), out.reason.as_deref()), ("failed", Some("state_unavailable")));
+    assert!(r.rt.state.credential.is_none());
+    let _ = r.rt.transport.lease(&[]).await;
+    let reqs = r.server.received_requests().await.unwrap();
+    assert_eq!(auth_headers(&reqs, "/lease"), vec![format!("Bearer {AGENT_CRED}")]);
+}
+
+#[tokio::test]
+async fn a_rule_violation_reports_failed_payload_invalid_and_changes_nothing() {
+    let mut r = rig().await;
+    mount_ok(&r.server).await;
+    // revoking the only pin
+    let out = r.rt.apply_maint("task-2", "someone-else", "pin_revoke", serde_json::json!({"kid": r.v.pins[0].kid}).to_string().as_bytes());
+    assert_eq!((out.status.as_str(), out.reason.as_deref()), ("failed", Some("payload_invalid")));
+    assert_eq!(r.rt.pins.len(), 1);
+    assert!(r.rt.state.revoked_kids.is_empty());
 }

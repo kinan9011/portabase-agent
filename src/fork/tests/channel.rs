@@ -224,3 +224,36 @@ async fn plaintext_hash_matches_sha256_and_is_reported_with_size() {
     let b = bodies(&server, "/hash-report").await;
     assert_eq!(b[0], serde_json::json!({"backup_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa", "sha256": h, "size_bytes": 3_000_000 - 3_000_000 + 11}));
 }
+
+/// D45 end to end on REAL agent artifacts: the plaintext the agent hashes BEFORE encryption is exactly what the dashboard's verify job recovers by
+/// decrypting the stored object (W02b fixture = a real stock-agent archive, TEST-ONLY lab key).
+const FIXTURE_MASTER_B64: &str = "7V2197O7oHu676baTe285S2RzxNDPaHGvVvNV9lrsec=";
+
+#[tokio::test]
+async fn plaintext_hash_before_encryption_equals_what_decrypting_a_real_agent_archive_yields() {
+    use crate::fork::hash::plaintext_hash;
+    use crate::utils::file::decrypt_file_stream_gcm;
+    let dir = tempfile::tempdir().unwrap();
+    // (1) a real archive written by the stock agent (lab fixture): decrypt → hash == the committed plaintext hash/size
+    let out = dir.path().join("real.tar.gz");
+    decrypt_file_stream_gcm(PathBuf::from("src/fork/tests/lab-postgres.tar.gz.enc"), out.clone(), FIXTURE_MASTER_B64.into()).await.unwrap();
+    assert_eq!(plaintext_hash(&out).await.unwrap(), ("48fdb387abd55cc600618de19886f4d78e75605d392e61d7497f4969619456aa".to_string(), 20668));
+    // (2) the agent's own encrypt path: hash the plaintext first, encrypt through the real upload stream, decrypt → same hash
+    let plain = dir.path().join("a.tar.gz");
+    let data: Vec<u8> = (0..2_500_000u32).map(|i| (i.wrapping_mul(31) % 253) as u8).collect();
+    std::fs::write(&plain, &data).unwrap();
+    let before = plaintext_hash(&plain).await.unwrap();
+    use futures::StreamExt;
+    let mut stream = crate::utils::stream::build_stream(&plain, true, &FIXTURE_MASTER_B64.to_string()).await.unwrap().stream;
+    let mut enc = Vec::new();
+    while let Some(chunk) = stream.next().await {
+        enc.extend_from_slice(&chunk.unwrap());
+    }
+    assert_ne!(enc, data);
+    let enc_path = dir.path().join("a.tar.gz.enc");
+    std::fs::write(&enc_path, &enc).unwrap();
+    let dec = dir.path().join("a.dec");
+    decrypt_file_stream_gcm(enc_path, dec.clone(), FIXTURE_MASTER_B64.into()).await.unwrap();
+    assert_eq!(plaintext_hash(&dec).await.unwrap(), before);
+    assert_eq!(before.1, 2_500_000);
+}

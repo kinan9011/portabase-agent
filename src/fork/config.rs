@@ -95,6 +95,12 @@ fn is_loopback(u: &Url) -> bool {
     }
 }
 
+/// `fork.<agent_id>.<43 base64url>`: the only credential shape the dashboard issues (also checked on a signed `rotate_credential`).
+pub(crate) fn valid_credential(agent_id: &str, cred: &str) -> bool {
+    let prefix = format!("fork.{agent_id}.");
+    matches!(cred.strip_prefix(&prefix), Some(secret) if secret.len() == 43 && secret.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-' || c == b'_'))
+}
+
 pub fn parse_bundle(text: &str, allow_insecure_loopback: bool) -> Result<(ChannelConfigParts, bool), ConfigError> {
     let raw = general_purpose::URL_SAFE_NO_PAD.decode(text.trim().as_bytes()).map_err(|_| ConfigError::BadBundle)?;
     let b: Bundle = serde_json::from_slice(&raw).map_err(|_| ConfigError::BadBundle)?;
@@ -105,10 +111,8 @@ pub fn parse_bundle(text: &str, allow_insecure_loopback: bool) -> Result<(Channe
         return Err(ConfigError::Invalid("ids"));
     }
     let insecure = check_transport(&b.server_url, allow_insecure_loopback)?;
-    let prefix = format!("fork.{}.", b.agent_id);
-    match b.credential.strip_prefix(&prefix) {
-        Some(secret) if secret.len() == 43 && secret.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'-' || c == b'_') => {}
-        _ => return Err(ConfigError::Invalid("credential")),
+    if !valid_credential(&b.agent_id, &b.credential) {
+        return Err(ConfigError::Invalid("credential"));
     }
     let key_bytes = general_purpose::STANDARD.decode(b.task_key_b64.as_bytes()).map_err(|_| ConfigError::Invalid("task_key"))?;
     let task_key: [u8; 32] = key_bytes.try_into().map_err(|_| ConfigError::Invalid("task_key"))?;

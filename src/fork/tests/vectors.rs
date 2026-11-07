@@ -23,7 +23,7 @@ fn every_vector_gets_exactly_the_expected_decision() {
     for c in &v.cases {
         let got = run(&v, c);
         match (c.expect.as_str(), &got) {
-            ("ok", Decision::Accept(a)) => assert_eq!(a.payload, br#"{"echo":"hi"}"#, "{}", c.name),
+            ("ok", Decision::Accept(a)) => assert_eq!(a.payload, c.payload_plain.as_deref().unwrap_or(r#"{"echo":"hi"}"#).as_bytes(), "{}", c.name),
             ("duplicate", Decision::Duplicate(_)) => {}
             (code, Decision::Reject(r)) => assert_eq!(r.code(), code, "{}", c.name),
             (e, g) => panic!("{}: expected {e}, got {g:?}", c.name),

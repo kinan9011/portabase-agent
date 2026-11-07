@@ -2,6 +2,7 @@
 use super::capabilities;
 use super::config::ChannelConfig;
 use super::crypto::Pin;
+use super::maint;
 use super::state::{self, Outcome, State};
 use super::tasks;
 use super::transport::{CallError, Leased, Transport};
@@ -14,7 +15,11 @@ use tracing::{error, info, warn};
 pub struct Runtime {
     pub agent_id: String,
     pub enroll_id: String,
+    /// Effective pins (bundle − revoked + runtime-added, see `maint::effective_pins`).
     pub pins: Vec<Pin>,
+    /// Pins and credential exactly as the bundle file states them; effective values are derived from these + the persisted state.
+    pub bundle_pins: Vec<Pin>,
+    pub bundle_credential: String,
     pub task_key: [u8; 32],
     pub capabilities: Vec<String>,
     pub state: State,
@@ -42,14 +47,44 @@ fn now_secs() -> i64 {
 impl Runtime {
     pub fn from_config(cfg: ChannelConfig) -> Result<Self, String> {
         let state = state::load(&cfg.state_path, &cfg.enroll_id).map_err(|e| e.to_string())?;
-        let transport = Transport::new(&cfg.server_url, &cfg.agent_id, &cfg.credential, cfg.insecure_lab).map_err(|_| "cannot build the http client".to_string())?;
-        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins: cfg.pins, task_key: cfg.task_key, capabilities: capabilities::reported(), state, state_path: cfg.state_path, transport })
+        let pins = maint::effective_pins(&cfg.pins, &state).map_err(|e| e.to_string())?;
+        let transport = Transport::new(&cfg.server_url, &cfg.agent_id, maint::effective_credential(&cfg.credential, &state), cfg.insecure_lab).map_err(|_| "cannot build the http client".to_string())?;
+        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(), state, state_path: cfg.state_path, transport })
     }
 
     async fn report(&self, leased: &Leased, o: &Outcome) {
         if let Err(e) = self.transport.result(&leased.task_id, &leased.lease_id, o).await {
             warn!("Fork channel: could not report the result of task {} ({e:?}); the dashboard will offer it again", leased.task_id);
         }
+    }
+
+    /// Maintenance task (pin_add / pin_revoke / rotate_credential): compute the new state, SAVE it, and only then swap pins / credential in memory (DD6).
+    /// A save failure leaves memory and transport untouched and reports `failed:state_unavailable`; a rule violation reports `failed:<code>`.
+    pub(crate) fn apply_maint(&mut self, task_id: &str, signing_kid: &str, ty: &str, payload: &[u8]) -> Outcome {
+        let failed = |code: &str| Outcome { status: "failed".into(), reason: Some(code.into()), result: None };
+        let outcome = match maint::apply(&self.state, &self.bundle_pins, &self.bundle_credential, &self.agent_id, signing_kid, ty, payload) {
+            Ok((mut ns, result)) => {
+                let ok = Outcome { status: "succeeded".into(), reason: None, result: Some(result) };
+                ns.set_outcome(task_id, ok.clone());
+                if state::save(&self.state_path, &ns).is_ok() {
+                    match maint::effective_pins(&self.bundle_pins, &ns) {
+                        Ok(p) => self.pins = p,
+                        Err(e) => error!("Fork channel: pinned key set invalid after {ty} ({e}); it will refuse to start at the next restart"),
+                    }
+                    if let Some(c) = &ns.credential {
+                        let _ = self.transport.set_credential(&c.0);
+                    }
+                    self.state = ns;
+                    return ok;
+                }
+                error!("Fork channel: cannot persist the effect of {ty}; nothing was applied");
+                failed("state_unavailable")
+            }
+            Err(code) => failed(code),
+        };
+        self.state.set_outcome(task_id, outcome.clone());
+        let _ = state::save(&self.state_path, &self.state);
+        outcome
     }
 
     /// Verify → (accept → persist → execute → persist → report) | (reject → report). Never executes anything that did not pass every check.
@@ -80,14 +115,20 @@ impl Runtime {
                     return Handled::Rejected(Reject::StateUnavailable.code());
                 }
                 let _ = self.transport.heartbeat(&leased.task_id, &leased.lease_id).await;
-                let outcome = match tasks::execute(&v.envelope.task_type, &v.payload) {
-                    Ok(result) => Outcome { status: "succeeded".into(), reason: None, result: Some(result) },
-                    Err(code) => Outcome { status: "failed".into(), reason: Some(code.into()), result: None },
+                let ty = v.envelope.task_type.as_str();
+                let outcome = if maint::is_maint(ty) {
+                    self.apply_maint(&v.envelope.task_id, &v.envelope.kid, ty, &v.payload)
+                } else {
+                    let outcome = match tasks::execute(ty, &v.payload) {
+                        Ok(result) => Outcome { status: "succeeded".into(), reason: None, result: Some(result) },
+                        Err(code) => Outcome { status: "failed".into(), reason: Some(code.into()), result: None },
+                    };
+                    self.state.set_outcome(&v.envelope.task_id, outcome.clone());
+                    if state::save(&self.state_path, &self.state).is_err() {
+                        warn!("Fork channel: cannot persist the outcome of task {}", leased.task_id);
+                    }
+                    outcome
                 };
-                self.state.set_outcome(&v.envelope.task_id, outcome.clone());
-                if state::save(&self.state_path, &self.state).is_err() {
-                    warn!("Fork channel: cannot persist the outcome of task {}", leased.task_id);
-                }
                 self.report(leased, &outcome).await;
                 info!("Fork channel: task {} ({}) {}", leased.task_id, v.envelope.task_type, outcome.status);
                 Handled::Executed(outcome.status)
@@ -129,6 +170,7 @@ pub async fn run(cfg: ChannelConfig) {
             return;
         }
     };
+    info!("Fork channel: pinned dashboard keys (kid): {}", rt.pins.iter().map(|p| p.kid.as_str()).collect::<Vec<_>>().join(", "));
     super::set_active(Arc::new(super::Active { client: rt.transport.clone(), capabilities: rt.capabilities.clone() }));
     loop {
         let wait = rt.poll_once(poll, now_secs()).await;

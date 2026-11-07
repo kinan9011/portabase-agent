@@ -2,6 +2,7 @@
 //! mock dashboard (wiremock). `vectors.json` is generated and signed by the dashboard's own code (TS) — the agent verifies those exact bytes.
 mod channel;
 mod config_tests;
+mod maint_tests;
 mod vectors;
 
 use super::crypto::Pin;
@@ -21,6 +22,7 @@ pub struct VCase {
     pub expect: String,
     pub last_seq: Option<u64>,
     pub known: Option<Vec<String>>,
+    pub payload_plain: Option<String>,
 }
 #[derive(Deserialize, Clone)]
 pub struct Vectors {
@@ -29,6 +31,7 @@ pub struct Vectors {
     pub enroll_id: String,
     pub own_capabilities: Vec<String>,
     pub pins: Vec<VPin>,
+    pub spare_pins: Vec<VPin>,
     pub task_key_b64: String,
     pub cases: Vec<VCase>,
 }

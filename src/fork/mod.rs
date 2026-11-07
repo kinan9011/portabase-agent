@@ -9,6 +9,7 @@ pub mod config;
 pub mod crypto;
 pub mod envelope;
 pub mod hash;
+pub mod maint;
 pub mod poll;
 pub mod state;
 pub mod tasks;
@@ -37,11 +38,7 @@ pub async fn start() {
     match config::load(&env) {
         Ok(config::Startup::Disabled(why)) => tracing::info!("Fork task channel disabled ({why})"),
         Ok(config::Startup::Active(cfg)) => {
-            tracing::info!(
-                "Fork task channel enabled for agent {} (pinned key fingerprint {})",
-                cfg.agent_id,
-                cfg.pin_fingerprint
-            );
+            tracing::info!("Fork task channel enabled for agent {} (bundle pin fingerprint {})", cfg.agent_id, cfg.pin_fingerprint);
             if cfg.insecure_lab {
                 tracing::warn!("Fork task channel: INSECURE http transport allowed for a loopback lab host (FORK_ALLOW_INSECURE_LOOPBACK). Never use this outside the fork lab.");
             }

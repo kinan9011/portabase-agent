@@ -66,6 +66,8 @@ globset = "0.4"
 walkdir = "2.5"
 # FORK(stack-recovery): A02 optional RSA verification for the fork task channel (already in Cargo.lock through rustls; only compiled with the fork-stacks feature)
 aws-lc-rs = { version = "1.18", optional = true }
+# FORK(stack-recovery): A02 YAML event parser for the agent-side raw compose read-scope check (ADR-015 D-3); only compiled with fork-stacks
+yaml-rust2 = { version = "0.13", optional = true, default-features = false }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
@@ -73,7 +75,7 @@ libc = "0.2"
 # FORK(stack-recovery): A02 fork-only code lives in src/fork/ behind this feature; the stock build is unchanged
 [features]
 default = []
-fork-stacks = ["dep:aws-lc-rs"]
+fork-stacks = ["dep:aws-lc-rs", "dep:yaml-rust2"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

@@ -8,15 +8,16 @@
     "noop.v1",
     "plaintext-hash.v1",
     "channel-maint.v1",
-    "restore.target.v1"
+    "restore.target.v1",
+    "compose.render.v1"
   ],
   "pins": [
     {
-      "kid": "2e94a90e5272",
-      "pem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAk0OKBqbs4dDkapqm2uV+\nPVsB5LT5/9IP3u7PiDMpRHAwGGRcwBthbAZypm1kcW5MKHzOFsmwE6NcdR23rc0x\n88ONS9g4v7mmDXBDuTSJePL7XvRkxqZr+q7wA9iNtv/fMMrhzUqSK8OCdZ4Nm091\nkERiOw6aSzpbTZHdWeRDDEI178EyV2fFCpItK/fdayaVGjpI5YkJzLpJBv+QVeBi\nlFQfYfocKWfOlSbqKrYHnLTlm6iocMPBH/Ka0J0pjIlpJwFFV6UqkxfnlTMMGwTB\ncCN007e9wRdSQae5uaLZSX1toHpnBGIi0AEF7nf7RSSKNYPKRTjo1LTthcTzhBQA\nWQIDAQAB\n-----END PUBLIC KEY-----\n"
+      "kid": "cccbfee94b73",
+      "pem": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnqr/MXHE2cD9ZzSYeHqt\ngLa1Tjx+8W0BHtcD9Jy/T+mP9O4/E8cs0dq8tN7jzMxudX8SxGoRuoL517xKy/np\nxKm4X4Fmw/ADLxy+kaht3U5lNr0xK6WEuzdR5jYAtATe2iDesbeqFkyTTNGb68nG\n5DkLJnn9Z854hX+27wPAwbGaJBDoaj+QstFX2zdhRdmGURq+Nvk8HfZRiDc5164J\nO0DIgcVrtypPsYidJZM+Fa8u/2kHDuLJpQA0toN3jTCFqKhEXMk79wJ9gfrJonKq\nomaJbf7jeIj4i/MZvWdfvIFFT7OiPVcGdhTK49OQl4sqaVuOmKKTcuP0gQXDXeQx\npQIDAQAB\n-----END PUBLIC KEY-----\n"
     }
   ],
-  "task_key_b64": "eo+J8bnyEgMmuTsMpFPMknsLleJzmIms0Sn9GWtreO0=",
+  "task_key_b64": "nA33uaaTMg5X4zMLn2qIKNfMMTy1AxSSCORCkZxP89M=",
   "ids": {
     "stack_id": "44444444-4444-4444-8444-444444444444",
     "rp_id": "55555555-5555-4555-8555-555555555555",
@@ -44,7 +45,20 @@
     "disk_full",
     "docker_unavailable",
     "deadline_exceeded",
-    "restore_failed"
+    "restore_failed",
+    "compose_unavailable",
+    "override_invalid",
+    "raw_refused",
+    "render_failed",
+    "render_too_large",
+    "policy_refused",
+    "approval_invalid",
+    "container_conflict",
+    "protected_container",
+    "network_exists",
+    "volume_not_in_compose",
+    "db_restore_failed",
+    "compose_failed"
   ],
   "types": {
     "restore_probe": [
@@ -58,100 +72,163 @@
     ],
     "restore_cleanup": [
       "restore.target.v1"
+    ],
+    "compose_render": [
+      "restore.target.v1",
+      "compose.render.v1"
+    ],
+    "restore_db": [
+      "restore.target.v1",
+      "compose.render.v1"
+    ],
+    "compose_up": [
+      "restore.target.v1",
+      "compose.render.v1"
     ]
   },
   "targeted": [
     "restore_probe",
     "restore_stage",
     "restore_apply",
-    "restore_cleanup"
+    "restore_cleanup",
+    "compose_render",
+    "restore_db",
+    "compose_up"
   ],
   "cases": [
     {
       "name": "restore_probe_targeted_ok",
       "expect": "ok",
-      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"2e94a90e5272\",\"nonce\":\"XcCeAuDbxizMh9wrFyrnLA\",\"not_after\":1794053400,\"payload_sha256\":\"afbf9d0f3560b0fd7795e81c42a0a79ee6b6fc67e064f77826aee642cad28d91\",\"requires\":[\"restore.target.v1\"],\"seq\":100,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000100\",\"type\":\"restore_probe\",\"v\":1}",
-      "signature": "NiQj5X0Xah5X94ZYIdZ8mkW2KWUDVCrw7EAua7twLMyhBi7eWfeH8lWkPacc7EY5PqLPWkrcdMFiJaWn5cn5fEcpPJJ+X0vYY5obrGXnlEBQfT5gvPDddS7PhWr5YFdeTtoFhOOnBXCKT1i4ozrM1Vey7XFPHgt1Hd/4sNZGBZtCgYGlR6IP12vAnegYi3BLoPdKuMPSTB49xo3FavxMccCQu43/qElu/SkELQj2N+k6UR7VrvscFFgypnKwyPRdIt7AwgfB3DxXPnwA/e09nyZlntvUYdvDYdDEVftOepBVQmImejmUWTis9B998CwW/+HcvCBBhq2t+CAc+aHECw==",
-      "payload_enc": "OVf1ocVv4J7gt/aLR1WLU/a4lOe1BU+gdVKlMLiYmVaBdaY=",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"e7YENbO_rbXycuaDpCVRxQ\",\"not_after\":1794053400,\"payload_sha256\":\"afbf9d0f3560b0fd7795e81c42a0a79ee6b6fc67e064f77826aee642cad28d91\",\"requires\":[\"restore.target.v1\"],\"seq\":100,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000100\",\"type\":\"restore_probe\",\"v\":1}",
+      "signature": "e8yCKq5KIOgAhfbnNhOYIJDVIDrJtDe2aOMwJvG95dVyl5XRJ3cggnuG9xEcQ9pjunwosebBaZ5Uo/4e5HC2clbcEuHTicN4pUcYrltZt3hFs6J5eQQY/wr3h2pNkcwTgjfIoHgmPJtuAafPwg7rOS4y3YvQnLf3m7mVsHhxPouNYqqGmnBQo2QPYGJA36Nx7+Qr1lRy+Hd9de13DlQCQSLrRHR4XUFp9c0tIiVzpelC0UDCgtZ9Mb1ZH61tspvvkjcMZW7Foj9TQ88x4k/NlIMDR3v6UFymYrbTKCi1F46h3Cq8EESFuAhwAJPF5pEjfrE11HVLMNxXj0b64d5hoQ==",
+      "payload_enc": "jfVEMpkcBTD+BaCEXgAI1dTiSQTXQ7abCuehXFKsD20a53k=",
       "payload_plain": "{\"v\":1}"
     },
     {
       "name": "restore_stage_targeted_ok",
       "expect": "ok",
-      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"2e94a90e5272\",\"nonce\":\"1z4LerXrOIe4vpWl2ZIm8A\",\"not_after\":1794053400,\"payload_sha256\":\"a0dc7a16138704d0fda8948866872df74bbd4983d893bce04faecc12c7ccfac1\",\"requires\":[\"restore.target.v1\"],\"seq\":101,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000101\",\"type\":\"restore_stage\",\"v\":1}",
-      "signature": "e24jgNXYlGL62Nu4IbloNv87h723jYi/ZYTatqp/vy+0p+Liq1FJrwK30kqChDNwe/sVcVcHpi0UIMsAeXvGn3lw1tkmoMog78gCpNAbJfDWjkpnKw+0j1IJ97gQAoVURhM30dCcpLOD8n1M9eMM1JuDCyoMTGaIiVj3c5Q3m7kwh/VYxw9rQ07o/dG/VOwhQ87/cjJHgA5jq08wAorTiInIaji8CDMYbEDsxsKozYMSJwF6ppoUssTJmjE1OSHGeKwpmmotCbocEdd13+T02BshoLOotClxD69G4VYOIva8eM2/OjBqx0hBiuz6NSiwdd3iKi7w+QsEFXbAlRAqQg==",
-      "payload_enc": "ShU9JSD3H6ro3WBD7UjGzryJc9EJAlmk740C9mrOq/XrruSraR8frkvHBK7gcSffuX8LONsdJKFdUC2de3JS/JDUkCCZjIqMhxmKmZli3I8yaTjrjQrGFs+HzIuOimYBL8I6t6Ux3CxMCW4haxz9LOkkU7l3N6hvltskvaldwR2ZJg5nYFWnVo2mM8DBFusG5hL9Ly5gLyHjFcurfVYZlj/oQIxe7Yu5hia8xZ1PmOEWNtZMJPHqWCYDE1ktJUQrtgeb/XCj7sTTYC3sQru3cejZgLqL2tpkBTqyK1yOIePKfL6JuP7KF46CAhHkRMHfuiRT4n9PK1doLl9lY5y87pSGcnBHctCAIjeYvOR78OenzvkdtFH/F6e09N3avNqeOgjq7A+ef592a5raV7txuulUpJeMoT5FO9SNvrz4L7BlA0aLi12cCf011KhJyuVRf7A+Yc61tMZWT1T/NOYH/JdAGeOF2/cVAW89xNFK9sebGAO9iJVL+Q1WVEQrrTxF/Mkj/ON+IxOuvxo2dNdC6qb8M1OZT5abDOYh6Yre8Tllc9wSxugYPBk9f6x7Bp+5V6ZCdOLuz+1ulMlnDzEQ5MnO9rFc6ppkWjsGnHISHE12XehD5Tq3sTIx+EDvu3BgCnB1BxF5iHorRTsbTIN5RK9NAoLDcfOXCtt2WFn3o4HNE/H+EJ8u7TkIqsUByOLsXR1KYnYu8tnRAA1SzZ4bAgJvWZdrKAyyDJ7h6vaXZrEwkiK+l7uQLOelqRsulESca6BknPPN08k1/s8X+kMrPyvyJ3Z4Rdsf4jSn5ZsfD6GQiPSLryizGu0Hd2nFt80AZEMHSlYnD864vZl4WNaFQYPkKarkRBuaK29kx6jHJegFz10OE96hFD9FIAZ8pU09A0Qn9zw2LNX79vxGmmdGaB69+7BnTCbtK0Fwy1GER2Xm1GgA4dU9MVIkiUM=",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"US0Eyne7Hj9cDC1dK3W_mA\",\"not_after\":1794053400,\"payload_sha256\":\"a0dc7a16138704d0fda8948866872df74bbd4983d893bce04faecc12c7ccfac1\",\"requires\":[\"restore.target.v1\"],\"seq\":101,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000101\",\"type\":\"restore_stage\",\"v\":1}",
+      "signature": "cTZtMVyyv0J498b9o6F5i1be83ApWCQXZj4KunzdZBQAwT6cQ5nPpx9nzQf/cJLH0FHubT5hpXoYomnoCRYvGjI2YUqImzIlYZcRPAbdC1WYVkZUAb/a6HoWglkcH6ql2uEg6/JJB9owzBEfL8PpsErcpMB/sv6lurnw2tovVN8w3zmacLaAUJgavl9woiQFVm+K1vEEHMJqYrPNzAyRd3KtePQz5MfRoEyiVcHM3tDvYwc2uNU7wVgzX1CHfibW4vQqb/SYSvFGE6BT0kj7UasUP41B8RFlbTFyQ/j7n8Nu+DO6r48E7PflcajqKcMeBTxgPmbRgp0YO9SKV6MNYA==",
+      "payload_enc": "uwTpO7aWQ8NF3hE+AaUjOwX4uVurKbhf9+QTCODY/7LBvmBtrxD2rXHVSp3jcoOFTVbQr6K8ovytTKa3ZDCjXuy+pW/yZlEOzGKpWnvQ561z/PI0mrmXgQKr1g5vjC/SdwRlVAGkTNHUK0T4fUbI7ZGVkzhrSSZBPTe/I+2NQoDXKz1hzSBYIu2KTKwtcSZuGmxBqXnhwGyeOjLCUXHhH/sVlRXv9vwHbMcVB579zed5V2evey9du/IEiWhjdQtRnsv0E6mcLxBOKlVR7I2coWs8gN88RoUoWxK2RbzxggEps5Q2IIi2ZvCpgO6fye8lKKBuBEFFV2Cz/GOwSTNdAMMfrSIocHVhHVFYyiocdaT2ns1mSRBI3Fkt53rdVIAY/MCFDRhlIH8vUh1TImSHp+x272H/fDBBnMuFROWuOYC4RLNGxXdqy7iIgvnuCPiFAh1k7yE0DBk+EhW3XUea6xp2v12ByHLIcfo6cKHzqrhIomJHe/a6eVpPyqCaIcJHqZeVsaLYzrYNos1FuyaYdkcF1LOnJydt8T/vIpQRjXxXscNVphG4N6DOsTNXGyAy6Zb+8wtRg4xkgHy3SVJgZ9KWrZVoZWwlwlKXw/f2vM24QHa0jWxUctMMh301dhpbTnRBSKJLdLPePmdLODktuFI3nriJSkq2tssTc0EjRMtZERDQK9S5s9vJn3WGvdobo4Gaofsf6cRrGuvn8gB3hEz0fmPyuF2s5H84U4BFoVUewaWqkDMCN2SPRbBZ6RBOrvbROF3owScLUP37kbUkNvXQZvha6aOk6yDc4ux58CbmVqTNSjKSqLCQsnsrsNmk74Zn/L3xz1a49xdgOBSgo1n5Q6+s8akdOamkWslhjagCYlns4h81fgub16hk5iBlRsarU53FOuE1Xf98qFhMvFar8rWAElnNh08KhPh7G3FMOZUCPffal6lubaY=",
       "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest\":{\"json_b64\":\"e30=\",\"sig_b64\":\"AAAA\",\"sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"artifacts\":[{\"index\":0,\"source\":\"archive\",\"url\":\"https://minio.example.test/b/o?X-Amz-Signature=x\"}],\"paths\":[{\"index\":0,\"dest\":\"/srv/restore/app/files/app\"}]}"
     },
     {
       "name": "restore_apply_targeted_ok",
       "expect": "ok",
-      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"2e94a90e5272\",\"nonce\":\"NEkbkQk7YB1g7rqj2RdcJg\",\"not_after\":1794053400,\"payload_sha256\":\"88e7d9b564545bf8b8ee69674f0bfe12a9d7c991cb13a683b75fb3fffc159e6b\",\"requires\":[\"restore.target.v1\"],\"seq\":102,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000102\",\"type\":\"restore_apply\",\"v\":1}",
-      "signature": "hBRn/6DBy1KlMzsUPAhYaOkJT/Xy2cSDSMAG8y4Qvjr0p+tOTB4nGq+RM9sot0Eau9OZ+yn1lslLSDa3CsOwQnNPnyIZ9C1LPsfbPR1m7Ib5isx12SDVXKweB2AOkd+clHY2sL4+xOgluwzHM0XMOrAUuK1xXCjNRMT7896ym4k9l9Ebd3zMS4zwDxRHeNS3sZEikkVrjF64G+sddxu9i9PeUCglZPnLm+QtTym01mNHgHbn9WdtH4vZlDaDRql4T5ITn+chvzzH8bEpVlC5xgjPwINX5tqVSpIei/3w1IIvr5nJyR4sQkgfqCdqiShw+ArOhI0XecLlHrI5SiAM1g==",
-      "payload_enc": "NRRxAxL5Cv2xEyFgBgwJyfTuhxqA34XRGNwnrKc5WB6ysbauM9LwLUXvdXPMhf6GnILvl/W13d02/tD96us0rJFJPqBAFmoJn/4w1xnt1auUlq9UNtOBzaPeDWnRq9T3Y+JwSDIQECZcSinwgNXJ2A65k0KmWls/+vx7DCM+ve2KmOL05hjnGkFK9EZ5Ixe6fzx3+7MEfpGqayUH6bmJ4VhrkRA7/+13L/1fHnsAWhdLj2JNvniZyQw6grpTyvB3/fyNG9mhW5XaDO/eDynuxZUxu6eT5g4HU4r6Sot/hTC5KM8SeOrye7NXZv4Rwyaf0kKgRZ7+byQVR5sPuUGL9AYMxIO4jnYqlKFecZhijmDFoxQ1ofPO91hL+2WjFuWeVBhoJ1IX8+Kqj7v+/MtN9t3TQHXU1TpUfwYwzb8d1scmtBi2Ihdoh6PNk/J1Y5pCW51Igy8hzxITpzacgruk8WVbJkmfWxUAGPGyM9iTeeqH8cnfbjkH3urTxWicmjQzvazJc0mcJNjOBah9I/T8nrGYdcT2Wr/6410Ny3wonObBkuD8xPde8TXQvTvAPPqiUSUSXTWQaBPUj7u6jWhKCYmJX9HiG5eJAMf9fvsbmIkSH5Knur46LH3ObVPUcYJ9BXQyk9jDmUuj3JBAospPwmPNxw99a08V2jpz5znh74gzOQABg3HK5x6UDftEuginwhRbZEThhNC6/YetpAgDoYO6YDRNVVioTH2IAB9ABQemZqF6ewcEG50spyWoEqWrjMWuZqv/OB+F04ZqaaUfN3yDdYPcEZL1V8jyFrwqaKtMv0j7gMQ0FQ1IrflDB1ja+6sWv/np3PzzFxWu4cbeVpsXw2zs3XY0nA==",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"wMxrLhVUL49TMv0FAL6Q7g\",\"not_after\":1794053400,\"payload_sha256\":\"88e7d9b564545bf8b8ee69674f0bfe12a9d7c991cb13a683b75fb3fffc159e6b\",\"requires\":[\"restore.target.v1\"],\"seq\":102,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000102\",\"type\":\"restore_apply\",\"v\":1}",
+      "signature": "cr10C2tEDKKJOXEOhBf/bGfXLcEeS1rW2Aw3vxFpSvXMbQ0c57PsAadZmmy89eVtEFFmohq8aZV3thlypt9BLkgy97JhMmQGCs79oxkLZcffNbg0RYflhwfXQYPClztS01ULcC30KTa7U3HWC0DmHsyMtdzdIPy+qL9grGYDyZiAAGQX//HPXDxxJSc6SACWwaNqxs7TG27Mu2YirGlaTGq75q+Ou5aMQFwDdXpirb8bwX9QvoU36E1COs7gXx6+73zCZpmVEtVX4VRK6wbp/75B9vx5kDjQR1ReTGy0CqmoaAxrLn0lmJ210fxLj1pjSkl20P7vgrTPvOQngef4OQ==",
+      "payload_enc": "W2TugusWLt33hX0tVBUnjSyiPZdixXkekIHXL8xVDQ+Dxy+QAgnkGdXZwI09M8QPBsCUlkL9E4fZ075VLKlhy10pTN/xA+hdY6NdRBQC8yEZ+p+dgtZBscRo6GrS6MF8V6I8LUFNSz8UvVajEyMu61bUPni0QyWtabNbVTnR5H4wSkFkQa5BluklqSv6wRFbTOA2Eyp07pPXnzXWCdgW8+nPTECZxq6f9XcbtKMeMdiDJneixjhCsaZJPR4SLnSDDNe1fN//HM0xe1K+b7o2T40DeCE43uXJTh9fG3Mdt8TARtEywhjQv1o7UWoGNoloWPvVVTruLTruEn0AY+PXOZSgsFVu1Q7MVCIJl3FwXON3OJJe3D+GnC1uzna4cdIV4qVOZ7IIQcbneLHSIAVO8m7lc+O3ee6QyXCc3+14qTpEDhkNSYQjTs1sxlM4+Om3gOB5tHEdJXhImokIlkl//lWQx5oS4kV3tPRiCz98FxzMApIiQhLCjvZ+q3yVp9APrr+zdfc55fbGC8/WDlIiFqx6yRnjUlPTbHgdVhOpDYNCDzTPsWCE23QwSiRuXrR0gxGUW3zmR4ojGCUEwvhuaB8gWHEvvLL1XPAEFhMS2jpcsqdc/xdksXTfFelTjTth0ZbD7xgx32CjXGPJ3yELdPAQqz1w186ioJPjOlkw115sv341r3/mE0Z62VLENkRrQ8JvPU9HkwFLWGxHzc9qRmm3WbGEffIj989lxM7olBt1KJuG44AfbaRN8kNH2KYDb1+eHGEKNxMuqinX7S7vxlE/LawMeESUdQL8ClDfEdwElHrU2y3nIw/CkOr01ctZNwsE1vKJPjbOFN37BI5gQylUFxvMRJCc8w==",
       "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"volumes\":[{\"index\":1,\"name\":\"app_appdata\",\"compose_volume\":\"appdata\"}],\"sqlite\":[],\"networks\":[{\"name\":\"app_default\"}],\"unpack\":[]}"
     },
     {
       "name": "restore_cleanup_targeted_ok",
       "expect": "ok",
-      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"2e94a90e5272\",\"nonce\":\"9Tlx6PrT3VHYXEXxHmdLcQ\",\"not_after\":1794053400,\"payload_sha256\":\"5cd44cef4e6b5fce967c6ad9e9ec51d29f3138f78cbee15b327b0979390633c9\",\"requires\":[\"restore.target.v1\"],\"seq\":103,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000103\",\"type\":\"restore_cleanup\",\"v\":1}",
-      "signature": "cN+dUTPmnTjxPeleP5If4dpg+dpv9obEvbAvHlH4HdscnESsATCnRXo1uNDYP1pR+GLx5XRos/+QyHKHh61l1cU7Po3P9yizHiwMowqk910Npky/pkmYFlBurGwb3dU5OmHmb24xxR9631l2OEIyLnUFXwG6Q7STeSfnK1z9KgNSSSsDFK0kJS5OT/6RVRmtAE4TXbCrExiffBD6fkN1xDaQAlv72AxfdzsKGpiSbkfEFAS2Ml4vd+b3jkdb/URp0ZhSWBn8AUTn1UQbTbpmWBbMEZ5EezC66NUvGZOgo+VTIEat9HKv2zRWAW0N5OgHoWVSRGDoM4YOsV277YXuWQ==",
-      "payload_enc": "a+V/l1TVKa8cJOOSv7uIFDMAwKt7yne9V4nWHC4pvc0dnr14XRcXo7ZIAdcckq1fuKEgKXe1rYsO6lcZGH+UDJozISLKX1y3vGoBoDcoZWdyW5S0snOBwglwxOzSGIceHFNsE6yvGo3fsxIjj7/qhWflzwUxuKmZuSpIL+CJG4ijCwNmYDaPPo112Ewl+9MeJqApX3LSjyfG0es1ZWSmp6qB0Z2RYHWU+SJcY8ku1slAXCCI0IkgrLN1fR1wvi1TxL0k1ffderiD/pgyUH+3wFLexrcA98mOpvvKwMQ7H9iXhOGRZ0exvJbrVdH6fULACczW4xLksngZCbx6lQ74sMArX9JDEHNXcBSdi3Vrw0t3TIQOeys1HTgEBa1L5I5KK+p4rhqF854ysncUDX8SIoJZal+gBDKPLb1YIPfvmxzQ4BfgK/545AcEHD56VeaG5y+xZH0BSENBBkaFLiKG929u1NVud1zg1UCdx8+xhr4tgRrIMQkqIX4mCM+EArROpMxoxRlNrD+W6RWzbWKVmm8BB24LU95MDMc+2phlPXJrmYiPoItYiBUVtZOYuexMnlpfb5fCDT7SQc35d1Z9/p5xVGDZcT1SVnoz/Et6gIBaHQudkAIu71RcyQgrRkjM16De3V0N64tdQ5rhzjooIBqZhFmkrUBEv8M=",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"oqjmanN7Q59AX_1SezIymg\",\"not_after\":1794053400,\"payload_sha256\":\"5cd44cef4e6b5fce967c6ad9e9ec51d29f3138f78cbee15b327b0979390633c9\",\"requires\":[\"restore.target.v1\"],\"seq\":103,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000103\",\"type\":\"restore_cleanup\",\"v\":1}",
+      "signature": "JhB29hJRQt2Dowf3zD85wn8j1LGFSNjyfqQwxyVWtdUAvgTHkrdxVskNY1K5PZpqVQVeb8aodPT9WGAYJWBlBjo/Vt2CbocJWLh35OiFI4mkpzsZzCa5MRISJ4krez3J13mILExC/oXQtWpVkwvmWNi+K5jh6QrwdNRXu1OL2Z8tFJ9/oobDGl6MXH2xdpaQuBy0KXDE0tzF83dt7rh13MOKiDGMhJOivuFnz7WOCr0aOZdf10RfseVninqRG1zOUSME3mIrIlePflLHQ2+t6z2P1nVTP4tsPYBC4uWIvldQA4v+9qwWBnW8GEeqgcm/VVphqNdX9goTGiFviRaQxg==",
+      "payload_enc": "ytOFaWXJBn83dj/AI1inBrUlMOcaAsH+/Ug94vswY5mOTY1uvReXstelPgBQjwPsexgXN+8pcYk6meXOudlz4cCU7vd3SaR5FoQTheSettR8PW2XyPyH0LHP8VjMQr8+rXO5cGtfgZgx7j5V9wQoZAowRAEna2lZq1+TDkgLcqCSfSD6hxN5ZKwyTvPV53l8tiKjHRQ2HQCr9FdEVhQQWeXeLMTs3EfmadaYzZWXio9yQWQ09yAzrrF2Rtk+InH/k4MZIvA7U/ozsfr0f+WiKMUpelINYpX6EwjVR9rRTHhcmcy6jeuOMw06pwEuVz25HXpjDnob8JbtmBJDSnuN6k63XU1wN+7829YnkaZ6pgq+zBJN6WxITqKDgUS1YOPN2doo0TQmv+d4W37aa0FZOgVj8hodvko1r8p0SrwFeQy9isAXbAGApeb9hecShbn0PKD9zmWkmfQ+IiF/RnPooXEm7TH562OEGCOqeVq3z6XHiANA1bQsomSb2woqvS44ew9WVvZGLz1IziGZ0yM6mHV/pmMqUaHP5JZC0VLyumbOZ4Y87fpDcdhj5hFDMRK9nxS0qQ3CbIooulxKW3UXgj2QrLfj1pDT992UJlLsOegxnH3gKEL5bLvS+ct9zB9E4NR8oVNuz2rzcVz12WwMtAYsyBxdJhtOfjE=",
       "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"workspace_remove\":true,\"volumes\":true,\"networks\":true,\"containers\":false}"
     },
     {
       "name": "restore_probe_without_target",
       "expect": "target_mismatch",
-      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"2e94a90e5272\",\"nonce\":\"0Jpvh06ph9vGp83AwfBDTA\",\"not_after\":1794053400,\"payload_sha256\":\"afbf9d0f3560b0fd7795e81c42a0a79ee6b6fc67e064f77826aee642cad28d91\",\"requires\":[\"restore.target.v1\"],\"seq\":104,\"task_id\":\"00000000-0000-4000-8000-000000000104\",\"type\":\"restore_probe\",\"v\":1}",
-      "signature": "ELWlSX3tXazFILdG8NZwFFcgFiZwuaH2S2vw0DxXU8n7z/p0JWR19/QuRPcGIuC8wb/Lx/ElLlylTLEKo+2W+kMnL7lJ8vGlaiVUMYp/htgVssqi6SILfZAXnXFrV2YRfKUxt4B7T5tAsJArmYpx1avdWR54xPNdk4URRCAKRFpMI4DzvEVMDzW51xMnzAuQheiUhmzFSuQHiM3VAOT+K9tXaRyr6N9tpFoi2dh+kXBz1eu1CQQwgoO7QQas1kArtH437G5CVmdazV31QNtECzu+pKjjsMjJwrwC5KA5W//z8n2HvXdoRkUT2874OVlcqq7ehf7NbuyWXJhDxnW4KQ==",
-      "payload_enc": "XB/B7tEPspXUkcfGv5jIGztw2Hl8dij1OCtRSVdxWAGm3BA=",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"ji8FJzKAgyopuh83NlJq0Q\",\"not_after\":1794053400,\"payload_sha256\":\"afbf9d0f3560b0fd7795e81c42a0a79ee6b6fc67e064f77826aee642cad28d91\",\"requires\":[\"restore.target.v1\"],\"seq\":104,\"task_id\":\"00000000-0000-4000-8000-000000000104\",\"type\":\"restore_probe\",\"v\":1}",
+      "signature": "aa7ZzT5l38txH/wIoBXgbZF+x8q+y6Kz8IFqH3pp43IbsiikEwusVVB3WKjwmTRey1yPNcNFzqLOgWrbS3+DGGUL5TpsoP66WoNiY+bwISxrJMO8yadNzJb9iSR4xQoguxqHBAV8fctNIfv2JTEcRzYq5E4Allr04/tB5xYBq5Ws18Fa5UEdqOW+Pmxll4pkxxNsomDRFloHXmgz4+aZX/WqzQ3+nHRJ104cLTqiqqSTjXlMB9/IVrZT/Gzyl2ZbfJkJ2HxWZF5/J4/LIQECGQKnjPtWTCsb36A049GiyBuwfM1wYTNMnWIbHs8Wqd2H9GLM8L6X7llxZKOLxzRPKw==",
+      "payload_enc": "dCV6Nolrqtl3KVOnL4hT8tJ9SfsgYL9Y6Xo3pkx4z4qb1eM=",
       "payload_plain": "{\"v\":1}"
     },
     {
       "name": "restore_stage_without_target",
       "expect": "target_mismatch",
-      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"2e94a90e5272\",\"nonce\":\"gL0utPQwBHBIkVOlBUBJCg\",\"not_after\":1794053400,\"payload_sha256\":\"a0dc7a16138704d0fda8948866872df74bbd4983d893bce04faecc12c7ccfac1\",\"requires\":[\"restore.target.v1\"],\"seq\":105,\"task_id\":\"00000000-0000-4000-8000-000000000105\",\"type\":\"restore_stage\",\"v\":1}",
-      "signature": "aFxywcEqmZP11VZmK834bnPRNEwQ/THsQ1aI0tIkHYnT9630ucmjanJp0NzdGrf/OOFwrW6+F57zpoJvTYVcJkNW3NSgDEPvB9gB9JLH71adelIesguHJA1CkHsSOMqK05NFOnlglAa8b96TkwTFmXdzctVo+p3nP8vlDk782+nsiIsdBeMngeIx44ER+ouTiNfVlR86SHna7ir2ee+WNqv2DVYuSeW0cub/m1MwInMtMRvjy00wYPmi2oG+PwLZTMyUHgOaPD246/S8EjnfL4cyokAvF4vPZ/5fTlrP9MuUG2moLP6IInII1YUNm68o6BvrrwsQ8lkgbuBSqWQ0KQ==",
-      "payload_enc": "4Jau/cL/g+jtmHxRXWU+GJMICTyQz6r7F7EYKLiABLNM9h7jYx9Z0l3nUUOn7hlFtXopIyAJV5oKU0OFKBFMjnYiPqArvXg3ZmkEK6a5awetYX5Fg2+50jMbg4Jb/qNu6uZe7QS1wEGAg1DlW7l85gudQDmFt8X8JRacsBY9WL12fF6skfLWLKw6RLl9QghlfkZyUEMw6pX3Niwj24n9bbpJ7vN4NL989NDpKk15mBxdJlyHvGWhL9gyYTdVyN5oxcaxqDsrft4k6JdeymhlDFyKcsTweoLqcKH1tWjrw5xxG909m+GOrIbwXE686NQcm5IBjFgCZ8+wBh4yfkypatFICcylRrvl+eaoblZHnKuP39X124XKNwlkdkwGa+Wx9jqq+n/ZRY7gznpglVbRT9cjqc0y789qVngXqijPiBSYjJK3ykatNjx+CmjWHxd9K32DOIoBWwmuEVa1qIlAV2zAoS71kcIp15CdAgSIeaY7IZJP8hvdcRhUkTL5VwYfWG6+RaYP7fb93gbHGFNtaOQ0uqth3rgiyu1hVKgypnHAMUKt/wINPvvZV5+1pbmNHfPjYbllBL3G9K5o1FV+uhZN4CYImSA5hNpvYVmW2gKUrwvQo0sL48/DL+c4gz4gCU+7vV5uM2R77CDYvCoaY+cCfl8NViFIWWdok83rultzob994mh2CJE8TUNmxM3lamMp7EWqCUeBuflhuzeupS373Wy2LwAtYbJk1URpUwJLRjpiAEywUUBmqOr6wOfJPFg/OlftAX4ABa/J9y3YSf0ZVcWi275V1OyR/mTLGePEVoTkpk5n5oJ7sgaT475BOi6Uzgo4DsXZq3KOMInO5f1Wg5sDxS2mkUIP6f0zT/xoNKwwZKxKl9x47yIowi4bIzE6ITXXBS0wWS8NfE/vDSmoC96Kugtanlg9Nlx48r3bkwpmpX5ECSuUA5I=",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"Zx6xD0R3hbSbXabBVfC9Bw\",\"not_after\":1794053400,\"payload_sha256\":\"a0dc7a16138704d0fda8948866872df74bbd4983d893bce04faecc12c7ccfac1\",\"requires\":[\"restore.target.v1\"],\"seq\":105,\"task_id\":\"00000000-0000-4000-8000-000000000105\",\"type\":\"restore_stage\",\"v\":1}",
+      "signature": "b0Au5vuMmVTkVta/fm0semNfitWZjd+mTi5/BfHCju981UP9Th1s1uIdv2IwOQqufpc5OA4u4JBv2pY41eTeRIWCX/b5u69GLhnDxuBXKLh2tPHQZw3uoYWZK866cfiBur5KwU5+tp0IS15LHLom0okveCnpjzs3Cs3D0wIHYDMyw+C8E1sEIyXPXqZ38hjQ2oFDrtOdPPdSeaOg9yvcnK58gNuQIX1MyCT7BAvzcAFExPbW1cdDbFN9DGV9WRd9+OFsHqB4gJrjDuWUnYfg765WqUDqlcBDAKPimllZKd/7jsNW1pAvMP68LIumfkLoP9VQaW2OSQdH/i59DkfAoA==",
+      "payload_enc": "o1/3+RJFCRQu4aFRv4UMBcJC6CEcoYQAVfQZY0AFXAj/DtO8ptW+i+QP9nI2S4fqRa/uOFktR1LEDT62GcRzFxNHn7cXAvzrqWWxHvRaAVNyPTV2ZWUdiM0LtJkjU2z2LaKONEmIr46VAVAmYf0slMm75749Z/dGhM+vHENRxDpBUHuQWnYH+Q7rCoN1mfI9QjWaXPXLjgl1BAYrPCewyzHHW/vNtLRillKDisTo4cQSc3j7NV31+Kkd8cFrMc626aEjOsM6sti2SkfPdKoIM3S8uY1p/yThd/qlNwb+OQ9REdawggN1Jo8++MoePHm6AyZZcjzv4KVK6shBSPGwhoDk9vStk7K1XVEh7ufxhEyPf2FW/kX0xMw+z0DYv6xBTqLQ54HVkE7muBdv9/gfPAg4aOOqByTau6gP3gKo5X4SEsVc1SbeaJ4o4qvRxiZPw+5KmuDu/c5UQLL2XJnnYPhE69m85Z1+DsSOWFCAloul1XE+ln87mgc4Sj0sG9J7Xqe1KwNR+PQAp75kc2gSzEgq1/A2zyGbIaHv9y0DV/3cqEhRa17+3JhbBXDAFNfr0t6oVau4XSTlsjgAhUbeJcVBves301d67RRcYsYIt6WksyOKOB7CszHDzPU7aOpgraK5JmTyxP0qpjrC03SnLHfEScaufl7YweArr/49Up7UpVwwEBHrLEEZmG7csaLdvuliP+EcggMO8r088q4p+yEEAoEnSlIsAbzQjav39/WD54sidZ2sDMP08aXZfSA1Enfg9xOMoV3s8CwSUEu/6eUAaUo4gCgcEnBrN6osK+qPY/n79cDsbIxlqLzH7OcOOAdPWNy3bzwZQFwfU1LmSRuwcx8UNvgEj5JkplhS20ve2uJEd8A878H7kxXIODxONz5cWU9gxOqT73ln3fBgEWVb91DcD11BK7+Sq9/QfYiY1Jmzcv+fCO4TBI4=",
       "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest\":{\"json_b64\":\"e30=\",\"sig_b64\":\"AAAA\",\"sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"artifacts\":[{\"index\":0,\"source\":\"archive\",\"url\":\"https://minio.example.test/b/o?X-Amz-Signature=x\"}],\"paths\":[{\"index\":0,\"dest\":\"/srv/restore/app/files/app\"}]}"
     },
     {
       "name": "restore_stage_targeted_at_another_agent",
       "expect": "target_mismatch",
-      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"2e94a90e5272\",\"nonce\":\"hx8wdWpeH-Ooneb4nw3QdQ\",\"not_after\":1794053400,\"payload_sha256\":\"a0dc7a16138704d0fda8948866872df74bbd4983d893bce04faecc12c7ccfac1\",\"requires\":[\"restore.target.v1\"],\"seq\":106,\"target_agent_id\":\"33333333-3333-4333-8333-333333333333\",\"task_id\":\"00000000-0000-4000-8000-000000000106\",\"type\":\"restore_stage\",\"v\":1}",
-      "signature": "kKCO58KelPV3D9k/Cp8BTnoQVg33sbUDqPEBDGqUpoMRd6C+gQP+UUHpAuS3CvhUG/tS5BA3sZh/HpMyvurR3+uwkRT8kwf5h2VEFXwwW9kTQcLHlNmuyoVHvrNRMwnjuL755Jx6hg/yeovMphNGP0ZEahYheEsLzG9fEwY2j5Mpa4b2e4fdFaDGvb2MiIOij82ndUUZc9/Psw0R5i/uzQQUwh3O6Al67Vh9oaN2/Lvna9c+pMH3G0KKkuc7dJK60s7gTQMqlt96yS9D40Wrqw9+XXT1T81ItcpVGP8IXAiPIs1HxXg9ackaqWFfN+11a98wuX5tsS0d2LEqfEqykg==",
-      "payload_enc": "h1EQI5nlOwFR7DYz4UzsXnMHvDnBfxeLTF0+DYm8a4UvTIC6sAF/mT9LRqm6Yi4knrNQbrshJ8K1bRbmZUMpj7lYCDxKXKCpE/TUT1XRq5xrIBo/K7eR7+oIBIHTkbR4XM9RQlIp9FB+UuXtFLMpsK7lhqLhfD4tnG8fdoT0GucAWmqjcX3IBDG5wkZAYvII2Y5fO1JzFfQIQAuo14q6o2eO6yNCREIGJuTRMJTB1SoFfX3IRfd5bHfYbLunrayIA3UA9u2RuceMWR2eL/4tAVfaTRcIeUC4tPe4ObA8akIUFNgw657OcjWModEZBX7onamUESOz/mYwbo0MT+imWLsGoPF8o0tDzaM4U+mHUd03LsWsS+TOcIGDTRpbKsWfiS86GjmAgI5UA/lNy3hygEMA+SEsBGkph/q2U0N12Qf5hbO+bUX39nVPDh8p9ByYt26NWrW1GTzgoeisdA4ZqAJEMG3aF1Xl6VeoxbevOqsWT7/qYdEZmVVDNDgY2AhdG7IekhhwiTCrHBnIJOsrN2m/AXJCY2Dgd8l5ZsfhxjOvHuYqk0xhB4z4oPxY4o1kF4quXcTGH5mdyCiy1s/SOULloK6jD+9nTB1vSvmz4yJ8BmrYX8C8mVPQZwRRPjR6iz3Czu5g3T4RjWU3QOFtxS+qA370ff3zMqihWEuIUTq8oEmigvsvC3p+J1Zk062rpMmfam5XmZgqZu/VBIyMQ746mo09thfV/p6ZOBWnYip1FuglhRv99uD/2FbqFXpKCF5sBKKZi+xU8Ws9rKOb7wtSjoWT3CpxNpsPbWi7e7IJQSDkW0YAGdi9ju16dOIA0LGyK3PCPkm0/r1cKFvE8ywFvHPzTXPx0tY06p+Qys9w6G1gIfSxGtqPTe8xwExOGOwz49Wpg9joTjRLaNg3DxC8XfOkccGdXfJWs49+ztiKha3GbJfCIRHLWwE=",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"edqkRxblFEYNuoMKxwV9Vg\",\"not_after\":1794053400,\"payload_sha256\":\"a0dc7a16138704d0fda8948866872df74bbd4983d893bce04faecc12c7ccfac1\",\"requires\":[\"restore.target.v1\"],\"seq\":106,\"target_agent_id\":\"33333333-3333-4333-8333-333333333333\",\"task_id\":\"00000000-0000-4000-8000-000000000106\",\"type\":\"restore_stage\",\"v\":1}",
+      "signature": "K5NCAi0ggDLNSIzpFUmQcQ4xtFH7wKafxRsJzRPL+Ky7B3rimqR3Bl6zuD+73KLut9rBZLyd0k5Dz+ni4N9nsWQzg8ur14AzvRECetEpm8NCQDDuye9+RmQucRC8z619Uw0hiMOnQvkYS/0SoauGcQEZEYLB8esjAgnn/0NS/eiM2Y21M4lap2ZzkevMnKfJXzW3Zy43cg1BOt+jb3qoEu4/tXcgp3Qx9wmLWUurQiNRdLHLTTP62fyuA5+RIt90jw6ECCmRgdKWFTgnBMJh9pGioSksui7BXqr2w3tgtKouxCJO//+sVVtSOjKevCDklnktvoQEmJXhOqMrkzM29w==",
+      "payload_enc": "9H57yTSNZuH2sJxGVW7jMaAnwAK/nKMQh/hWdJakec9k9nOjF978oPJOp/1H1lSB6AMVc/XSAZJWOdYXbhN6AU8hmuD13LCChnH8N19Wol0oLRQemJ/tqTszz014TyDmyAh82iTjnuu9u8Iuf1YciWBLdx0SiF0zcWWSK+P5lab6QIFhZOyxeei8Vo98bWRSOiszseVl3SZ/ijTMSv4ryA6E1+XHPSrgIFcC7WGMknaVv7lsfXZuCt1WxDe88yWPE1yAaPOCMFr3e3szN5s+dAS219ApUSZiYFfPs9mqGBFEaaC4JvNjVj6OVbKFZPvszrZ1ohYfgLV/mbUXTbrDwcv/Nk/v3nHx21OoYg0LpBAM6F6iET+oAnydhyxjJEJ8NA0wap0sMjJbwR/rFqzEO5jiwoz4A+lQIJ9hP2XgwPb+9F36YyKblUeH/hvgltRvKVPMpFNwj6gYbnWuEN5kh5+P0QgRV+yZ+4HbOyHG16aVjvaZFJWK4skzMyVMHMlxU6aKrB1TW2RiCBhYrnQ8YPzmHe+b2kVkVkrRcrt7nSSlhlEGFsWG+hpEg7eT+FU2YJqAG3++DvSPGWrErpxjPmKNeIQVK+KwHsOE9TjqM1v6Ag8o2nzhDvCVrvS8/Hx97UcKQG+QIkPHVh4FBAzdGlpKeGQZ+aVDnyFMldLG2gVfKK9Zu0dNXcZpxabnLKui5T0epTY6mBa1NqikymTrqqsknZTW/BRbmjnb3pQO4Er0MCmtpFy7l5MKz6wLbKMRQXxKgPmKZ+xJ+wGEXDD1pvAYPPb87kMiaRJR68cS2jF+JA+TNRsgx5o7JeTg5brLTQ2hRxyP7U5ZzSBldAxudy3UObvISy8etaI1HRs8PQwt06nMhedDMIJEWxksYHqLJffu7oa9pJZXcC0F9DyR/pwE5w4EKYF3lULMM8Vdcgi97ahvsVLG4g7dldY=",
       "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest\":{\"json_b64\":\"e30=\",\"sig_b64\":\"AAAA\",\"sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"},\"artifacts\":[{\"index\":0,\"source\":\"archive\",\"url\":\"https://minio.example.test/b/o?X-Amz-Signature=x\"}],\"paths\":[{\"index\":0,\"dest\":\"/srv/restore/app/files/app\"}]}"
     },
     {
       "name": "restore_apply_without_target",
       "expect": "target_mismatch",
-      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"2e94a90e5272\",\"nonce\":\"9Km-Tcpp9pqm4jxPLEzLzA\",\"not_after\":1794053400,\"payload_sha256\":\"88e7d9b564545bf8b8ee69674f0bfe12a9d7c991cb13a683b75fb3fffc159e6b\",\"requires\":[\"restore.target.v1\"],\"seq\":107,\"task_id\":\"00000000-0000-4000-8000-000000000107\",\"type\":\"restore_apply\",\"v\":1}",
-      "signature": "FuVsStXAEdC2omwFxt2xH/CleQyEBXpEfU7dO8y3UgsHAf+8AM1PGCxzy1ZsPrSOrUXZ7Re4g6sLVdeqZHvPwfWq/fSWRPlLdqFBzAlLaSG0/tf4HpZO859sSJZlgb6SxWZTZUPqb98o03sAf21OH9vvKdabsiF/IufEXamY1e4djcizuYzqSYNQPuJp2vrbTD7YRuRZQD87mOUzZYgzq1eKSP9iJc6v63ovYpy7pmd99ZSgOT2EUKKvva755EtxJ4A9Ayfu8cyparkILQ0hy4WpM2cPcHZgsp0GRHMwhpTS57BCjNF6GC2KYCepBWP0qsW9BORtWgsTFAVlo/HUBA==",
-      "payload_enc": "lES1BoneCg6b9n19PzwVZ6HXKFbHJy7YLPW7SE9uYe7MzNZPsoftAlyo5bYPLSORBxMIrdZQIQsmSUFnxXnf2JxmXbLZ4b3wrVBicRGjx0Sw42cGl3yrWH63cAsyVLFT1YZSypqHIZ8/f5SPGmJKVjePHk5xRyV6o9XTky97gsRqvs4WF1qH0cMRIdfKjxNSFIXWfL16fOhXhh8O3MpiorlGk9XYkB7ZBEtDuhr+fqfcaeLAit/0eGxIqhGB7hsgJ990a/X4wpXja2G6nHBlIkGhqma89YCQSPdvUgBkxakK0aQ1m4fC/4hd9qUSOveL5DNhpt2QvOW3cH7tfPuqVqC3gktPU//fy9VnGoEzk8pGXZIFqTe2Njaj/UReMTgN8BTKtMdsw67wkRWXpsTGPJk48qGwEw9cBtNTQS90uuRlkZZ0ftc4yUH/bbxTEhp2CwT/CO3s3iAlaaUj1CxNzg/+T34cSDuys07nNetVPnyzwqbvNrHeWT4tnzaILXLt/CbImBECczPsvfEQ32XUfmuNPYqNWJhuNJzGt8qxIX+k0do23cYLpCdSFtvlk8Jb0O/1kFaH8BQrJv6aNe6zBeBdNZjaersuaORDPPyQvPtG18rCEv5vq20vyh+giVeijmbmAnGDlCdtAzvdauw9hdAr43Y08ytnr4kDt2ctjXvo/sFR1mqa/8vOnjp6R8Z1HXs7oBPGduJvv0jVE+JbnAbyxl6rteaSDYI8+B0dIEbLswbfqK90MMyTp8rlGHo+UcEl8CylAxLNk71JIkThty0uw+dSlYMv6yeP+Qnw2Xwd4oRKE2MvajxDF4x8BrQKVkOAkZe929hxqwtHWDznGaoAfhG2QJgn9A==",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"HFS1r6_Z62Z-zs0jlxLDbg\",\"not_after\":1794053400,\"payload_sha256\":\"88e7d9b564545bf8b8ee69674f0bfe12a9d7c991cb13a683b75fb3fffc159e6b\",\"requires\":[\"restore.target.v1\"],\"seq\":107,\"task_id\":\"00000000-0000-4000-8000-000000000107\",\"type\":\"restore_apply\",\"v\":1}",
+      "signature": "VWbR24NbY9NwxFRTsHfK8B7m1/KQIg/OqWiZrcfOhjBgM2YqNq1lGh4lppA/G44NN8CfYFjdnugWUlSL8yfbFHk1rk/Mb+XMz9HnsV0yp7G67BDQga2JH9FPFi8Iwmn8pGksTT6GD2BjrKkBYHI/ybxt3o2iZz2k8s0dRja74NO3CnemUgrbuGMdXQP15U07IVa4HRjFxTyFuLCJnDwSisejjWUSvoXMzdB76FvyPKaaRbVnF1fa3fbqAS5nBcgTymRXb5P7m5YpzTC9kec0mHq5cMsSpZrg+D4x/PIp8AErYKj2oMkjVJF64iSuK8o8q1lObIX67LAQsy6A/5d5hw==",
+      "payload_enc": "jW+xdv9nhFKZCjSkjyG0gle0NJHFniR/WOFo4lsGz1MgitbhyETWmB7Bi4VbHq/+pEm1karVDWf/i1cglaysGo2qbZvJSl5ARJe/Rzku2fjlsfBCEl4XJ2Hz7e2L21F+fN+0OVl47Gxjmf9fvrJQoBiGcJ6MvGGXZ2h5aRdOWqgNhnKAyX/uqXfeqLYgxebX3gjeNvDCwxu22JG07IPs1T0NXNFKcEFGTMNTWUye+PBMiBc1O5AZfGOwyh/H5MCbppC2A6x6mU5bvAgY5suz4KsDB+tXjKlJzEB56aHyTwQFzvnNJOGYaSTVZpb0iIBi30MayAZeAHMq1DcVuxhNcNg6E0nc8eD1VBcZgTEzooXHrxINFx//GH0dB2gDESRLS6aR/fgdSoc7KaiDDIHY30lkeJWlsX+cG8oQhY5jqebLcCHfRgiwnYkVBnIdMz2DPQBpUxV/w7DZFMz8JXi+mSbKO/LlpH3g5njSJ9+9GAMIj0O9W6YI321sURY4SiVwMW9kaoNU9fbf7yXz6N+BCmFEHospr6iWlgRY68C0H0rq6FKdrpCvMrznBQwcRTD+5UzVoLfw7hbO91Ynyg9NACOWCy+2ASjxdCh9SPVyTIsfDTxw4MPQxWkEJ3zqKUjAlhADPyPlE/0+rdGy4m8I4BzLA9XvAAD55epW1/7KGdHfiu8CiO+R6tZn1uev2zIRjL6HqZ7e+9WAelNNcRNMbuC9rTFrG3/Am1k0sWn1PBn1guaoJr2f0IJ69/rKH4QJZHxON3dDgnEIBoXBc1tPRzme4KyGoWYjGB16LI20qbOPREMz36Q0s3wp1dFpLP4IOSk7NQZRpUK4mFXo1eRz+4I9yGLnE5oQXQ==",
       "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"volumes\":[{\"index\":1,\"name\":\"app_appdata\",\"compose_volume\":\"appdata\"}],\"sqlite\":[],\"networks\":[{\"name\":\"app_default\"}],\"unpack\":[]}"
     },
     {
       "name": "restore_cleanup_without_target",
       "expect": "target_mismatch",
-      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"2e94a90e5272\",\"nonce\":\"GnWd1TItEWBKUxZAugN1Sw\",\"not_after\":1794053400,\"payload_sha256\":\"5cd44cef4e6b5fce967c6ad9e9ec51d29f3138f78cbee15b327b0979390633c9\",\"requires\":[\"restore.target.v1\"],\"seq\":108,\"task_id\":\"00000000-0000-4000-8000-000000000108\",\"type\":\"restore_cleanup\",\"v\":1}",
-      "signature": "WyGTdFH4ZdMXfZgxkWdKV0DQyzZDXzUubhVPoYRjygH2+eLFLBPv7/dxjGblewMEjuIiBrfTHTWhEGKIQN9zGceDSjapcWQk5LR4cj+hTs3TGlrgBQ6sVxvGG5AAjtUeF84CBsnsws93mo7EmZ4ob4m2xDe6Q+rtNBtZ6eYNG7arqtR7F2ueDyZlHM5U6mpSv82+orllzxc6hg8nz6/tIrEf+/BcJArcq0MZrEeWUjVK7P37wqaRb6NDQjpBeg37Jc0mOyj11F+XZym8bnZkhjmDALk9I/DerWQjeh3UTIBElSAp8Bjt/wsdQaluJgdbnutfaRUBGYiqTV+1P6O5Qw==",
-      "payload_enc": "BmIZSlTsnXIDybRm34BdDv39CPALoconRFJZezaYMi6746VjHrhrUl3BnUwMOAK2N+q7069an2DlaBJEBIFF72zrcndanfW3nDOyddO1md8yZ9KMAy6VImYTRIB3SESGzqQzbUzihRhr4orW+5J6e8qiPZ9bak/bBWH11msi4nly/+VV5tJHgeEJ3XqHmOp4ysjAJzyTwZ9I5gjoVI6teJLd4A03lTLMgdmLONNge3IP2kn5s+iTX5G8Nnq1fG7mCM3+Po8bWW60eTzn9kGVbZSjMGRbAfM5T+pulNCOU9YITOajwJu6ncnlhNYLPgpyyUUleVR1PBGCYc1vsfVfBMPn+zm7ohnXCDjTGNmTeSFLdhzkPoOCRil7Zo2LN1K3LaqzLeDZRcIRHxqyVR0jfa/P0yc4uBU6h1M0pk+099RTsY/ORGUrbdhWq1qZ0iZlO0jdG5ALe/23uJWktXJ4+8tWYxw4ZFVvxNvs5p016Ni2KF1SX1ENu3UQYgdRBZPZpEMrs/xarKas0edxPu8ixXUtYVKhEinDVtW/oLSyZFndJpZluVAv81TctshRYDyVRyZ5YIHaaHB3wEg4as8t/wADdI2ILbg8IiTZHk8mz2z2NCU7xaTURpDuLo8cVpY6OP5VCu7YSRI5HIYmKNN/wBhJCNdRc+TfWPA=",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"c1Obe0P7Z1udd-UqrZ_SNA\",\"not_after\":1794053400,\"payload_sha256\":\"5cd44cef4e6b5fce967c6ad9e9ec51d29f3138f78cbee15b327b0979390633c9\",\"requires\":[\"restore.target.v1\"],\"seq\":108,\"task_id\":\"00000000-0000-4000-8000-000000000108\",\"type\":\"restore_cleanup\",\"v\":1}",
+      "signature": "HBxzo4yGNO4b3bNd+/WWwYQy/Y8Q7AMd3SI/aKd1mrB2P453iWrtElVbFpduHrLNG8HI5X9mFftK+a7juHcyUX6tG28a8sAbhEXOyNMNVHYVlPRXHhWc5iro+kHzI+nEhXw3qUOWOYkNK76c0t6jk02LI/WN3B4hQRP4BpnWBrcJV47vwIuHScPcdi2g+meEQWmCx0BlYRJ8/eizryr+ZPebe+8CGga+9FgiqnQOebsKgSv+euWvf0I1c5vjum9PYWjNbzkPsuRc1MzWYG/jh7mIpEB5M+3tzhALFHu/rMIrN7PMhikcrVkJA0T/x4KR2qD7sP5Z8DT9hL1sH18Olg==",
+      "payload_enc": "8vNzG+gfEgxE3cMXkCepTHVEHh5qWqntaTWPwEeewo20v12nwA2MBnKZOv85IF1GQLC6XJDyJn1IHNgAmLRGk4xlaYVdZerZXvZTy5hoNZSQf7LOlxB2c+wOSgZEbTeQxszrmenx+dd6SXBURsjma8sLA62dAUmNQpn8ja4qCvO99Z3u5lBO1PnMzFbNEZbwYJcfNPWx8Z9ztCRoSRsnjHNAY/oiWv5oD6Msj3Ugx97qSvqHgJ7jYVAIFoZb+cVcnuOgBjQRUKgy55NMpmppAx3twQnQvk0Jv2/pIa4jhVd1ukcC8cnZ1hp0JljdjU4pChm6HCj5flIcPVnsJyg3O05M5PRwbRtdAQtCBsnY/UqUfddpFXrQ9kMDfuXmurXwNomcijvepmEuh4psuCyotZL2WHx8iQfeJIWiVQexlbJz0dUY37jBFAgob4Ca/Cks6Sbn+JRaSRFgBoZIXClBib7rPHzdiTJ5N+g27++9eqtSWCHIg0PLMpk7wwJg6YtRRrBnlY/G3V4qB4ISboKHhAC88RFxyiCuOmVjMf4oXm9ypN2P0rJtpBXEgPzeIJiQrL5lCV8faoKUw8pEst8+cEGEpmNWvrGI9FxjkpaOxasVTqOJERdBhEQ4ZrmKuof80nVMY2I94rQW5sGdOEApyNBnGywKosKwoeU=",
       "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"workspace_remove\":true,\"volumes\":true,\"networks\":true,\"containers\":false}"
     },
     {
-      "name": "compose_up_unknown_type_in_w17i",
+      "name": "compose_render_targeted_ok",
+      "expect": "ok",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"5lvVFAyvmtAx3FHpezjOfQ\",\"not_after\":1794053400,\"payload_sha256\":\"3fbf740be93f9adeec19d1e2ff35098f5102bdd98cf4bb138a840219be34989c\",\"requires\":[\"compose.render.v1\",\"restore.target.v1\"],\"seq\":109,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000109\",\"type\":\"compose_render\",\"v\":1}",
+      "signature": "RkowlZ0p8CcwSbRnAUREYyw5Dgf22HEHR3R2glg/h6g3lu6xQjILinCu4MbwFZmBfty2AnDN5JKCIE23xJVjI6r8yUsrMSLVpJxUrwr9q2px6Ka94adianBErEcynGcJzKPZFOz+hk+H8Q1KMLrfvDiD6zA57wJeKVpTR6jMDwRlvCtQ/Vur9tmlxhvidgTBhOc/SsOT+zuUtRTYzJebnKhkBN01Jd+LQ8ZTSNrNVjEdkE+C+KFt8gXzoMYpvmbAQ8rrS/gBTXJaVt27FpVdIJbOre0LlFZjUsE4q9ggOEJiyB0Tg8fhIXL8jILpuo4xi1XV6tT2iaB3DuYOdRGstA==",
+      "payload_enc": "U37FeOQym5A5S4qPQDZAi6IECQ48U7Goue4tTFleVgNUwzFJpf5/EqoCeOQhJR0G2GSo3uKDfXtnxYOITd9WL3CdJdR/ssOvFDvWDN5dzg8yoEtNkl0OpG1rqwA1xfXrTYu8b4xJeRAzCvIdu3fWtGc9wWoAvKYygLC7FHJ6xy/Yj4anmTGcU/9gIYMo1u9T5SBLDq/V5+nXINFefl3Sb8jm2xjTkrapKocbmdrmCxKlNwLhjkuqi8HEykR8NCf+2KHYZlgx8rGOuRotqDvqW7vT+FRPwCH/FCuQR6/COKKoGsv4RNnd7o97niJuXIPoSddKaCrZ1beW5JJ1scUYq+J54LSW8XjulfzJljGkOeOuW1ydYIt5fOd31j0gqSU3eXHXqahsIhg+L2xpKaj9c4g1eYaqD2jTw2btrYoiHpqlboACDeCxB3JFP6RWLZgzDFhe0wfYNV6tTHTw1kqcDT7W13vpYLVzcWLi1R695v8k63u2z4McmlyvoAxSp2LhO9btn5ldbNz0NaCHwFpyez79+m7P/mUWruJ305ANJ24rS4YYMgl8Ex95noYwZyGCstPDwFEHfk09yueklKaYYcrl3Lu0X0dSC4j1DfaYqs3Mgv8LF3ToGkFBhg+59iorXJfI/G9OLNdlmVchuaHyG9h6zEAm3LBR0Eqqq/2phdj6tTBncAiTW46hOwIwiflOtQk20XEK6NGPLI6ADZKr+9304PJDt4ez7VGgxH4IToKGp6Mb6H+6bw7xIZHazHy2BKmmFp0LU+/08ffnhakOiuClJcddozdn7dXq75Yob5oBIx0Lzc1mwZ7JeKI7DnKoDrRbSHtWtc7UZMaSZr0iYjqu8jec9BJh5D10JmSN/rcaD1XcEbEPTg==",
+      "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"compose\":{\"dir\":\"/srv/restore/app/compose\",\"override_yml\":null,\"env\":{},\"path_map\":[{\"from\":\"/opt/stack/www\",\"to\":\"/srv/restore/app/files/www\"}]}}"
+    },
+    {
+      "name": "restore_db_targeted_ok",
+      "expect": "ok",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"q2TT_R7IZe7AtvSWXxEbNQ\",\"not_after\":1794053400,\"payload_sha256\":\"987e7f20be5e39020323ae9acb254633421d2825e827b67c004a64c410828b81\",\"requires\":[\"compose.render.v1\",\"restore.target.v1\"],\"seq\":110,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000110\",\"type\":\"restore_db\",\"v\":1}",
+      "signature": "Du4aMshLS4cJJpFZVd5Q+LcH3x2MMMIhik8qsCWXlujPvyIa4e8QriHczqg6MPUkjoEvP/bWVGfpH9qhdr/lRKKoxfAxLLD2sT1Jkz7dXSZzzR55w//Kfy0bymH0BSS0MJ16BDLH0kpfvpFm/mWiO37MoNurpfsUXnKz0ntB4Cv1CYFJnQo7dR8X2acLSJggqNuFCb6md7cjKcUAQ4jrI++3y07FrBe151BGGfzwnYM7MmtvAJ3aUq2KE//vFZgF9kAixsTY+TaTLTcNCYt54vAQtmv/B+XSuSoqxK1La2wteEXYRGBvnfD7MWr6LxSSeT/JwlWzMeESXQjrg8tlqw==",
+      "payload_enc": "SiZHbWI09gS4E/o6w6XrAj2OyFOKT8WN2O/j7KCGSOkUWeXpaeyYybTb21wEAwC4LX7eMk47TSlr1CmBS5iI32+U81gR9TdVV5Fj9/CpP7PzTfWT4zbH52QHCVNXKLBHJA169Jfg8tWlPLByXTJ0/MCe7jz9r6oY2gv+LI+cD7uKKQMFyRBuakOPCG4DRjCuJWu0OWeFakuGxVurw6QYaRANykDCiiWl5vifBAZ/YgLQFU5cYAqFh1MtFvhOz4bq16FwDjyLAyAhtsom69Ul7KJDVAv0bj2/7t7xqah31B8LB2aF4H+fTjIithNaL2NyZb9qNuaYcz/X+fS6xbLgKpnEow1/seb831yxG2911mAXu9fb5yQAxP3iqx4RGYTQpyFTHkGOQd52lSL5Er+0+UwOlFAVee1ng5u9P6uCFzf96CzfXQFEfLBySSseWgdBCMNS9dH8P0p9sfG/MKPv5ZYUD20JGoVh4jhzdhDD8GbZZLTqidMVn/8VeHNdaELGwE9a+lRHRVhgV+2xUSKoR/OT1Qa97U17wFMr8/Rn8l1GyCHe52OcF31In+0IuOK+Ed7ZzQxn+QwGGLYKKdmBjsU7J7nXfSbiQkEzI33Ow4dadg0qQfDmvwL+qZMFm761/szqv7NWYpADdyaGDlg2aYrY56MvW2oyvTyP5Ae9J1punUxs8eR3SqGwKvqiP4MYBst5dSNndjLSckieTRsls4wlOceEg26yRridmtloT9IxYCuE346JTzlY0jyfgEb4L694XjWKkU+jQw4XJ/jDrb4F8ZWDcpdWN1YAGV3ThFfnAfPKihcwQven0fPHD/TPuvjbLxJmTP2yRZmPYRG0RgEEAu2lDBhdHcO/CHsc8VscfyDiQrvbzQA5w1cY03urwpHHspX12ms1TnzVgtopf7BSKf/DVUTr5FRAyH4cWKJi01FyiV16qKLflXRZUb02M30tXAkAOCQfhSK7Iy0maa9Wb9K82ZQ+wetuw4A19QQ1tzY2RIbSIjE7IB68xUrNkG9MuVu0uXLLDPr/0mVI8PitE4R4IeLcO+I7SsbU8w==",
+      "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"compose\":{\"dir\":\"/srv/restore/app/compose\",\"override_yml\":null,\"env\":{},\"path_map\":[{\"from\":\"/opt/stack/www\",\"to\":\"/srv/restore/app/files/www\"}]},\"compose_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"approval\":null,\"dbs\":[{\"index\":1,\"service\":\"db\"}]}"
+    },
+    {
+      "name": "compose_up_targeted_ok",
+      "expect": "ok",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"e7GLx1oqQtGTddoSCEjSnA\",\"not_after\":1794053400,\"payload_sha256\":\"3a43e430c7ef5f70ea471e7cd7a2682c9bdb7f81a106eda7b34065a9d00946bc\",\"requires\":[\"compose.render.v1\",\"restore.target.v1\"],\"seq\":111,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000111\",\"type\":\"compose_up\",\"v\":1}",
+      "signature": "YNdK3aAkGODo7SoZXW2wTNR5yaNF3DSjK540g1W40lRbMhRHN1ccWZ8NKfv9maO+mQ3oHNp5fSNcsHAt1/abYVWBUA5ooS7m2v7yQFdUQrPJsOeEiXQl5ky297hszqGFEdqqULuUL3C2OVM06DlrRKi3moDcRGDp7cA3Gg0Ju0kmf7wOpqkrtRVBxnVEi7vF2dkG/tue6ZM/9oZ2LUVrB+J3Sd3oIyaojqprhfJY7STNOxOylzyXo+TotcPOmyn39uq7U/5XihWbLrhmz+w4hq0XSuF1aDYR33CqiM7YxBYBZaDX4cR24OlMC8Abqb2otwzBxMsUbO8RcNXiiZXzNA==",
+      "payload_enc": "kQH0llXfoOP7vAtHGkDF8ububeBFUXYMlrnHP+LjMU5Vz0wvG9UIRcyN1kbrWISz2Fy6wMcYAfLIm69DPRCoG/XWBQBKw4Fl2g5c+vLs5S9v6+tFmUogkV3dGlPrlsOgxK1GPOY8HNRdvWFl+e57XbD9Hc99m6TNV1ndKf+mQxdDS4FElxSd5EHIQf7ryoy4ZJSBoahkvhZk1srV2ue9Uilk/2FKpQjSfuBfUc+62LxAESct8KR1RezfM862mYOgqmXC4iK0crNsTBb1TFLL6oShXJjTwqeNvBOB9co2BJDkSenDyNIvuUBB/xhQinO8aarVyqh5ZUW7KqhxmwIRPLXehyn4mQ6ptkoWU33abFGmNhXgdHQRNOwXWZvX/BZ/CSvfCUh7SYoo/6npvRWBkbc0eWHnxZ6VpUzjVVmYNsrSqAyWqi2FWn51ZK1tuGGt29yjPzKowMd+LvHql2zAjz1MC6ehY31PIl/IfSDQEcgzW2htaNuQqIakV6vA2XaFT42VJBf20BoVPfcNW9/wkB2n6R6LVkVhANyDXq4CtqIgQbYtGgORErQcbcBt2f9T7zmBusT0uxh0yl3Renh3p1Ej+OpIQy4QKdksIPuwn/72uGaPF0e700Ee3+KfFfErH506Iit+9punc8SaOfV8cNF84BB7skwIyMjZZADQGvXTlTYbZuhTBPCbGxAQMNuM7z4+xObuTaGD1pdwrkJNTGQiZkkULX+EiyqjV+3ukJWhXRQzCcoctHkQnKmPym5aeZzGmf7BE1ExQfbH0oEzJyUC2OV0RXuNoy14jrjxv/qEDX/edxxbXMQyYcw5l6nk8ZdPUJIngc5qjvmljKGM5mxVV8iUQtVxz9ybsT2jeztTaRyLsZH94LoIdjRAZapKIDiaEW1UA8RWkeny9/to6h0qD3ywGb+FdbTYq9HpxCoNVJF6K197QhlPcSm+QSUG549aeaZ4o8vLwuaxyciG9aCWBx5rp9OioSVBlLwgfylBkm4B6OFMSh8yxglGtvhebU1b4yYEtadpx6CikOJ0K6x7+zeFuQ==",
+      "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"compose\":{\"dir\":\"/srv/restore/app/compose\",\"override_yml\":null,\"env\":{},\"path_map\":[{\"from\":\"/opt/stack/www\",\"to\":\"/srv/restore/app/files/www\"}]},\"compose_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"approval\":null,\"volumes\":[\"app_appdata\"]}"
+    },
+    {
+      "name": "compose_up_without_target",
+      "expect": "target_mismatch",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"KKS1f-g99jmMSndIUilmLQ\",\"not_after\":1794053400,\"payload_sha256\":\"3a43e430c7ef5f70ea471e7cd7a2682c9bdb7f81a106eda7b34065a9d00946bc\",\"requires\":[\"compose.render.v1\",\"restore.target.v1\"],\"seq\":112,\"task_id\":\"00000000-0000-4000-8000-000000000112\",\"type\":\"compose_up\",\"v\":1}",
+      "signature": "FjIxIbfN5X4tnCdkoigGe2LCphxU2d75pUixGSBMD+ufm/ts/r+2QS7l+6IF+O6V7cGT817hLoPeBWzdv5g8tasrAp+krVnXc23K1FO6uayE3WZ0cHSWd1JABZkTWCfvu80ILYuKZl0d0AvnB2h4IGlaQnKlXhdWJdkK/4wpJaAGr7jAYxukqj10/2NvgPR9eiBa+lOkNxaVjMHo3kFRMyzBitctR4B4PQLyWwaT8ltgO9XB42HFSa2Pyk5NExgNPAIOhEJ+mT01Mof2AtyCgPhkT2HbQ2mhuqzGT5+GdRWsuBrXYKIQdIrqBW15Gtxz1RJqvYOMR7ozyzcDkIbEIQ==",
+      "payload_enc": "qyahMlv9+N8cXFSgYBPIgdjEsF8oUkgZa3XE0HNZS49bNhTRbynPGO2wjUdF8nEMT2P0FbL2JWe8MShUJOI8/NhhBIgxKTfjXDTO99McNRMpvFhBhBTwGgfMc/wUwYQdx2PwvhkV8u6dfxc4BccsUiO4wJ01xWPyYfDHC6GLrAp9Z2pX963URIDG0nNWp49dZQL3qZt73L/21P+n/yg0w7ZifIIuNHdnmA7YbFkW+KrwEM1sqhGgXaIlmGum2YQc5BwzcjpeKN3MXFrcIkz1BxIgaIlb/5V/sPeS1FB6ULkVt9rXrkgZFcwst1U7y4N1mNtGhQWoi0XxCL91/zvKpYJlzpKrivXZgQjMnzofYQFnlMKVtIOaapwQOx2ZLcgpHeJpez5d2UbxXtIeps3XXo692I/JHSVHmiTK1uUPqsIO6TFmunKIxFJcpKNdSnSJyCIBA0n097YmVbi8a54+C2XNOcgnkiqP3vLY5C1gzVGqZEgQ2W9PreD7/rUUorAjKSCpeWQx63BTnL5n79asj60DO7UU/oo6InrCN2IqgDO1VlLYan0IUXe4suFJorN7p6bounTYLZVqFnCH8Tp8GaDx48Z7qwuOWGwJpQfR0wY1SvQN5ZmnFpPySyCTGWQ4J+mnAR21r5MkbuOsdhgmCC/C4aPsdzvkHk/nv3qiXYsfOq5jQ63/caBAOB1HLPkZED7bUDuS+0Kso7t7sFG1N9u47sZdlqz0OAQDAvz080LQIsqewsmjtp1V1Y4d4mpWLgawgWd5ICzStipb5n8hLH+J17nY/aVdcjfRe9K6aUiElSoUGL0Qlh4u4P6tzV50/oDoawSLA6s3W/cMV3h4Fnkzp58RdBwTpTA1v7ecAm0k+umk8O9Ji9TofqtRBs1B1wA40t/OtW2UxtWYuEHTCOYDs0DDcX/lQWYRQQV+k0WhPopXWgp025oFY9NKD1F951nWqmmWUaiKL94dtLqBeK5oHlYb7ZKRIbjh4JWMMgFRyD7wYwtotEYWBUpi72UXDnkBEajmS5/HSz/wLMKPlEKhOdDsvw==",
+      "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"compose\":{\"dir\":\"/srv/restore/app/compose\",\"override_yml\":null,\"env\":{},\"path_map\":[{\"from\":\"/opt/stack/www\",\"to\":\"/srv/restore/app/files/www\"}]},\"compose_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"approval\":null,\"volumes\":[\"app_appdata\"]}"
+    },
+    {
+      "name": "compose_render_without_target",
+      "expect": "target_mismatch",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"h9Qz0pUXmVWG1Zg8rcTTZQ\",\"not_after\":1794053400,\"payload_sha256\":\"3fbf740be93f9adeec19d1e2ff35098f5102bdd98cf4bb138a840219be34989c\",\"requires\":[\"compose.render.v1\",\"restore.target.v1\"],\"seq\":113,\"task_id\":\"00000000-0000-4000-8000-000000000113\",\"type\":\"compose_render\",\"v\":1}",
+      "signature": "nUA0FZ1TNK3bynbUUAw7xq8CJfHypf7XEKfrkJJE6tIX8CTa0aGWrNwN3kTTc2XdfSBq8NNzo6EX3e0RcsIjKDaCBMz/3Cac3cJO/ffA4//17g2b8a761G0TLAEr5Atxwh8+XYu2m+xyyamxhdU36xwU/MOONQmqd1UlZiCUG0puMw9AKQhPFurg9MaQz3LfZrTFFoluhlBCWBPAG1KunchgkQq2YK/PGPF4zhx4EH7LZrIOBKXRF67/xlLjEy38Y/YghU6nXORgd1ZMyNsURF/sd6RbHhNbwpT1CSzOEI4tmyaFolwfMK5cVj+9f9CbLP/b4rRUr2mVamqsfZS49g==",
+      "payload_enc": "HqJlmiGxLV+MowbVOPxQ6ARUUC4Ydj+6KcS2fSMi3jCBk8S4gPMw6PPxMAF5Q9m6HtG5gjZN3qve+xcie/xuiYT3XfltLiMddHSOM3YIzkYPSpqEac0ntuI+wXVAmZnJvlZ43Wid4GpufGNVWEWytQFUxd3DPl2CyaaO3ZWDtlBea8RTLIRVAV2+ZW5+TZh47LFKMZ2MDBP7mPHrQ4fFW/yE9uO2BYiCpqPpmdEHypQxPqrYdTYzT8nF3sIlo1//Nq2E3Dy+kqAkKvMhrC91FdhWoZNXWWpCh1vlJWzmNvSc45eDwxAd9SKnMf/nK9RVnEa9PYL8M5pggy0O8BNKSn2Sy29c7weZRyg55vjqZ6lmcAChgCRpWu3aDz9HN++g9lJgrImSyv0m8h2TECP9TdbIzV9UzhvPsws2Ea1YVOZwlHMlnrX666Ey/btLSjDRBT0wcO9L/JXxp3RnVB0YYkUY2HcMf/bEp6RMv8RRah8aLpfUFGFCFjkgNNA2WHEp+7o6u+bLv9xpWPYVwzLfRes9lv2QiqysPTnd78qcQdo6roXUgRpHUJYWz8J3BKIHk7Sz3pwj0ldN83PdbWffDpDR07TOvhF1rXIpCEhenaVCuKwb/7cztr+mtyzM++3Alv8QsHXBcuOI1iJ48cw2R4CyW0lQmPGBVGalOvnNdFYIKsopYY3o4AR9EUbKuZ1fHU7ojcnvAcCC7aGqlKK/IljdVFaqUS3HZYtnxSB7cR87Hm+6w8TV4i+uEJeVeB8t55rW4qCjNSec4Yo7QmBMpFx/+KoI8p/jLPJe67mD0HpU7eEcbCQlqtK6ThxkpL9AsxFs0fGYSw149LDG5k/j75txrRtZTcYEsFaH/deAjtngXPg8eybt6A==",
+      "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"compose\":{\"dir\":\"/srv/restore/app/compose\",\"override_yml\":null,\"env\":{},\"path_map\":[{\"from\":\"/opt/stack/www\",\"to\":\"/srv/restore/app/files/www\"}]}}"
+    },
+    {
+      "name": "compose_up_targeted_at_another_agent",
+      "expect": "target_mismatch",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"fBgaEPs072QSKADpbWy8Xw\",\"not_after\":1794053400,\"payload_sha256\":\"3a43e430c7ef5f70ea471e7cd7a2682c9bdb7f81a106eda7b34065a9d00946bc\",\"requires\":[\"compose.render.v1\",\"restore.target.v1\"],\"seq\":114,\"target_agent_id\":\"33333333-3333-4333-8333-333333333333\",\"task_id\":\"00000000-0000-4000-8000-000000000114\",\"type\":\"compose_up\",\"v\":1}",
+      "signature": "F3T1ml53qdh9oJgwRVCCl0i87+xoZzgsnDYsne9pqaoXG3P9YnaPHPe1gGavVMxFohJZcGYp3OJqjV1uklgRj/awdMlcg3Tb3klOZPv6Oz4BOI/RRJRpwMIEJyjga2fuRmyWKcTMG8SE/+sztkYaeLxIrE+udN4hgf5bXvb3qlB5rMmLvxGCyCGwdf9RecoRJdtBVgij4SD7l8iWLwAWxN4ts0rTxRvjH54mDyHR76QMcpTC/FjxQ3je3LeDR2UVLbwtSo3D3uEGKQCc4WtC8+grSxAw7/HLWBPfPTqNkZTHg7n8id6gShkVq9y9nwowo1Z0ZBGVNZYdWFbhgMkRbA==",
+      "payload_enc": "sZHWuHoCUJru2QiAvsAiYpysjt110wN4kU+Y6MHSevoJ3cwam0fOHjqYFr7LkbeTeZKIc4dessdJ5X6t3v+3+DlGZMTikNHVZ0Kx7Cq5RU4VOhdiJJ6aYk5wZ+1amIKaMyoHa793o7KYfNxBov9ocBZqmZfpDJuHL0aIeAk1KvSLBm+y7v038g8zFc8jSOjJnl9tc3kaFhJhVZPkqVdG2MJv/hMY9H6bmRMkDIX+wvla3a1dHGF2ICkUZxpEB/HcKoXUozFeQOI57IyVZGaYXOHW8UZluI9lleCNuT7h+k/htM/uzaA6t1RrC+RjFQEW0OJdo9kVFsGildwYiprO3dlxTtj/6c6IWnqEbM9cwk3FN9Bbh7nzcIYyACxdfCcDthwZaNmttdHp4cWlzG6XxsHiZGUYjTVfnb0uIH1ozfQt6XPSLofviP/hyDDN/B2oeDlCMnovZCTfHNFsaEMdojh6F4N7sfkVXb6FRzaoIeULq8foK0g2jRSG1PSUNu5VPql5gFsw1Q5rl8q2ZWKCB89aQQBMxDWYhsCUfJvJDdX/5VdHcoJ1tKw+xVUTztKdFNKbYDZmpOp/r/MBhYcvvCQOe7ZXK/HmKM9N6Pla6MgZ/r7tbt65TFJxvxw6sGT7cFhPl7TUuKFSrfUiPO8Cl5ep70CpNbKtADAp8CaOiDFeadd4BwFRKjoHlrE8tcsn+7SWT2ZQtzC6zrF3v2zNXXIs4MFjYXf0ayHxPizNPifKue5YWFJSGArPHyPhUMQQD6OKqqxCLeWtHJ5tlO9pZ+6iGYEOfnnLtSBu4R69HCMvpyqtcktOMmgh7SmInOAFjKTzJcXzRno+lIt6TQ6lyXiMDAHnLXdLhbU+Cg05g3kyQdy87LoDZIt+i7ym9lEjZLq57T+BPzBAuqkROCRK2RKO94MVatWifDL6GO8fNvH9tUj5vLtY86xu1JgFEqIoQIoyS6iWeJvF4/JFFM/Vt63O+szBEzkPplLM3seqeX0wSojnE0uXMSFOHuA0MzwqCPPKRlNYfCss143GqSfUevQcScGTMw==",
+      "payload_plain": "{\"v\":1,\"restore_id\":\"77777777-7777-4777-8777-777777777777\",\"plan_id\":\"88888888-8888-4888-8888-888888888888\",\"plan_hash\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"rp_id\":\"55555555-5555-4555-8555-555555555555\",\"purpose\":\"restore\",\"mode\":\"selective\",\"host_role\":\"test\",\"approvals\":[],\"workspace\":\"/srv/restore/app\",\"project\":\"app\",\"manifest_sha256\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\",\"compose\":{\"dir\":\"/srv/restore/app/compose\",\"override_yml\":null,\"env\":{},\"path_map\":[{\"from\":\"/opt/stack/www\",\"to\":\"/srv/restore/app/files/www\"}]},\"compose_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"approval\":null,\"volumes\":[\"app_appdata\"]}"
+    },
+    {
+      "name": "compose_down_unknown_type",
       "expect": "unsupported_type",
-      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"2e94a90e5272\",\"nonce\":\"nKqg7pLmvjNPlOHCbpjNzA\",\"not_after\":1794053400,\"payload_sha256\":\"44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a\",\"requires\":[\"compose.render.v1\"],\"seq\":109,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000109\",\"type\":\"compose_up\",\"v\":1}",
-      "signature": "VXrZqbyCAKn74Q9/Ys+XgCYSrGT8CkyqpBgV7mhTR3SNgm25YfvhiRhC1Dpk7AJ4An6ekhJkC2YVK4Jgnn5l3tJVsuTL4gEVZ02wmKyxSYY88uy5bUxisqqTGiCPf0ma+idRtod+jptkMD+Ng9G4jnp7rTYuPMJitlQiRyF/h0pNzRQ/ehKC2UtK/FmEgqWEdmiTAZZvaw9m0pmBIUV/OIbzNvJ7mLxXSbHKJdV43Sy1qwkYMEoAunkBbKDlDS41Qg/cs2/GHfUsW+G5Iz4TfzoiebURm1rG0cgxcwp7BOd61SDhBGPtHK/DUGOW/Yg5yaq6M2bLsMR6RQd6SOj/6A==",
-      "payload_enc": "m18GwD/BrakqXr90nunva3CXx6IhI97sxlTA3CQc",
+      "envelope": "{\"agent_id\":\"11111111-1111-4111-8111-111111111111\",\"enroll_id\":\"22222222-2222-4222-8222-222222222222\",\"issued_at\":1794052795,\"kid\":\"cccbfee94b73\",\"nonce\":\"YOQF-MsXKs-mqB2ib-DeqA\",\"not_after\":1794053400,\"payload_sha256\":\"44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a\",\"requires\":[\"compose.render.v1\"],\"seq\":115,\"target_agent_id\":\"11111111-1111-4111-8111-111111111111\",\"task_id\":\"00000000-0000-4000-8000-000000000115\",\"type\":\"compose_down\",\"v\":1}",
+      "signature": "WQn5b/LYaUx/SZe5hS4YNmRJWyKmbpXCUGx/Si0pjLe/eqiCnrHlE+yP/YR28M3ld/12wcFamEWgiTXiq2wcdLMIa9fmHmryavkNVGHB0lLQ9arFcTizHUhVZO4vx0SmUrBiD+5Ble7ko3HVt7jhYkyVY5Sm82bGj2pqnI9qo/ADrjyhasSF5sBN2f6yWQhUkJKN5XhgWljE9c61hD5RdBg4K7GsZ0iEsEuI6hxDX7De5umbhBJ3CGBJt9Dj/DlGKM8Mugm4DcEVXCBHisarr7RRYxIQOjK/q/OS2q7lS9lSTs6Zs6BMTX/XsfsbuhlKjgleflj0T+39rI8nRgFNig==",
+      "payload_enc": "5PZqyxupUxiO1lpsq4qKNkiHx5dkHEkE6NEZAlZb",
       "payload_plain": "{}"
     }
   ],
   "stage_world": {
-    "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"73749f09a9f39a94a82e5ba3a953d54026b1a5a5e40e23267844443a1ec5f52d\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"volume_lab\",\"location\":\"backups/lab/volume_lab.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"6a38a0e942c5291d1c1101c9e5d7b73797d88e2f790eb5c99cde8214f63b379a\",\"plaintext_size\":1339,\"required\":true,\"size_bytes\":1462,\"source_name\":\"volume_lab\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"33bcdecc620f1a094a9d2bd221e21e45162ee982a4fdee4e1189e9ea0a1ad072\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"db_lab\",\"location\":\"backups/lab/db_lab.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"48fdb387abd55cc600618de19886f4d78e75605d392e61d7497f4969619456aa\",\"plaintext_size\":20668,\"required\":true,\"size_bytes\":20792,\"source_name\":\"db_lab\"}],\"inventory\":null,\"kid\":\"2e94a90e5272\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
-    "sig_b64": "LnYjQiPdR8VuNoKSDh0afx3iSb2cx8wAlsDcIhJDz4cvOohqOSRkNTr2uY4hCBBMiPSnRN1tu55sJJIbQieQVzyRGD/90D3wl5ZvlQj6eu6q7XDiB86HpuoHn5XQlouWxLKQYEq/jQHKG6efxTpFXCXQJoLV5dQNGt5uHMpwUECr0z6ZyhGyI/R7jCG+DiaKxsjYpvfkDZqQA4zDzcacQyCgVJBLXwZeqcSS3vKriDCe7ivi497QK/MXtYFg+woNbCvnWdykwp+DFGTR+uX9MQSFhBBW6xArUp7+bHmT4Kr8KJHAWtST1NUM8PoKrxjIVktlTp773hkr3xP3OTWlyw==",
-    "sha256": "31bb7177f2ad79036532a5af24e4dd5d36e172720e8a541e2a8c3db8e3fe1a5e",
+    "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"73749f09a9f39a94a82e5ba3a953d54026b1a5a5e40e23267844443a1ec5f52d\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"volume_lab\",\"location\":\"backups/lab/volume_lab.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"6a38a0e942c5291d1c1101c9e5d7b73797d88e2f790eb5c99cde8214f63b379a\",\"plaintext_size\":1339,\"required\":true,\"size_bytes\":1462,\"source_name\":\"volume_lab\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"33bcdecc620f1a094a9d2bd221e21e45162ee982a4fdee4e1189e9ea0a1ad072\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"db_lab\",\"location\":\"backups/lab/db_lab.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"48fdb387abd55cc600618de19886f4d78e75605d392e61d7497f4969619456aa\",\"plaintext_size\":20668,\"required\":true,\"size_bytes\":20792,\"source_name\":\"db_lab\"}],\"inventory\":null,\"kid\":\"cccbfee94b73\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
+    "sig_b64": "Nce+/gi6SIIJLKziPp1XlfOG3ZGG0TshVxPxFaigxxefatTUmXwJSLv1rAreuqsDpqVxJdiD8hOSjjcSe3E5Q8tQGUvd8R5Zpc9WUnCchpzHtZUdrOKfuq0kV8xAndU0NynyFJed0ClcR2sCK/Ku0OijBhrgebY8OqqVGDsTCv5jucs+H7W9eO+4JzryYsV+j5QT90P8AK2DMQbW1LuPKrILG/Xqea34oT9z/7WbxIkFEqPVW3r8/HXywidTyZLx9JP9HipERTSLdRWRsL7Y+do0503fgiqZABJwRJrpEU1gYxGl+Q2BmS0/+7r5q7K62MS4wkRtRC5Vg690DAIzrQ==",
+    "sha256": "d3400378ca42a9cce7577d544c8979b12cd35fd5abee0b2c7d2c46ad08262673",
     "rp_id": "55555555-5555-4555-8555-555555555555",
     "stack_id": "44444444-4444-4444-8444-444444444444",
     "sequence": 7,
@@ -261,6 +338,115 @@
         "volumes": true,
         "networks": true,
         "containers": false
+      },
+      "schema_valid": true,
+      "agent": "ok"
+    },
+    {
+      "type": "compose_render",
+      "name": "compose_render_valid",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        }
+      },
+      "schema_valid": true,
+      "agent": "ok"
+    },
+    {
+      "type": "restore_db",
+      "name": "restore_db_valid",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        },
+        "compose_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "approval": null,
+        "dbs": [
+          {
+            "index": 1,
+            "service": "db"
+          }
+        ]
+      },
+      "schema_valid": true,
+      "agent": "ok"
+    },
+    {
+      "type": "compose_up",
+      "name": "compose_up_valid",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        },
+        "compose_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "approval": null,
+        "volumes": [
+          "app_appdata"
+        ]
       },
       "schema_valid": true,
       "agent": "ok"
@@ -1013,6 +1199,566 @@
       },
       "schema_valid": true,
       "agent": "approval_missing"
+    },
+    {
+      "type": "compose_render",
+      "name": "render_unknown_key",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        },
+        "extra": 1
+      },
+      "schema_valid": false,
+      "agent": "payload_invalid"
+    },
+    {
+      "type": "compose_render",
+      "name": "render_env_key_compose_file",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {
+            "COMPOSE_FILE": "x"
+          },
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        }
+      },
+      "schema_valid": false,
+      "agent": "override_invalid"
+    },
+    {
+      "type": "compose_render",
+      "name": "render_env_key_path",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {
+            "PATH": "/x"
+          },
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        }
+      },
+      "schema_valid": false,
+      "agent": "override_invalid"
+    },
+    {
+      "type": "compose_render",
+      "name": "render_env_value_newline",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {
+            "A": "x\ny"
+          },
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        }
+      },
+      "schema_valid": false,
+      "agent": "override_invalid"
+    },
+    {
+      "type": "compose_render",
+      "name": "render_override_too_large",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        }
+      },
+      "schema_valid": false,
+      "agent": "override_invalid"
+    },
+    {
+      "type": "compose_render",
+      "name": "render_path_map_to_outside_workspace",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/etc/www"
+            }
+          ]
+        }
+      },
+      "schema_valid": true,
+      "agent": "path_not_allowed"
+    },
+    {
+      "type": "compose_render",
+      "name": "render_dir_outside_workspace",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/etc",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        }
+      },
+      "schema_valid": true,
+      "agent": "path_not_allowed"
+    },
+    {
+      "type": "compose_render",
+      "name": "render_relative_dir",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        }
+      },
+      "schema_valid": false,
+      "agent": "payload_invalid"
+    },
+    {
+      "type": "compose_render",
+      "name": "render_missing_manifest_sha",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        }
+      },
+      "schema_valid": false,
+      "agent": "payload_invalid"
+    },
+    {
+      "type": "restore_db",
+      "name": "db_empty_dbs",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        },
+        "compose_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "approval": null,
+        "dbs": []
+      },
+      "schema_valid": false,
+      "agent": "payload_invalid"
+    },
+    {
+      "type": "restore_db",
+      "name": "db_unknown_key",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        },
+        "compose_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "approval": null,
+        "dbs": [
+          {
+            "index": 1,
+            "service": "db"
+          }
+        ],
+        "extra": 1
+      },
+      "schema_valid": false,
+      "agent": "payload_invalid"
+    },
+    {
+      "type": "restore_db",
+      "name": "db_bad_service",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        },
+        "compose_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "approval": null,
+        "dbs": [
+          {
+            "index": 1,
+            "service": "a b"
+          }
+        ]
+      },
+      "schema_valid": false,
+      "agent": "payload_invalid"
+    },
+    {
+      "type": "restore_db",
+      "name": "db_missing_compose_sha",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        },
+        "approval": null,
+        "dbs": [
+          {
+            "index": 1,
+            "service": "db"
+          }
+        ]
+      },
+      "schema_valid": false,
+      "agent": "payload_invalid"
+    },
+    {
+      "type": "compose_up",
+      "name": "up_unknown_key",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        },
+        "compose_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "approval": null,
+        "volumes": [
+          "app_appdata"
+        ],
+        "extra": 1
+      },
+      "schema_valid": false,
+      "agent": "payload_invalid"
+    },
+    {
+      "type": "compose_up",
+      "name": "up_volume_with_slash",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        },
+        "compose_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "approval": null,
+        "volumes": [
+          "a/b"
+        ]
+      },
+      "schema_valid": false,
+      "agent": "payload_invalid"
+    },
+    {
+      "type": "compose_up",
+      "name": "up_missing_approval_key",
+      "payload": {
+        "v": 1,
+        "restore_id": "77777777-7777-4777-8777-777777777777",
+        "plan_id": "88888888-8888-4888-8888-888888888888",
+        "plan_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "stack_id": "44444444-4444-4444-8444-444444444444",
+        "rp_id": "55555555-5555-4555-8555-555555555555",
+        "purpose": "restore",
+        "mode": "selective",
+        "host_role": "test",
+        "approvals": [],
+        "workspace": "/srv/restore/app",
+        "project": "app",
+        "manifest_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "compose": {
+          "dir": "/srv/restore/app/compose",
+          "override_yml": null,
+          "env": {},
+          "path_map": [
+            {
+              "from": "/opt/stack/www",
+              "to": "/srv/restore/app/files/www"
+            }
+          ]
+        },
+        "compose_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "volumes": [
+          "app_appdata"
+        ]
+      },
+      "schema_valid": false,
+      "agent": "payload_invalid"
     }
   ],
   "manifest_artifacts": [
@@ -1032,80 +1778,80 @@
   "manifests": [
     {
       "name": "valid",
-      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"2e94a90e5272\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
-      "sig_b64": "MFUN28epVej7BGKChhd6fl1oQCR1bc4mHrRbd89/hxDbx6qKYq2SGHCgsoGNvTrD3EOK7/3aIgFt2EYcDHJHu9I8FxgJm6SCcBkR8GN803UcHsRGvt/sJYRar36/AQqTCZc7bIoM0Pky6yXUUTLNFhDrUpK3tfdcABf2vhWpML+LRUDjkjn8pC54UPY/Uzota3sxHKMkB7eCvdUkjcLm4tnoQxnDu0R2lULlh+QMnBR0gIfuchm/f2zxcmGdJsQPn+tBRnDSrPwsT0mmLRkcnbsP1Mzr5+PB8NmWHtFxNVXG7e+yHvVm6FAhJMqAtoFZzuxFX32ldN9Zp6KugN37/g==",
+      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"cccbfee94b73\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
+      "sig_b64": "LeXcCvKlklLLBuLtTbW799sdMnk/VBrj9G92MKNxUfh5nfH+i9dq4D2rbzEIIJXPjqNYvbXAkl/+9znlbQXnR4tnCd+n5+3vT4CJc1ZEpbqlGjoCH5wmv19p4b8ae9rWj6JT/sKlLJkClLOd1a2GAqA4wUHRDySZlpvemiX2J0dJ+eh9NInpOtda6rKGv2lxSsQNO1LgqZIynzy5pxVyzi3rM/yp6QGCtbvgPj5mO1mDbSPXvy2QPxflsGpPuqMJWcyISjlDYS7gmTxUMvKn73ZOExKt1J/BiAuHLj4jAg4J8TgWlksqaLofyyepLrsgWxRRn3DZueE7BfKNyYvuqw==",
       "expect": "ok",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",
       "sequence": 7,
-      "manifest_sha256": "5383fbc9b1fbde763ffd25a9090662096febd431990288e650e6be67d691efd9"
+      "manifest_sha256": "4097231b5677dd1578caaa8f33d87af20e08034ca8c42574061c02e75c3e7972"
     },
     {
       "name": "wrong_kid_not_pinned",
-      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"75093873f87a\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
-      "sig_b64": "K8Fhp3UFjToujYt5h03ob9oVbJD5Q8b2yFQJWgKaE4r3blW34uZ9+uShhwT0q0fi+2A3iGmjoNzlZ+pCiSViCiEOtx8lDt/uTEV8Sn+Y7fhsf7TM1WFPuxU5Ks8nuFPGI7Y/gqJBsuOBnu+gIF3HrEloUEr7RxrS40uvIXHrUnMUfzhcUs3+ZILSxTePQiZJoSkabwwgrK2hC8zVjtEYyTGdA4zKL2szgpyxrWBXlC4eym1JINuHRQcPNC8bMQzUjFh/cLDmtunGKq/oS3WVsWnFGcCiScAv21kbeFfpKU7BXIsJcsEPSsCfDA9tIvtcfxS2jydlEGRLVl8HKVBMbA==",
+      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"e7b94f4d6d70\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
+      "sig_b64": "XVXb68o597T444Jx7EuBfesaC5/s9Q2N0wT9gPTzsrQEfV8WgFfYbZExcBX9Wy9gIEuoyPYvvYHPdQ1hBN0mHxELO42sxnsj3I7pUL3UGoDuaFtD7cYi/K6rYZqLt7vxD8OWxSk4Jp/ubrplJkaF87uUaEPvOtMqScTXAUcIj8hYKyeqgCtSbJ9HEeozhGEKWc+wH1H1Y5LqqjPRUHYYup8ULEm14cjip7UkeG5Fg+xhLU9wIwH8JNQ9001ubeCFBs7CnK2yg2/soVkw2tWuODRycoV7PW//81AyYslQhPUSi3P+2pyLmdUQpTuzMVjdtWtd+P9vqeOY69jD/8k2XA==",
       "expect": "manifest_unknown_kid",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",
       "sequence": 7,
-      "manifest_sha256": "d4b223a25b01d66059a91b11014ba6b8a16e272fee3acf8ac24756b64c48b4dd"
+      "manifest_sha256": "e7fd6266342297f432257dda99542a2ff801201782c642b734101bd40bb334c9"
     },
     {
       "name": "tampered_byte",
-      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"2e94a90e5272\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"apq\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
-      "sig_b64": "MFUN28epVej7BGKChhd6fl1oQCR1bc4mHrRbd89/hxDbx6qKYq2SGHCgsoGNvTrD3EOK7/3aIgFt2EYcDHJHu9I8FxgJm6SCcBkR8GN803UcHsRGvt/sJYRar36/AQqTCZc7bIoM0Pky6yXUUTLNFhDrUpK3tfdcABf2vhWpML+LRUDjkjn8pC54UPY/Uzota3sxHKMkB7eCvdUkjcLm4tnoQxnDu0R2lULlh+QMnBR0gIfuchm/f2zxcmGdJsQPn+tBRnDSrPwsT0mmLRkcnbsP1Mzr5+PB8NmWHtFxNVXG7e+yHvVm6FAhJMqAtoFZzuxFX32ldN9Zp6KugN37/g==",
+      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"cccbfee94b73\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"apq\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
+      "sig_b64": "LeXcCvKlklLLBuLtTbW799sdMnk/VBrj9G92MKNxUfh5nfH+i9dq4D2rbzEIIJXPjqNYvbXAkl/+9znlbQXnR4tnCd+n5+3vT4CJc1ZEpbqlGjoCH5wmv19p4b8ae9rWj6JT/sKlLJkClLOd1a2GAqA4wUHRDySZlpvemiX2J0dJ+eh9NInpOtda6rKGv2lxSsQNO1LgqZIynzy5pxVyzi3rM/yp6QGCtbvgPj5mO1mDbSPXvy2QPxflsGpPuqMJWcyISjlDYS7gmTxUMvKn73ZOExKt1J/BiAuHLj4jAg4J8TgWlksqaLofyyepLrsgWxRRn3DZueE7BfKNyYvuqw==",
       "expect": "manifest_signature",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",
       "sequence": 7,
-      "manifest_sha256": "e9082bd8a881cf13a59f15126077fb9ec565a6591b1c5342aba41670eb55950b"
+      "manifest_sha256": "cd94d735da38d51b16d65a1503cb8af07ff6192a869aa86f64575bd29088d1bc"
     },
     {
       "name": "signature_of_other_bytes",
-      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"2e94a90e5272\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
-      "sig_b64": "A5ixDVFqrKA2pE1Qh+YzQChbBU3gMRbAXBwAz43RjZgzc4f/EJWN+FGADXWjxaoIws/U0KB+a7v+uZLtH6uusY7OLMRtrHALcyBtqZbvcC3kV+AXc1LOY0pyV0HThU7y2WYjITd56YMX/yFzoQ8gioYqrXq3Vt70BqHcl1Zf+fPoPD2JoyELnK3GtbV0EKYIVmm8yXOiAsffjXl4VXlFoTTfNGiTe/ARjphrLi/m9j9/zorXzy9DZ+hypp/zBfolVrWbdxysBmvIcSew9w8MxLaIXU43bWB1wPuc5cmc3jLRpIKOzGIXCKLFcl0DrXUHjWl2bm07X+YJXLUkAYT/yw==",
+      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"cccbfee94b73\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
+      "sig_b64": "ceZaKx9sowAz5wYKezwen0rBJYZGU+tKJiy1dIjPy2w0rh1Ep3vQNSeWYlgcnOCNHTmsEZDxjqjrrw1Rqg0mrej5nxVJ2C9uG9Lz0AJHnvEunq+h0zOBMPiUnxtO6v/mV29xzGCBUXX/D/G9LEOYfoI766OGvNDP+t/SMtE12To5wmgR6PI1MyVNFNfLE1qhYD0XV6RBlvPMiKXHAi6T0ocwiigehcSSlRkYVZ44uAR1XXvurCf5f+JCCRUkBW0x3WwADLtvHy243nNNkymgjtbKTOhxb4AJxG9rZNWhc7ggTf4dwFEoDNXMC+gp+sIcy4j6U97U/sTqD05G+sMt9g==",
       "expect": "manifest_signature",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",
       "sequence": 7,
-      "manifest_sha256": "5383fbc9b1fbde763ffd25a9090662096febd431990288e650e6be67d691efd9"
+      "manifest_sha256": "4097231b5677dd1578caaa8f33d87af20e08034ca8c42574061c02e75c3e7972"
     },
     {
       "name": "other_rp_id_valid_signature",
-      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"2e94a90e5272\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"66666666-6666-4666-8666-666666666666\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
-      "sig_b64": "WnRilUqUuZ6TOd+mgGpDb7bZgYopJtJJLh+MOoa/wGfzARmuJyvvP75er8itiwN7KkkHziVylXN8qo3IBQ+UJuhjvzuFZWZrvzmt1Q3qAb1hGg0sVAzvbsdzdIkAnptZaX9U5uO2jEYMuF+bFK4pJ2uPS7Cr0YE8KD8ZwyXA9tRpO0FfL+D8EVcYglPLhmWvy9wPdGxRcenjaLJGYtLX10Q181kmz0J61XB675n4V5h/Ebz7qPgrMDmKb818sTVnBpZXfgrphnyKAo/ZSP56i6NeF+0OagxvywdPlvWsT1ZZfEr1sHfKTgxCeu30hBJqS9NGJQO1A9L5X3e4i8XZtw==",
+      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"cccbfee94b73\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"66666666-6666-4666-8666-666666666666\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
+      "sig_b64": "KPqqqkoSCsihIAcZAoymCApypJJsyUgt37CZcp9pFz0vzkP5INDv9g9jZnKP/6bNiSBwz5PSxp0I5FqYlwrII+YRcwxGX1n8psbczox4FZyn/IhFSgw9/nhR6IEJ9a1Cmydp/8qAVJ0SOJ5QNVG9FFxOJHywjQb+nE+wKwvgvs2xqC6H3fAiQZWTabn1LseO81VzTgujaEulu9N/CczaSAHhuAVM8d5P3pX79rmOLqAyD+CqhGXAncnO6f5AsR8eWihggfs3NHSuMuqQa4b8P1uAkIPdQmDUXxTJhJ/t8K4n4WT+eXYHfqkeKT7X0U+FJsPrP0G2hWH96O0cRXZ3Hw==",
       "expect": "manifest_mismatch",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",
       "sequence": 7,
-      "manifest_sha256": "7348c0d867334de20438990d61e79e807a88944f813849b60e6d08ac07db53ad"
+      "manifest_sha256": "5f054f7695c63f52aea92a76866deb50d9b9aaeb06af2087268267aa7c72f910"
     },
     {
       "name": "sequence_below_min",
-      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"2e94a90e5272\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
-      "sig_b64": "MFUN28epVej7BGKChhd6fl1oQCR1bc4mHrRbd89/hxDbx6qKYq2SGHCgsoGNvTrD3EOK7/3aIgFt2EYcDHJHu9I8FxgJm6SCcBkR8GN803UcHsRGvt/sJYRar36/AQqTCZc7bIoM0Pky6yXUUTLNFhDrUpK3tfdcABf2vhWpML+LRUDjkjn8pC54UPY/Uzota3sxHKMkB7eCvdUkjcLm4tnoQxnDu0R2lULlh+QMnBR0gIfuchm/f2zxcmGdJsQPn+tBRnDSrPwsT0mmLRkcnbsP1Mzr5+PB8NmWHtFxNVXG7e+yHvVm6FAhJMqAtoFZzuxFX32ldN9Zp6KugN37/g==",
+      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"cccbfee94b73\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
+      "sig_b64": "LeXcCvKlklLLBuLtTbW799sdMnk/VBrj9G92MKNxUfh5nfH+i9dq4D2rbzEIIJXPjqNYvbXAkl/+9znlbQXnR4tnCd+n5+3vT4CJc1ZEpbqlGjoCH5wmv19p4b8ae9rWj6JT/sKlLJkClLOd1a2GAqA4wUHRDySZlpvemiX2J0dJ+eh9NInpOtda6rKGv2lxSsQNO1LgqZIynzy5pxVyzi3rM/yp6QGCtbvgPj5mO1mDbSPXvy2QPxflsGpPuqMJWcyISjlDYS7gmTxUMvKn73ZOExKt1J/BiAuHLj4jAg4J8TgWlksqaLofyyepLrsgWxRRn3DZueE7BfKNyYvuqw==",
       "expect": "manifest_mismatch",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",
       "sequence": 7,
-      "manifest_sha256": "5383fbc9b1fbde763ffd25a9090662096febd431990288e650e6be67d691efd9",
+      "manifest_sha256": "4097231b5677dd1578caaa8f33d87af20e08034ca8c42574061c02e75c3e7972",
       "min_sequence": 8
     },
     {
       "name": "sequence_equal_to_min_is_ok",
-      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"2e94a90e5272\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
-      "sig_b64": "MFUN28epVej7BGKChhd6fl1oQCR1bc4mHrRbd89/hxDbx6qKYq2SGHCgsoGNvTrD3EOK7/3aIgFt2EYcDHJHu9I8FxgJm6SCcBkR8GN803UcHsRGvt/sJYRar36/AQqTCZc7bIoM0Pky6yXUUTLNFhDrUpK3tfdcABf2vhWpML+LRUDjkjn8pC54UPY/Uzota3sxHKMkB7eCvdUkjcLm4tnoQxnDu0R2lULlh+QMnBR0gIfuchm/f2zxcmGdJsQPn+tBRnDSrPwsT0mmLRkcnbsP1Mzr5+PB8NmWHtFxNVXG7e+yHvVm6FAhJMqAtoFZzuxFX32ldN9Zp6KugN37/g==",
+      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"cccbfee94b73\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
+      "sig_b64": "LeXcCvKlklLLBuLtTbW799sdMnk/VBrj9G92MKNxUfh5nfH+i9dq4D2rbzEIIJXPjqNYvbXAkl/+9znlbQXnR4tnCd+n5+3vT4CJc1ZEpbqlGjoCH5wmv19p4b8ae9rWj6JT/sKlLJkClLOd1a2GAqA4wUHRDySZlpvemiX2J0dJ+eh9NInpOtda6rKGv2lxSsQNO1LgqZIynzy5pxVyzi3rM/yp6QGCtbvgPj5mO1mDbSPXvy2QPxflsGpPuqMJWcyISjlDYS7gmTxUMvKn73ZOExKt1J/BiAuHLj4jAg4J8TgWlksqaLofyyepLrsgWxRRn3DZueE7BfKNyYvuqw==",
       "expect": "ok",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",
       "sequence": 7,
-      "manifest_sha256": "5383fbc9b1fbde763ffd25a9090662096febd431990288e650e6be67d691efd9",
+      "manifest_sha256": "4097231b5677dd1578caaa8f33d87af20e08034ca8c42574061c02e75c3e7972",
       "min_sequence": 7
     },
     {
       "name": "sha_differs_from_payload",
-      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"2e94a90e5272\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
-      "sig_b64": "MFUN28epVej7BGKChhd6fl1oQCR1bc4mHrRbd89/hxDbx6qKYq2SGHCgsoGNvTrD3EOK7/3aIgFt2EYcDHJHu9I8FxgJm6SCcBkR8GN803UcHsRGvt/sJYRar36/AQqTCZc7bIoM0Pky6yXUUTLNFhDrUpK3tfdcABf2vhWpML+LRUDjkjn8pC54UPY/Uzota3sxHKMkB7eCvdUkjcLm4tnoQxnDu0R2lULlh+QMnBR0gIfuchm/f2zxcmGdJsQPn+tBRnDSrPwsT0mmLRkcnbsP1Mzr5+PB8NmWHtFxNVXG7e+yHvVm6FAhJMqAtoFZzuxFX32ldN9Zp6KugN37/g==",
+      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"cccbfee94b73\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
+      "sig_b64": "LeXcCvKlklLLBuLtTbW799sdMnk/VBrj9G92MKNxUfh5nfH+i9dq4D2rbzEIIJXPjqNYvbXAkl/+9znlbQXnR4tnCd+n5+3vT4CJc1ZEpbqlGjoCH5wmv19p4b8ae9rWj6JT/sKlLJkClLOd1a2GAqA4wUHRDySZlpvemiX2J0dJ+eh9NInpOtda6rKGv2lxSsQNO1LgqZIynzy5pxVyzi3rM/yp6QGCtbvgPj5mO1mDbSPXvy2QPxflsGpPuqMJWcyISjlDYS7gmTxUMvKn73ZOExKt1J/BiAuHLj4jAg4J8TgWlksqaLofyyepLrsgWxRRn3DZueE7BfKNyYvuqw==",
       "expect": "manifest_mismatch",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",
@@ -1114,28 +1860,28 @@
     },
     {
       "name": "header_sequence_differs",
-      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"2e94a90e5272\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
-      "sig_b64": "MFUN28epVej7BGKChhd6fl1oQCR1bc4mHrRbd89/hxDbx6qKYq2SGHCgsoGNvTrD3EOK7/3aIgFt2EYcDHJHu9I8FxgJm6SCcBkR8GN803UcHsRGvt/sJYRar36/AQqTCZc7bIoM0Pky6yXUUTLNFhDrUpK3tfdcABf2vhWpML+LRUDjkjn8pC54UPY/Uzota3sxHKMkB7eCvdUkjcLm4tnoQxnDu0R2lULlh+QMnBR0gIfuchm/f2zxcmGdJsQPn+tBRnDSrPwsT0mmLRkcnbsP1Mzr5+PB8NmWHtFxNVXG7e+yHvVm6FAhJMqAtoFZzuxFX32ldN9Zp6KugN37/g==",
+      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"cccbfee94b73\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\"}",
+      "sig_b64": "LeXcCvKlklLLBuLtTbW799sdMnk/VBrj9G92MKNxUfh5nfH+i9dq4D2rbzEIIJXPjqNYvbXAkl/+9znlbQXnR4tnCd+n5+3vT4CJc1ZEpbqlGjoCH5wmv19p4b8ae9rWj6JT/sKlLJkClLOd1a2GAqA4wUHRDySZlpvemiX2J0dJ+eh9NInpOtda6rKGv2lxSsQNO1LgqZIynzy5pxVyzi3rM/yp6QGCtbvgPj5mO1mDbSPXvy2QPxflsGpPuqMJWcyISjlDYS7gmTxUMvKn73ZOExKt1J/BiAuHLj4jAg4J8TgWlksqaLofyyepLrsgWxRRn3DZueE7BfKNyYvuqw==",
       "expect": "manifest_mismatch",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",
       "sequence": 6,
-      "manifest_sha256": "5383fbc9b1fbde763ffd25a9090662096febd431990288e650e6be67d691efd9"
+      "manifest_sha256": "4097231b5677dd1578caaa8f33d87af20e08034ca8c42574061c02e75c3e7972"
     },
     {
       "name": "extra_field_signed",
-      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"2e94a90e5272\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\",\"surprise\":1}",
-      "sig_b64": "LOwoRLl5HNvEZXjPwxEnik/wG54ONnhpq5+MrsUJQCxsaY6fGOWiNtRuebM6yLnazSVp6WpKyKcJsyxpgblZXGAj5hxTPRG2T5H2nt53cigLeyZT/ykrD0bkMzVZdJc9Uj0EgMiV/vZobQ/Uv+gOCH5Pn0vFNgJl4TAy2Pe1l192GdZSpnhczJkKIz1aP0QN4WqYOByAmK/dQkbvddUAoQdQ46uROZ9+ziAny1sM3lmFpgQL5agQgdEu134BWm5UgcBEShJIcmtQ2BIhOIhbqW0NlMM4Sd67fnVCcS4rtDitfNtKZJgyn5nhrFD3Rc4Lls9e2/6T3SF1dNKzLxxwAQ==",
+      "json": "{\"artifacts\":[{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":null,\"encrypted\":true,\"engine\":\"docker-volume\",\"generated_id\":\"g1\",\"location\":\"backups/a/vol.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"plaintext_size\":1000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"volume_app_data\"},{\"archive_format_version\":1,\"archive_kind\":\"archive_enc\",\"channel_id\":null,\"channel_kind\":\"s3\",\"ciphertext_sha256\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\",\"dump_format\":\"pg_custom\",\"encrypted\":true,\"engine\":\"postgresql\",\"generated_id\":\"g2\",\"location\":\"backups/a/db.tar.gz.enc\",\"plaintext_hash_source\":\"dashboard_verify_job\",\"plaintext_sha256\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"plaintext_size\":2000,\"required\":true,\"size_bytes\":1200,\"source_name\":\"db_db\"}],\"inventory\":null,\"kid\":\"cccbfee94b73\",\"manifest_version\":1,\"rp\":{\"consistency_level\":\"mixed\",\"created_at\":\"2026-11-07T10:00:00.000Z\",\"finalized_at\":\"2026-11-07T10:05:00.000Z\",\"id\":\"55555555-5555-4555-8555-555555555555\",\"inventory_hash\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\",\"inventory_version\":1,\"required_artifact_count\":2,\"sequence\":7,\"stack_id\":\"44444444-4444-4444-8444-444444444444\",\"stack_name\":\"app\",\"verified_at\":\"2026-11-07T10:09:00.000Z\"},\"signed_at\":\"2026-11-07T10:10:00.000Z\",\"surprise\":1}",
+      "sig_b64": "fVlT8ZsOn5teukrRlP/+kaExkFeO7gxQWOBoVJ1gIhEZ/MdJXNj+DuZnyf8yXBNgmVhuLEhvyZQLGEb8GlYkgPBzbGGSvO+d+qmqie45SsqjQlG7gbNIlx11UzIU2X2U+raoDy69LdTcUvfBSIZLQJ+LhMEedFqJLNE/GKrNfG+Y+NIR8Imw7q3b4ocD1Tc0INGyhkNiurxqKQUoY5TdcFPTmvNtRrRK4TkwUzHL0QvJEzxSgBDO/AFfH5wrBTkb6Uvi8ybbsqo53+msjGo2wQlWzIHHN42uoZAQOojBvCsPl5ld2BYFNIMUc/L1PmpXfNRpjl10CkuM7fsHbpX77A==",
       "expect": "manifest_invalid",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",
       "sequence": 7,
-      "manifest_sha256": "7a1272516394de9a4f3ac556302ca6c5e35b1d97c398208f83c358957d18fdc3"
+      "manifest_sha256": "ddc88c51dd9752602da2e9af55031a2fb8e512ce3db0331fb70657bafeec0530"
     },
     {
       "name": "not_json",
       "json": "not json",
-      "sig_b64": "I21USGjPhDOVFfJFGcB7tHmM0bU+5krkyQwbUlxTy2vwkl6Eo+LlRAizVv8dlpnQW12XPyfV5SeAXyLyquxX/N6i5IuvmW5akXv4zzyXAnAWy4MCXIvlOqKnXx1ualuWtvNqyBfB5b7mML9/vEYceXa2+CDGOHnxx6u4M63oyEOypzsDk9FjEpapV1rD78Xqj0iPVxYvHOehBxUZskmHeVp9MwRELG4MPYnVFsh5GhYjJtvF2ROi+Y7I15Ag8YTJXNBpL0QeQh6hNdx9skB86oBA4q1m02NU3U3K2LlmOlyk1fXtYwdAz4XUJ3DWknJ6N8XtusUNqoe5g91s7feCJQ==",
+      "sig_b64": "Izx+6wdLlwZ22WcMAGc0fZ5LGL5T2zzWyHZfWr+2NE3pkESQqJDdOn2lIms7NMCM8OW2t5zeuzwc2fK0CvdOLnkvVeLROec2RxClrri3CnaIJxvJ1ZARzWWs57Ke9SHg1/zp+VYdMYIabIIiwe+gN2E8RMIvVGjmytb6d3xlA3KQmUph0JXmeBCWX/yRPOm77uMAKArgafG4BQ9U6PMy7x/myJgr4/Bsqv8iVWZu96Slr8bhZSbiFFVOwNQHrf7SOM10XdWDfdwVRcjJiN5Ex/2LsFYCDb/gGkaY8sbuu++bRyQrtot3OJZxXVMswjXuEjo2pjuHrRdC0WnqBZUcGw==",
       "expect": "manifest_invalid",
       "rp_id": "55555555-5555-4555-8555-555555555555",
       "stack_id": "44444444-4444-4444-8444-444444444444",

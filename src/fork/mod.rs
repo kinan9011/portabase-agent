@@ -12,6 +12,7 @@ pub mod exec;
 pub mod hash;
 pub mod maint;
 pub mod poll;
+pub mod policy;
 pub mod restore;
 pub mod state;
 pub mod tasks;

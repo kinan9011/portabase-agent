@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "description": "Compose deny list (REVISED-PLAN 4.4, D27; v2 = W20a). ONE rule file for the portabase-recover CLI (jq + kit-tool), the dashboard engine (TS, src/fork/policy) and the agent (Rust, W17). Evaluated on the RENDERED `docker compose config --format json`; the raw YAML read-scope check runs first. Default refuse. `rules` are overridable per service only (typed ALLOW <svc>); `hard_refusals` never are. Signature and checksum failures are never overridable and are not policy inputs. Normative semantics: vault ADR-015; oracle: src/fork/policy/compose-policy-vectors.json.",
+  "rules": [
+    {"id": "privileged", "directive": "privileged: true", "plain": "wants full control of this machine (privileged mode)"},
+    {"id": "network_mode_host", "directive": "network_mode: host", "plain": "wants to use this machine's network directly (host network)"},
+    {"id": "pid_host", "directive": "pid: host", "plain": "wants to see and control every process on this machine (host PID namespace)"},
+    {"id": "ipc_host", "directive": "ipc: host", "plain": "wants to share memory with every process on this machine (host IPC namespace)"},
+    {"id": "devices", "directive": "devices:", "plain": "wants direct access to hardware devices of this machine"},
+    {"id": "cap_add", "directive": "cap_add:", "plain": "wants extra Linux powers (capabilities) beyond the safe default set"},
+    {"id": "docker_sock", "directive": "volumes: /var/run/docker.sock", "plain": "wants full control of Docker on this machine (like a Traefik or Portainer would)"},
+    {"id": "bind_outside_root", "directive": "volumes: bind mount outside the restore folder", "plain": "wants to read or write files outside the folder this recovery restores into"},
+    {"id": "shared_namespace", "directive": "network_mode|pid|ipc: container:…", "plain": "wants to share the network, processes or memory of another container on this machine"},
+    {"id": "unknown_directive", "directive": "a Compose setting Portabase does not check", "plain": "uses a Compose setting Portabase cannot check for safety"}
+  ],
+  "hard_refusals": [
+    {"id": "read_outside_root", "plain": "reads a file outside the folder this recovery restores into"},
+    {"id": "path_ambiguous", "plain": "uses a path Portabase cannot prove is safe (a variable, ~, .. or a relative part)"},
+    {"id": "yaml_invalid", "plain": "is not one valid Compose YAML document (syntax error, duplicate key or custom tag)"},
+    {"id": "limits", "plain": "is too large or too deeply nested to check safely"},
+    {"id": "raw_incomplete", "plain": "refers to a Compose file Portabase could not read to check"},
+    {"id": "service_name", "plain": "has a service name with unexpected characters"},
+    {"id": "top_level_unknown", "plain": "has a top-level Compose section Portabase cannot check"},
+    {"id": "shape_invalid", "plain": "is not shaped like a rendered Compose file"}
+  ],
+  "cap_add_allowlist": ["CHOWN", "DAC_OVERRIDE", "FOWNER", "FSETID", "KILL", "SETGID", "SETUID", "SETPCAP", "NET_BIND_SERVICE", "NET_RAW", "SYS_CHROOT", "MKNOD", "AUDIT_WRITE", "SETFCAP"],
+  "docker_socket_paths": ["/var/run/docker.sock", "/run/docker.sock"],
+  "docker_socket_basename": "docker.sock",
+  "top_level_keys": ["name", "services", "networks", "volumes", "secrets", "configs"],
+  "service_keys_known": ["annotations", "attach", "blkio_config", "cap_add", "cap_drop", "command", "configs", "container_name", "cpu_count", "cpu_percent", "cpu_period", "cpu_quota", "cpu_shares", "cpus", "cpuset", "depends_on", "deploy", "develop", "devices", "dns", "dns_opt", "dns_search", "domainname", "entrypoint", "env_file", "environment", "expose", "external_links", "extra_hosts", "group_add", "healthcheck", "hostname", "image", "init", "ipc", "labels", "links", "logging", "mac_address", "mem_limit", "mem_reservation", "mem_swappiness", "memswap_limit", "network_mode", "networks", "pid", "pids_limit", "platform", "ports", "privileged", "profiles", "pull_policy", "read_only", "restart", "scale", "secrets", "security_opt", "shm_size", "stdin_open", "stop_grace_period", "stop_signal", "sysctls", "tmpfs", "tty", "ulimits", "use_api_socket", "user", "volumes", "working_dir"],
+  "namespace_values_ok": ["none", "bridge", "default", "private", "shareable"],
+  "network_drivers_ok": ["bridge", "overlay"],
+  "security_opt_ok": ["no-new-privileges", "no-new-privileges:true", "no-new-privileges=true"],
+  "raw_read_scope": {
+    "description": "Checked on the RAW compose/override YAML BEFORE any rendering, recursively through included/extended files inside the root (depth <= 8, <= 64 files): every target must stay inside the restore root; $ or leading ~ = outside; include with project_directory is refused.",
+    "keys": ["env_file", "include", "include.env_file", "include.project_directory", "extends.file", "label_file", "secrets.*.file", "configs.*.file"],
+    "max_depth": 8, "max_files": 64, "max_bytes": 262144
+  }
+}

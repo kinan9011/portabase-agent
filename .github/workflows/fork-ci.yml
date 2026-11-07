@@ -18,4 +18,4 @@ jobs:
       - name: Stock build still compiles without the fork feature
         run: cargo build
       - name: Fork task channel tests (unit + mock-dashboard integration)
-        run: cargo test --features fork-stacks fork::
+        run: "cargo test --features fork-stacks fork::"

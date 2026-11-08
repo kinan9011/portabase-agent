@@ -54,3 +54,12 @@ Requirements: the Docker socket is mounted (restores create labelled volumes and
 
 What the four tasks do (all signed, target-addressed, idempotent per `restore_id`, bounded by a deadline, heartbeating while they run):
 `restore_probe` (roots, free space, workspace state) · `restore_stage` (verify the signed manifest with a pinned key, download each artifact with a size cap and no redirects, decrypt, compare SHA-256/size with the manifest, audit the tar, extract into the planned destinations) · `restore_apply` (labelled Docker volumes/networks, sqlite file placement, non-PostgreSQL dump unpack) · `restore_cleanup` (removes only resources carrying this run's `restore_id` + `agent_id` labels, and the workspace only if `.portabase/owner.json` carries this run). PostgreSQL restore, compose render and `compose_up` arrive with W17-ii. The agent's journal and replay state live next to the channel state file (`${DATA_PATH:-/config}`); keep that directory out of any backed-up volume.
+
+## Compose (W17-ii)
+
+`compose.render.v1` is reported only on a restore target (`FORK_ALLOWED_PATH_ROOTS`, Docker socket) whose image is the **fork overlay** (`docker/fork/Dockerfile`: Docker Compose v5.4.0 pinned by SHA-256 per architecture, the build fails closed on a mismatch) and whose own container id / image id the agent can resolve.
+
+- `FORK_PROTECTED_CONTAINERS` — comma list of container names or 64-hex ids that `compose up` must never touch (in addition to the agent itself, Portabase / Arcane images and every container that mounts the Docker socket). An invalid entry disables the capability.
+- The agent refuses (`container_conflict`) to start a project whose name or `container_name`s collide with a container it does not own; it never stops, renames or recreates a foreign container.
+- Images are built **locally only** (`bash scripts/fork/build-image.sh`, `published: false`). Never `docker push` from this script; publishing is a manual owner step.
+- Private-registry images cannot be pulled (the agent has no registry credentials): `compose_failed`.

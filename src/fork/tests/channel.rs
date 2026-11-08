@@ -382,3 +382,30 @@ async fn a_rule_violation_reports_failed_payload_invalid_and_changes_nothing() {
     assert_eq!(r.rt.pins.len(), 1);
     assert!(r.rt.state.revoked_kids.is_empty());
 }
+
+/// W17b: a quiesce task that died with the agent has its containers restarted by the boot replay; `adopt` writes the honest outcome into the replay state, so
+/// when the dashboard offers the task again it is NEVER executed a second time and reports `failed: quiesce_interrupted` with the replay result.
+#[tokio::test]
+async fn a_reoffered_quiesce_task_reports_the_replay_outcome_and_never_runs_twice() {
+    use crate::fork::quiesce::journal::{self, QEntry, QJournal};
+    let mut r = rig().await;
+    let c = case(&r.v, "valid").clone();
+    let task_id = leased(&c).task_id;
+    mount_ok(&r.server).await;
+    // the task was accepted (state saved) but the agent died before an outcome existed; the boot replay then wrote a verified journal
+    r.rt.state.accept(&task_id, 1);
+    state::save(&r.rt.state_path, &r.rt.state).unwrap();
+    let dir = r.dir.path().join("fork-quiesce");
+    let replay = serde_json::json!({"project": "p", "released_by": "replay", "window_intact": false, "all_verified": true, "stopped_count": 1, "verified_count": 1, "containers": []});
+    journal::save(&dir, &QJournal { v: 1, task_id: task_id.clone(), run_id: task_id.clone(), project: "p".into(), created_unix: 1, phase: "replayed".into(),
+        containers: vec![QEntry { id: "a".repeat(64), service: "web".into(), name: "web".into(), was_running: true, stop_intent: true, stopped: true, started: true, outcome: Some("verified".into()) }],
+        released_by: None, replay: Some(replay), start_timeout_s: 30 }).unwrap();
+    assert!(crate::fork::quiesce::replay::adopt(&mut r.rt.state, &dir));
+    assert!(journal::load(&dir, &task_id).unwrap().is_none(), "a verified journal is removed once adopted");
+    let h = r.rt.process(&leased(&c), r.v.now).await;
+    assert_eq!(h, Handled::Duplicate);
+    let res = bodies(&r.server, "/result").await;
+    assert_eq!(res.len(), 1);
+    assert_eq!((res[0]["status"].as_str(), res[0]["reason"].as_str()), (Some("failed"), Some("quiesce_interrupted")));
+    assert_eq!(res[0]["result"]["all_verified"], true);
+}

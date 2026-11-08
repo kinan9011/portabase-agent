@@ -51,7 +51,7 @@ pub struct ComposeEnv {
     pub protected_extra: Vec<String>,
 }
 
-fn protected_list(env: &dyn Fn(&str) -> Option<String>) -> Result<Vec<String>, &'static str> {
+pub(crate) fn protected_list(env: &dyn Fn(&str) -> Option<String>) -> Result<Vec<String>, &'static str> {
     let ok = |s: &str| crate::fork::restore::is_hex64(s) || (!s.is_empty() && s.len() <= 128 && s.as_bytes()[0].is_ascii_alphanumeric() && s.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'_' | b'.' | b'-')));
     let list: Vec<String> = env("FORK_PROTECTED_CONTAINERS").unwrap_or_default().split(',').map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).collect();
     if list.iter().all(|s| ok(s)) { Ok(list) } else { Err("FORK_PROTECTED_CONTAINERS has an invalid entry") }

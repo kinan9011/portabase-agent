@@ -63,3 +63,22 @@ What the four tasks do (all signed, target-addressed, idempotent per `restore_id
 - The agent refuses (`container_conflict`) to start a project whose name or `container_name`s collide with a container it does not own; it never stops, renames or recreates a foreign container.
 - Images are built **locally only** (`bash scripts/fork/build-image.sh`, `published: false`). Never `docker push` from this script; publishing is a manual owner step.
 - Private-registry images cannot be pulled (the agent has no registry credentials): `compose_failed`.
+
+## Stop-during-backup (quiesce) — W17b, ADR-007 A15
+
+The agent can stop selected containers of ONE compose project while the dashboard copies files / volumes, then start them again. **Off by default, three switches:**
+the dashboard flag `FORK_QUIESCE_ENABLED`, a per-stack enable by a system administrator on the dashboard, and **this host**: set on the agent container
+
+| Variable | Meaning |
+|---|---|
+| `FORK_QUIESCE_ENABLED=true` | Host owner opt-in. Without it the agent never reports `quiesce.v1` and refuses every quiesce task (`capability_missing`). |
+| `FORK_QUIESCE_MAX_STOP_SECONDS` | Hard cap of the stop window on this host, 60–3600, default 1800. The agent restarts the containers when it elapses, whatever the dashboard says. |
+| `FORK_PROTECTED_CONTAINERS` | Extra protected containers (names or 64-hex ids). The agent's own container, Portabase / agent / Arcane images and any container that mounts the Docker socket are always protected. |
+
+Needs the Docker socket (`-v /var/run/docker.sock:/var/run/docker.sock`) and **a restart policy on the agent container (`unless-stopped`/`always`)**: if the host reboots or the agent is killed during a window, only the agent's boot replay starts the containers again (Docker does not restart containers that were stopped through the API).
+
+**What it guarantees.** A journal (`<state dir>/fork-quiesce/<task>.json`, 0600, never inside a volume) is written before the first stop. At every agent start — even when the task channel is disabled or its bundle is broken — journaled containers that were running before and are not running now are started again, in reverse stop order, verified one by one (running, healthy when a healthcheck exists, still running after a 3 s settle). The agent-local deadline uses the monotonic clock and does not depend on the dashboard. Only containers named in the agent's own journal are ever started.
+
+**What it refuses (whole task, nothing stopped):** a container outside the stack's compose project; the agent / Portabase / Arcane / a Docker-socket mounter anywhere in that project; an ambiguous or changed container id; a running second copy of a chosen service; paused / restarting containers; containers owned by a restore.
+
+**Manual recovery.** If the dashboard is gone and the agent cannot start a container: `docker ps -a --filter label=com.docker.compose.project=<project>`; the containers it stopped are listed (names, ids) in the journal file in the agent's state volume; `docker start <id>`. Removing the journal file afterwards clears the `quiesce_pending` block.

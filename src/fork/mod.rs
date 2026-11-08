@@ -14,6 +14,7 @@ pub mod hash;
 pub mod maint;
 pub mod poll;
 pub mod policy;
+pub mod quiesce;
 pub mod restore;
 pub mod state;
 pub mod tasks;
@@ -39,6 +40,8 @@ pub(crate) fn active() -> Option<Arc<Active>> {
 /// and in that case NO request is ever made to the dashboard (the agent has nothing to lease, so nothing can be delivered).
 pub async fn start() {
     let env = |k: &str| std::env::var(k).ok();
+    // W17b (D7): a quiesce journal means containers may still be stopped — replay it FIRST, even when the channel is disabled or its bundle is broken.
+    quiesce::replay::boot(&env).await;
     match config::load(&env) {
         Ok(config::Startup::Disabled(why)) => tracing::info!("Fork task channel disabled ({why})"),
         Ok(config::Startup::Active(cfg)) => {

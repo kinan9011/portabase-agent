@@ -60,17 +60,31 @@ pub enum Code {
     DbRestoreFailed,
     ComposeFailed,
     PayloadInvalid,
+    // W17b (ADR-007 A15), dashboard order: appended AFTER the W17-ii block, same order as `QUIESCE_AGENT_CODES`
+    NotInProject,
+    ProtectedInProject,
+    ContainerChanged,
+    ReplicaNotListed,
+    ContainerUnstable,
+    RestoreOwned,
+    QuiescePending,
+    JournalUnavailable,
+    StopFailed,
+    RestartUnverified,
+    QuiesceInterrupted,
 }
 
 impl Code {
     /// The restore-specific list, in the dashboard's order (the vectors assert equality).
     #[cfg_attr(not(test), allow(dead_code))]
-    pub const RESTORE: [Code; 34] = [
+    pub const RESTORE: [Code; 45] = [
         Code::PathNotAllowed, Code::SymlinkEscape, Code::RootNotShared, Code::WorkspaceNotOwned, Code::ModeUnsupported, Code::HostRoleMismatch, Code::ApprovalMissing,
         Code::ManifestInvalid, Code::ManifestUnknownKid, Code::ManifestSignature, Code::ManifestMismatch, Code::ArtifactUnavailable, Code::ChecksumMismatch, Code::ArchiveInvalid,
         Code::DumpFormatMismatch, Code::VolumeExists, Code::VolumeNotOwned, Code::DiskFull, Code::DockerUnavailable, Code::DeadlineExceeded, Code::RestoreFailed,
         Code::ComposeUnavailable, Code::OverrideInvalid, Code::RawRefused, Code::RenderFailed, Code::RenderTooLarge, Code::PolicyRefused, Code::ApprovalInvalid,
         Code::ContainerConflict, Code::ProtectedContainer, Code::NetworkExists, Code::VolumeNotInCompose, Code::DbRestoreFailed, Code::ComposeFailed,
+        Code::NotInProject, Code::ProtectedInProject, Code::ContainerChanged, Code::ReplicaNotListed, Code::ContainerUnstable, Code::RestoreOwned, Code::QuiescePending,
+        Code::JournalUnavailable, Code::StopFailed, Code::RestartUnverified, Code::QuiesceInterrupted,
     ];
     pub fn as_str(self) -> &'static str {
         match self {
@@ -109,6 +123,17 @@ impl Code {
             Code::DbRestoreFailed => "db_restore_failed",
             Code::ComposeFailed => "compose_failed",
             Code::PayloadInvalid => "payload_invalid",
+            Code::NotInProject => "not_in_project",
+            Code::ProtectedInProject => "protected_in_project",
+            Code::ContainerChanged => "container_changed",
+            Code::ReplicaNotListed => "replica_not_listed",
+            Code::ContainerUnstable => "container_unstable",
+            Code::RestoreOwned => "restore_owned",
+            Code::QuiescePending => "quiesce_pending",
+            Code::JournalUnavailable => "journal_unavailable",
+            Code::StopFailed => "stop_failed",
+            Code::RestartUnverified => "restart_unverified",
+            Code::QuiesceInterrupted => "quiesce_interrupted",
         }
     }
 }

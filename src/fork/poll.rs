@@ -4,6 +4,7 @@ use super::config::ChannelConfig;
 use super::crypto::Pin;
 use super::exec::{self, Ended};
 use super::maint;
+use super::quiesce;
 use super::restore::{self, docker_ops::DockerOps};
 use super::state::{self, Outcome, State};
 use super::tasks;
@@ -30,6 +31,11 @@ pub struct Runtime {
     /// W17-i: restore configuration + Docker access. `None` until `init_restore` proved the host is configured (then `restore.target.v1` is reported).
     pub renv: Option<restore::RestoreEnv>,
     pub ops: Option<Arc<dyn DockerOps>>,
+    /// W17b: quiesce configuration + Docker access (independent of the restore target). `None` ⇒ `quiesce.v1` is not reported.
+    pub qenv: Option<Arc<quiesce::QuiesceEnv>>,
+    pub qops: Option<Arc<dyn DockerOps>>,
+    pub restore_ok: bool,
+    pub compose_ok: bool,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -54,7 +60,7 @@ impl Runtime {
         let state = state::load(&cfg.state_path, &cfg.enroll_id).map_err(|e| e.to_string())?;
         let pins = maint::effective_pins(&cfg.pins, &state).map_err(|e| e.to_string())?;
         let transport = Transport::new(&cfg.server_url, &cfg.agent_id, maint::effective_credential(&cfg.credential, &state), cfg.insecure_lab).map_err(|_| "cannot build the http client".to_string())?;
-        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false, false), state, state_path: cfg.state_path, transport, renv: None, ops: None })
+        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false, false, false), state, state_path: cfg.state_path, transport, renv: None, ops: None, qenv: None, qops: None, restore_ok: false, compose_ok: false })
     }
 
     /// W17-i (DD20): decide, once at start-up, whether this host can be a restore target — valid `FORK_ALLOWED_PATH_ROOTS` (non-empty) AND a Docker daemon that answers.
@@ -102,7 +108,78 @@ impl Runtime {
         };
         self.renv = Some(renv);
         self.ops = Some(ops);
-        self.capabilities = capabilities::reported(true, compose_ok);
+        self.restore_ok = true;
+        self.compose_ok = compose_ok;
+        self.capabilities = capabilities::reported(true, compose_ok, self.qenv.is_some());
+    }
+
+    /// W17b (D9c): `quiesce.v1` only when the host owner opted in (`FORK_QUIESCE_ENABLED=true`), Docker answers, the agent knows its own container id and
+    /// `FORK_PROTECTED_CONTAINERS` is valid. Independent of the restore target (a backup-only source host needs no restore roots and no Compose CLI).
+    pub async fn init_quiesce(&mut self) {
+        let env = |k: &str| std::env::var(k).ok();
+        let mountinfo = std::fs::read_to_string("/proc/self/mountinfo").unwrap_or_default();
+        let cgroup = std::fs::read_to_string("/proc/self/cgroup").unwrap_or_default();
+        let q = match quiesce::QuiesceEnv::detect(&env, &mountinfo, &cgroup, &self.state_path) {
+            Ok(q) => q,
+            Err(why) => {
+                info!("Fork channel: quiesce.v1 NOT enabled: {why}");
+                return;
+            }
+        };
+        let ops: Arc<dyn DockerOps> = match &self.ops {
+            Some(o) => o.clone(),
+            None => match restore::docker_ops::RealDocker::connect() {
+                Ok(d) => Arc::new(d),
+                Err(_) => {
+                    error!("Fork channel: quiesce.v1 NOT enabled: the Docker daemon is not reachable");
+                    return;
+                }
+            },
+        };
+        if !ops.ping().await {
+            error!("Fork channel: quiesce.v1 NOT enabled: the Docker daemon does not answer");
+            return;
+        }
+        info!("Fork channel: quiesce.v1 enabled (max stop window {} s, journal {})", q.max_stop_cap, q.journal_dir.display());
+        self.qenv = Some(Arc::new(q));
+        self.qops = Some(ops);
+        self.capabilities = capabilities::reported(self.restore_ok, self.compose_ok, true);
+    }
+
+    /// W17b: run a composite `quiesce` (or the journal-bound `quiesce_start`). The body runs in its own task so an executor deadline or a panic can never leave
+    /// containers stopped: the journal is replayed (`recover`) before the outcome is reported.
+    async fn run_quiesce(&self, v: &super::verify::Verified, leased: &Leased) -> Outcome {
+        let failed = |code: &str, result: Option<serde_json::Value>| Outcome { status: "failed".into(), reason: Some(code.into()), result };
+        let (Some(q), Some(ops)) = (&self.qenv, &self.qops) else { return failed("execution_error", None) };
+        let is_start = v.envelope.task_type == "quiesce_start";
+        let deadline = if is_start { quiesce::START_DEADLINE } else { quiesce::deadline_of(&v.payload) };
+        let (q2, ops2, tr, task, lease, payload) = (q.clone(), ops.clone(), self.transport.clone(), leased.task_id.clone(), leased.lease_id.clone(), v.payload.clone());
+        let handle = tokio::spawn(async move {
+            let d = quiesce::Docker(ops2);
+            if is_start {
+                quiesce::execute_start(&q2, &d, &payload).await
+            } else {
+                let port = TransportPort { transport: &tr, task_id: &task, lease_id: &lease };
+                quiesce::execute(&q2, &d, &port, &task, &payload).await
+            }
+        });
+        let abort = handle.abort_handle();
+        let qd = quiesce::Docker(ops.clone());
+        match exec::run_with_heartbeat(&self.transport, &leased.task_id, &leased.lease_id, deadline, handle).await {
+            Ended::Done(Ok(Ok(result))) => Outcome { status: "succeeded".into(), reason: None, result: Some(result) },
+            Ended::Done(Ok(Err(f))) => failed(f.code.as_str(), f.result()),
+            Ended::Done(Err(_panic)) => {
+                error!("Fork channel: quiesce task {} panicked; replaying its journal", leased.task_id);
+                let r = quiesce::replay::recover(&qd, q.t, &q.journal_dir, &v.envelope.task_id).await;
+                failed("execution_error", r)
+            }
+            Ended::Deadline => {
+                abort.abort();
+                error!("Fork channel: quiesce task {} hit the executor deadline; replaying its journal", leased.task_id);
+                let r = quiesce::replay::recover(&qd, q.t, &q.journal_dir, &v.envelope.task_id).await;
+                failed(restore::Code::DeadlineExceeded.as_str(), r)
+            }
+        }
     }
 
     /// Run one restore-class task under the heartbeat loop and its deadline. Never panics; every failure is a closed code.
@@ -191,7 +268,9 @@ impl Runtime {
                 let outcome = if maint::is_maint(ty) {
                     self.apply_maint(&v.envelope.task_id, &v.envelope.kid, ty, &v.payload)
                 } else {
-                    let outcome = if capabilities::is_targeted(ty) {
+                    let outcome = if matches!(ty, "quiesce" | "quiesce_start") {
+                        self.run_quiesce(&v, leased).await
+                    } else if capabilities::is_targeted(ty) {
                         self.run_restore(&v, leased, now).await
                     } else {
                         match tasks::execute(ty, &v.payload) {
@@ -247,7 +326,12 @@ pub async fn run(cfg: ChannelConfig) {
         }
     };
     info!("Fork channel: pinned dashboard keys (kid): {}", rt.pins.iter().map(|p| p.kid.as_str()).collect::<Vec<_>>().join(", "));
+    // W17b: a task that was accepted but never finished died with the agent; the boot replay (fork::start) already restarted its containers — record the honest outcome
+    if quiesce::replay::adopt(&mut rt.state, &quiesce::journal::dir(rt.state_path.parent().unwrap_or(std::path::Path::new("/config")))) {
+        let _ = state::save(&rt.state_path, &rt.state);
+    }
     rt.init_restore(now_secs()).await;
+    rt.init_quiesce().await;
     super::set_active(Arc::new(super::Active { client: rt.transport.clone(), capabilities: rt.capabilities.clone() }));
     loop {
         let wait = rt.poll_once(poll, now_secs()).await;
@@ -265,5 +349,23 @@ struct Sink<'a> {
 impl super::compose::RenderSink for Sink<'_> {
     async fn put(&self, body: serde_json::Value) -> Result<(), ()> {
         self.transport.render(self.task_id, self.lease_id, body).await.map_err(|_| ())
+    }
+}
+
+/// W17b: the dashboard side of the stop window (progress + release answer), bound to this task + lease.
+struct TransportPort<'a> {
+    transport: &'a Transport,
+    task_id: &'a str,
+    lease_id: &'a str,
+}
+#[async_trait::async_trait]
+impl quiesce::Port for TransportPort<'_> {
+    async fn report(&self, phase: &str, containers: Option<serde_json::Value>) -> quiesce::Reply {
+        match self.transport.quiesce(self.task_id, self.lease_id, phase, containers).await {
+            Ok(true) => quiesce::Reply::Release,
+            Ok(false) => quiesce::Reply::Wait,
+            Err(CallError::NotFound | CallError::Conflict) => quiesce::Reply::Gone,
+            Err(_) => quiesce::Reply::Unreachable,
+        }
     }
 }

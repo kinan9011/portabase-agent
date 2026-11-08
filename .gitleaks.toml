@@ -1,0 +1,13 @@
+# Fork-owned (W27a F-02). Default gitleaks rules + an allowlist for PUBLIC TEST VALUES only (fork test vectors / corpora, upstream test fixtures). Everything else is scanned.
+title = "portabase-agent fork gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "test vectors and fixtures hold fake keys/hashes on purpose"
+paths = [
+  '''^src/fork/tests/''',
+  '''^src/fork/policy/corpus/''',
+  '''^src/tests/''',
+]

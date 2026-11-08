@@ -220,3 +220,22 @@ fn yaml_locals_not_in_the_corpus() {
     assert_eq!(yaml("{a: 1, a: 2}").unwrap_err().reason(), "yaml_invalid");
     assert!(is_canon_path("/restore/app") && !is_canon_path("/restore/../x") && !is_canon_path("/restore//x") && !is_canon_path("/restore/") && !is_canon_path("rel"));
 }
+
+/// W27a (plan step 5): a 10-level alias bomb (9^10 expansions if expanded) must be refused as `limits` AND quickly, through both the YAML reader and the raw read-scope check
+/// (the check that runs before anything is rendered). An alias is counted with the `yaml` package's formula, never expanded.
+#[test]
+fn alias_bomb_ten_levels_is_refused_without_expanding() {
+    let mut s = String::from("l0: &l0 [x, x, x, x, x, x, x, x, x]\n");
+    for i in 1..10 {
+        let refs = (0..9).map(|_| format!("*l{}", i - 1)).collect::<Vec<_>>().join(", ");
+        s.push_str(&format!("l{i}: &l{i} [{refs}]\n"));
+    }
+    assert!(s.len() < RESTORE_YAML_LIMITS.max_bytes, "the bomb must be under max_bytes so that the ALIAS limit is what stops it");
+    let t = std::time::Instant::now();
+    assert_eq!(yaml(&s).unwrap_err().reason(), "limits");
+    let compose = format!("services:\n  app:\n    image: x\n{}", s.lines().map(|l| format!("x-{l}\n")).collect::<String>());
+    let files: HashMap<String, String> = [("/w/c.yml".to_string(), compose)].into();
+    let r = check_raw(rules(), "/w", &["/w/c.yml".into()], &|p| files.get(p).cloned()).unwrap();
+    assert!(r.refused && r.reason.as_deref() == Some("limits"), "{r:?}");
+    assert!(t.elapsed() < std::time::Duration::from_secs(1), "bounded: {:?}", t.elapsed());
+}

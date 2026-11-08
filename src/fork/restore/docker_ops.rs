@@ -132,7 +132,7 @@ mod real {
     use super::*;
     use bollard::models::{ContainerCreateBody, HostConfig, NetworkCreateRequest, VolumeCreateRequest};
     use bollard::query_parameters::{CreateContainerOptions, ListContainersOptions, ListNetworksOptions, ListVolumesOptions, RemoveContainerOptions, StartContainerOptions, UploadToContainerOptions, DownloadFromContainerOptions};
-    use futures_util::StreamExt;
+    use futures::StreamExt;
     use std::io::Read;
 
     fn dk<E>(_: E) -> Code {
@@ -173,7 +173,7 @@ mod real {
         async fn drop_helper(&self, id: &str) {
             let _ = self.docker.remove_container(id, Some(RemoveContainerOptions { force: true, v: true, ..Default::default() })).await;
         }
-        async fn upload_tar(&self, helper: &str, stream: impl futures_util::Stream<Item = Result<bytes::Bytes, std::io::Error>> + Send + 'static) -> Result<(), Code> {
+        async fn upload_tar(&self, helper: &str, stream: impl futures::Stream<Item = Result<bytes::Bytes, std::io::Error>> + Send + 'static) -> Result<(), Code> {
             self.docker.upload_to_container(helper, Some(UploadToContainerOptions { path: "/".to_string(), ..Default::default() }), bollard::body_try_stream(stream)).await.map_err(dk)
         }
     }
@@ -286,7 +286,7 @@ mod real {
                 hdr.set_entry_type(tar::EntryType::Regular);
                 b.append_data(&mut hdr, format!("vol/{relative_path}"), &mut f).map_err(|_| Code::RestoreFailed)?;
                 let bytes = b.into_inner().map_err(|_| Code::RestoreFailed)?;
-                self.upload_tar(&id, futures_util::stream::once(async move { Ok(bytes::Bytes::from(bytes)) })).await
+                self.upload_tar(&id, futures::stream::once(async move { Ok(bytes::Bytes::from(bytes)) })).await
             }
             .await;
             self.drop_helper(&id).await;

@@ -58,6 +58,8 @@ walkdir = "2.5"
 aws-lc-rs = { version = "1.18", optional = true }
 # FORK(stack-recovery): A02 YAML event parser for the agent-side raw compose read-scope check (ADR-015 D-3); only compiled with fork-stacks
 yaml-rust2 = { version = "0.13", optional = true, default-features = false }
+# FORK(stack-recovery): A02 gzip decoder for the restore helper volume upload (upstream dropped async-compression in 1.26.0); only compiled with fork-stacks
+async-compression = { version = "0.4.37", features = ["tokio", "gzip"], optional = true }
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
@@ -65,7 +67,7 @@ libc = "0.2"
 # FORK(stack-recovery): A02 fork-only code lives in src/fork/ behind this feature; the stock build is unchanged
 [features]
 default = []
-fork-stacks = ["dep:aws-lc-rs", "dep:yaml-rust2"]
+fork-stacks = ["dep:aws-lc-rs", "dep:yaml-rust2", "dep:async-compression"]
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full"] }

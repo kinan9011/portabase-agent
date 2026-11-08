@@ -45,16 +45,32 @@ pub enum Code {
     DockerUnavailable,
     DeadlineExceeded,
     RestoreFailed,
+    // W17-ii (ADR-007 A14), dashboard order
+    ComposeUnavailable,
+    OverrideInvalid,
+    RawRefused,
+    RenderFailed,
+    RenderTooLarge,
+    PolicyRefused,
+    ApprovalInvalid,
+    ContainerConflict,
+    ProtectedContainer,
+    NetworkExists,
+    VolumeNotInCompose,
+    DbRestoreFailed,
+    ComposeFailed,
     PayloadInvalid,
 }
 
 impl Code {
     /// The restore-specific list, in the dashboard's order (the vectors assert equality).
     #[cfg_attr(not(test), allow(dead_code))]
-    pub const RESTORE: [Code; 21] = [
+    pub const RESTORE: [Code; 34] = [
         Code::PathNotAllowed, Code::SymlinkEscape, Code::RootNotShared, Code::WorkspaceNotOwned, Code::ModeUnsupported, Code::HostRoleMismatch, Code::ApprovalMissing,
         Code::ManifestInvalid, Code::ManifestUnknownKid, Code::ManifestSignature, Code::ManifestMismatch, Code::ArtifactUnavailable, Code::ChecksumMismatch, Code::ArchiveInvalid,
         Code::DumpFormatMismatch, Code::VolumeExists, Code::VolumeNotOwned, Code::DiskFull, Code::DockerUnavailable, Code::DeadlineExceeded, Code::RestoreFailed,
+        Code::ComposeUnavailable, Code::OverrideInvalid, Code::RawRefused, Code::RenderFailed, Code::RenderTooLarge, Code::PolicyRefused, Code::ApprovalInvalid,
+        Code::ContainerConflict, Code::ProtectedContainer, Code::NetworkExists, Code::VolumeNotInCompose, Code::DbRestoreFailed, Code::ComposeFailed,
     ];
     pub fn as_str(self) -> &'static str {
         match self {
@@ -79,6 +95,19 @@ impl Code {
             Code::DockerUnavailable => "docker_unavailable",
             Code::DeadlineExceeded => "deadline_exceeded",
             Code::RestoreFailed => "restore_failed",
+            Code::ComposeUnavailable => "compose_unavailable",
+            Code::OverrideInvalid => "override_invalid",
+            Code::RawRefused => "raw_refused",
+            Code::RenderFailed => "render_failed",
+            Code::RenderTooLarge => "render_too_large",
+            Code::PolicyRefused => "policy_refused",
+            Code::ApprovalInvalid => "approval_invalid",
+            Code::ContainerConflict => "container_conflict",
+            Code::ProtectedContainer => "protected_container",
+            Code::NetworkExists => "network_exists",
+            Code::VolumeNotInCompose => "volume_not_in_compose",
+            Code::DbRestoreFailed => "db_restore_failed",
+            Code::ComposeFailed => "compose_failed",
             Code::PayloadInvalid => "payload_invalid",
         }
     }
@@ -90,15 +119,21 @@ pub struct Failure {
     pub code: Code,
     pub detail: Option<String>,
     pub artifact: Option<usize>,
+    /// Extra result members of a failed compose task (e.g. the raw-check verdict of `raw_refused`); merged into `result()`. Never secret-bearing.
+    pub extra: Option<Value>,
 }
 impl From<Code> for Failure {
     fn from(code: Code) -> Self {
-        Failure { code, detail: None, artifact: None }
+        Failure { code, detail: None, artifact: None, extra: None }
     }
 }
 impl Failure {
     pub fn with(code: Code, detail: &str) -> Self {
-        Failure { code, detail: Some(sanitize_detail(detail)), artifact: None }
+        Failure { code, detail: Some(sanitize_detail(detail)), artifact: None, extra: None }
+    }
+    pub fn with_extra(mut self, extra: Value) -> Self {
+        self.extra = Some(extra);
+        self
     }
     pub fn at(mut self, artifact: usize) -> Self {
         self.artifact = Some(artifact);
@@ -106,10 +141,13 @@ impl Failure {
     }
     /// The `result` object of the failed outcome (inside the existing result map, so the dashboard's `ResultInput` is unchanged).
     pub fn result(&self) -> Option<Value> {
-        if self.detail.is_none() && self.artifact.is_none() {
+        if self.detail.is_none() && self.artifact.is_none() && self.extra.is_none() {
             return None;
         }
         let mut m = Map::new();
+        if let Some(Value::Object(x)) = &self.extra {
+            m.extend(x.clone());
+        }
         if let Some(d) = &self.detail {
             m.insert("detail".into(), json!(d));
         }
@@ -165,6 +203,8 @@ pub struct RestoreEnv {
     pub agent_id: String,
     /// Edge-key master key (decrypts agent archives). `None` ⇒ stage refuses (`restore_failed`). Never logged.
     pub master_b64: Option<Redacted>,
+    /// W17-ii: set only when `compose.render.v1` is enabled (E17). `None` ⇒ the three compose types fail `compose_unavailable`.
+    pub compose: Option<crate::fork::compose::ComposeEnv>,
 }
 impl std::fmt::Debug for RestoreEnv {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -185,7 +225,7 @@ impl RestoreEnv {
         };
         let roots = paths::parse_roots(&env("FORK_ALLOWED_PATH_ROOTS").unwrap_or_default(), std::slice::from_ref(&state_dir))?;
         let http_hosts = env("FORK_ARTIFACT_HTTP_HOSTS").unwrap_or_default().split(',').map(|h| h.trim().to_ascii_lowercase()).filter(|h| !h.is_empty()).collect();
-        Ok(RestoreEnv { roots, host_role, http_hosts, state_dir, agent_id: agent_id.to_string(), master_b64: None })
+        Ok(RestoreEnv { roots, host_role, http_hosts, state_dir, agent_id: agent_id.to_string(), master_b64: None, compose: None })
     }
 }
 
@@ -362,4 +402,4 @@ pub async fn execute(env: &RestoreEnv, ops: &dyn DockerOps, pins: &[Pin], t: &Ta
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

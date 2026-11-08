@@ -5,6 +5,7 @@
 //! executes a closed list of task types. The agent → dashboard direction is authenticated with a per-agent random credential. https only
 //! (one explicit loopback exemption for the fork lab). See the vault ADR-007 for the full design and risk list.
 pub mod capabilities;
+pub mod compose;
 pub mod config;
 pub mod crypto;
 pub mod envelope;
@@ -12,6 +13,7 @@ pub mod exec;
 pub mod hash;
 pub mod maint;
 pub mod poll;
+pub mod policy;
 pub mod restore;
 pub mod state;
 pub mod tasks;

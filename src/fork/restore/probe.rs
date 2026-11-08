@@ -51,5 +51,9 @@ pub async fn run(env: &RestoreEnv, ops: &dyn DockerOps, _t: &Task<'_>, payload: 
             })
         }
     };
-    Ok(json!({"roots": roots, "workspace_state": workspace_state, "arch": std::env::consts::ARCH, "compose_version": null, "rules_sha256": null}))
+    let (compose_version, rules_sha256) = match &env.compose {
+        Some(c) => (json!(c.version), json!(crate::fork::policy::rules::rules_sha256_ts())),
+        None => (Value::Null, Value::Null),
+    };
+    Ok(json!({"roots": roots, "workspace_state": workspace_state, "arch": std::env::consts::ARCH, "compose_version": compose_version, "rules_sha256": rules_sha256}))
 }

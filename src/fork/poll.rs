@@ -54,7 +54,7 @@ impl Runtime {
         let state = state::load(&cfg.state_path, &cfg.enroll_id).map_err(|e| e.to_string())?;
         let pins = maint::effective_pins(&cfg.pins, &state).map_err(|e| e.to_string())?;
         let transport = Transport::new(&cfg.server_url, &cfg.agent_id, maint::effective_credential(&cfg.credential, &state), cfg.insecure_lab).map_err(|_| "cannot build the http client".to_string())?;
-        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false), state, state_path: cfg.state_path, transport, renv: None, ops: None })
+        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false, false), state, state_path: cfg.state_path, transport, renv: None, ops: None })
     }
 
     /// W17-i (DD20): decide, once at start-up, whether this host can be a restore target — valid `FORK_ALLOWED_PATH_ROOTS` (non-empty) AND a Docker daemon that answers.
@@ -86,9 +86,23 @@ impl Runtime {
         renv.master_b64 = crate::utils::edge_key::decode_edge_key(&crate::settings::CONFIG.edge_key).ok().map(|k| super::state::Redacted(k.master_key_b64));
         let swept = restore::sweep::startup_sweep(&renv, Some(ops.as_ref()), now).await;
         info!("Fork channel: restore target enabled ({} root(s), host role {:?}); startup sweep: {:?}", renv.roots.len(), renv.host_role, swept);
+        // W17-ii (E17): `compose.render.v1` only when the agent knows its own container + image, runs the pinned Compose CLI and loaded its rule file.
+        let mountinfo = std::fs::read_to_string("/proc/self/mountinfo").unwrap_or_default();
+        let cgroup = std::fs::read_to_string("/proc/self/cgroup").unwrap_or_default();
+        let compose_ok = match super::compose::ComposeEnv::detect(ops.as_ref(), &env, PathBuf::from(super::compose::COMPOSE_BIN), &mountinfo, &cgroup).await {
+            Ok(ce) => {
+                info!("Fork channel: compose.render.v1 enabled (Compose {}, own image resolved)", ce.version);
+                renv.compose = Some(ce);
+                true
+            }
+            Err(why) => {
+                info!("Fork channel: compose.render.v1 NOT enabled: {why}");
+                false
+            }
+        };
         self.renv = Some(renv);
         self.ops = Some(ops);
-        self.capabilities = capabilities::reported(true);
+        self.capabilities = capabilities::reported(true, compose_ok);
     }
 
     /// Run one restore-class task under the heartbeat loop and its deadline. Never panics; every failure is a closed code.
@@ -97,8 +111,13 @@ impl Runtime {
         let (Some(renv), Some(ops)) = (&self.renv, &self.ops) else { return failed("execution_error", None) };
         let ty = v.envelope.task_type.as_str();
         let task = restore::Task { id: &v.envelope.task_id, ty, now };
-        let fut = restore::execute(renv, ops.as_ref(), &self.pins, &task, &v.payload);
-        match exec::run_with_heartbeat(&self.transport, &leased.task_id, &leased.lease_id, restore::deadline_of(ty), fut).await {
+        let sink = Sink { transport: &self.transport, task_id: &leased.task_id, lease_id: &leased.lease_id };
+        let is_compose = matches!(ty, "compose_render" | "restore_db" | "compose_up");
+        let fut = async {
+            if is_compose { super::compose::execute(renv, ops.as_ref(), &self.pins, &sink, &task, &v.payload).await } else { restore::execute(renv, ops.as_ref(), &self.pins, &task, &v.payload).await }
+        };
+        let deadline = if is_compose { super::compose::deadline_of(ty) } else { restore::deadline_of(ty) };
+        match exec::run_with_heartbeat(&self.transport, &leased.task_id, &leased.lease_id, deadline, fut).await {
             Ended::Done(Ok(result)) => Outcome { status: "succeeded".into(), reason: None, result: Some(result) },
             Ended::Done(Err(f)) => failed(f.code.as_str(), f.result()),
             Ended::Deadline => failed(restore::Code::DeadlineExceeded.as_str(), None),
@@ -233,5 +252,18 @@ pub async fn run(cfg: ChannelConfig) {
     loop {
         let wait = rt.poll_once(poll, now_secs()).await;
         tokio::time::sleep(wait).await;
+    }
+}
+
+/// W17-ii: hands the policy view of a `compose_render` task to the dashboard's render route (bound to this task + lease).
+struct Sink<'a> {
+    transport: &'a Transport,
+    task_id: &'a str,
+    lease_id: &'a str,
+}
+#[async_trait::async_trait]
+impl super::compose::RenderSink for Sink<'_> {
+    async fn put(&self, body: serde_json::Value) -> Result<(), ()> {
+        self.transport.render(self.task_id, self.lease_id, body).await.map_err(|_| ())
     }
 }

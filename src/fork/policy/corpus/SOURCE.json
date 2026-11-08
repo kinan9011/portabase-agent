@@ -1,0 +1,9 @@
+{
+  "dashboard_commit": "fca73bf976ab73a68c29b3c874256135502359fb",
+  "files": {
+    "compose-deny.json": "927647880a2149b123e4ddac37ed6b17eda34a0c0931c4f81082aa3752387e00",
+    "compose-policy-vectors.json": "9127866cd27e65ab4fd154fcb3fb9d7f20485ac00de1eab196b2da5b13502299",
+    "compose-policy-approval-vectors.json": "23954a277398c1eda6d1cf1ea09cfb8627871914d7c0adeefc1606ad4d61a97b"
+  },
+  "rules_sha256_ts": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a"
+}

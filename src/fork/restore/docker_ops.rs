@@ -49,6 +49,14 @@ pub type FileMeta = (u64, u64, u32);
 pub const RENDER_STDOUT_CAP: usize = 2 * 1024 * 1024;
 pub const RENDER_STDERR_CAP: usize = 4096;
 
+/// W-TR (ADR-007 A16): exit code + stdout (≤ `CHECK_STDOUT_CAP`) of one integrity-check helper. stderr is discarded (it may name paths or contain data fragments).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CheckOut {
+    pub code: i64,
+    pub stdout: Vec<u8>,
+}
+pub const CHECK_STDOUT_CAP: usize = 4096;
+
 pub fn owner_labels(restore_id: &str, agent_id: &str) -> Labels {
     HashMap::from([(LABEL_RESTORE.to_string(), restore_id.to_string()), (LABEL_AGENT.to_string(), agent_id.to_string())])
 }
@@ -88,6 +96,9 @@ pub trait DockerOps: Send + Sync {
     async fn helper_rm(&self, volume: &str, paths: &[String]) -> Result<(), Code>;
     /// Sandboxed compose render (E3): returns stdout (≤ 2 MiB) or `RenderTooLarge` / `RenderFailed(first stderr line)`.
     async fn render(&self, spec: &RenderSpec) -> Result<Vec<u8>, RenderError>;
+    /// W-TR: run `argv` in a hardened helper (network none + disabled, cap_drop ALL, no-new-privileges, read-only rootfs, helper label, runs as the agent's own uid:gid)
+    /// with `dir` bound at `/v` read-write. Returns exit code + stdout (≤ 4 KiB, stderr discarded). The container is removed in every outcome. Timeout ⇒ `Err(DeadlineExceeded)`.
+    async fn helper_check(&self, dir: &Path, argv: Vec<String>, timeout: std::time::Duration) -> Result<CheckOut, Code>;
     /// Every container incl. stopped ones, with the facts the D29 guard needs.
     async fn containers(&self) -> Result<Vec<ContainerFacts>, Code>;
     /// Stop (10 s) then remove (with anonymous volumes) one container by FULL id.
@@ -131,10 +142,17 @@ mod real {
     impl RealDocker {
         /// Hardened helper: created (and started only when `start`); removed by the caller in a `finally`.
         async fn make_helper(&self, binds: Vec<String>, caps: &[&str], readonly: bool, cmd: Option<Vec<String>>) -> Result<String, Code> {
+            self.make_helper_as("0:0", binds, caps, readonly, cmd, false).await
+        }
+        /// `attach`: the caller attaches stdout/stderr before start (log driver `none`: the output never reaches the daemon's log).
+        async fn make_helper_as(&self, user: &str, binds: Vec<String>, caps: &[&str], readonly: bool, cmd: Option<Vec<String>>, attach: bool) -> Result<String, Code> {
+            use bollard::models::HostConfigLogConfig;
             let body = ContainerCreateBody {
                 image: Some(self.image().await?),
                 cmd,
-                user: Some("0:0".into()),
+                user: Some(user.into()),
+                attach_stdout: attach.then_some(true),
+                attach_stderr: attach.then_some(true),
                 network_disabled: Some(true),
                 labels: Some(HashMap::from([(LABEL_HELPER.to_string(), "true".to_string()), ("com.docker.compose.project".to_string(), String::new())])),
                 host_config: Some(HostConfig {
@@ -144,6 +162,7 @@ mod real {
                     cap_add: Some(caps.iter().map(|c| c.to_string()).collect()),
                     security_opt: Some(vec!["no-new-privileges".into()]),
                     readonly_rootfs: Some(readonly),
+                    log_config: attach.then(|| HostConfigLogConfig { typ: Some("none".into()), config: None }),
                     ..Default::default()
                 }),
                 ..Default::default()
@@ -383,6 +402,33 @@ mod real {
             .await;
             self.drop_helper(&id).await;
             r
+        }
+        async fn helper_check(&self, dir: &Path, argv: Vec<String>, timeout: std::time::Duration) -> Result<CheckOut, Code> {
+            use bollard::container::LogOutput;
+            // the helper owns the files it reads (agent uid:gid) so no capability is needed; the bind is the ONLY mount, the rootfs is read-only
+            let user = format!("{}:{}", unsafe { libc::geteuid() }, unsafe { libc::getegid() });
+            let id = self.make_helper_as(&user, vec![format!("{}:/v:rw", dir.display())], &[], true, Some(argv), true).await?;
+            let r = tokio::time::timeout(timeout, async {
+                let mut att = self.docker.attach_container(&id, Some(bollard::query_parameters::AttachContainerOptions { stream: true, stdout: true, stderr: true, ..Default::default() })).await.map_err(dk)?;
+                self.docker.start_container(&id, None::<StartContainerOptions>).await.map_err(dk)?;
+                let mut out = Vec::new();
+                while let Some(c) = att.output.next().await {
+                    if let LogOutput::StdOut { message } = c.map_err(dk)? {
+                        let room = CHECK_STDOUT_CAP.saturating_sub(out.len());
+                        out.extend_from_slice(&message[..message.len().min(room)]);
+                    }
+                }
+                let mut w = self.docker.wait_container(&id, None::<bollard::query_parameters::WaitContainerOptions>);
+                let code = match w.next().await {
+                    Some(Ok(res)) => res.status_code,
+                    Some(Err(bollard::errors::Error::DockerContainerWaitError { code, .. })) => code,
+                    _ => return Err(Code::DockerUnavailable),
+                };
+                Ok(CheckOut { code, stdout: out })
+            })
+            .await;
+            self.drop_helper(&id).await;
+            r.unwrap_or(Err(Code::DeadlineExceeded))
         }
         async fn containers(&self) -> Result<Vec<ContainerFacts>, Code> {
             let list = self.docker.list_containers(Some(ListContainersOptions { all: true, ..Default::default() })).await.map_err(dk)?;

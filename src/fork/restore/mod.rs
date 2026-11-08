@@ -1,10 +1,11 @@
-//! Restore-to-target engine, data only (W17-i, plan-W17, ADR-007 A13): `restore_probe`, `restore_stage`, `restore_apply`, `restore_cleanup`.
+//! Restore-to-target engine, data only (W17-i, plan-W17, ADR-007 A13): `restore_probe`, `restore_stage`, `restore_apply`, `restore_cleanup`; W-TR adds `restore_verify` (A16).
 //! Everything here runs ONLY for a task that already passed the channel verification (signature, pin, target binding, replay, capability): the executors
 //! below re-validate every payload field (strict serde + the shared path/name grammars), verify the signed manifest and every checksum BEFORE any data
 //! is touched, work inside one workspace claimed by a `restore_id`, and clean up only what carries that id. W17-ii adds compose render / policy / up.
 pub mod apply;
 pub mod artifact;
 pub mod docker_ops;
+pub mod integrity;
 pub mod journal;
 pub mod manifest;
 pub mod paths;
@@ -72,19 +73,22 @@ pub enum Code {
     StopFailed,
     RestartUnverified,
     QuiesceInterrupted,
+    // W-TR (ADR-007 A16), dashboard order: appended AFTER the W17b block
+    IntegrityFailed,
+    EngineUnavailable,
 }
 
 impl Code {
     /// The restore-specific list, in the dashboard's order (the vectors assert equality).
     #[cfg_attr(not(test), allow(dead_code))]
-    pub const RESTORE: [Code; 45] = [
+    pub const RESTORE: [Code; 47] = [
         Code::PathNotAllowed, Code::SymlinkEscape, Code::RootNotShared, Code::WorkspaceNotOwned, Code::ModeUnsupported, Code::HostRoleMismatch, Code::ApprovalMissing,
         Code::ManifestInvalid, Code::ManifestUnknownKid, Code::ManifestSignature, Code::ManifestMismatch, Code::ArtifactUnavailable, Code::ChecksumMismatch, Code::ArchiveInvalid,
         Code::DumpFormatMismatch, Code::VolumeExists, Code::VolumeNotOwned, Code::DiskFull, Code::DockerUnavailable, Code::DeadlineExceeded, Code::RestoreFailed,
         Code::ComposeUnavailable, Code::OverrideInvalid, Code::RawRefused, Code::RenderFailed, Code::RenderTooLarge, Code::PolicyRefused, Code::ApprovalInvalid,
         Code::ContainerConflict, Code::ProtectedContainer, Code::NetworkExists, Code::VolumeNotInCompose, Code::DbRestoreFailed, Code::ComposeFailed,
         Code::NotInProject, Code::ProtectedInProject, Code::ContainerChanged, Code::ReplicaNotListed, Code::ContainerUnstable, Code::RestoreOwned, Code::QuiescePending,
-        Code::JournalUnavailable, Code::StopFailed, Code::RestartUnverified, Code::QuiesceInterrupted,
+        Code::JournalUnavailable, Code::StopFailed, Code::RestartUnverified, Code::QuiesceInterrupted, Code::IntegrityFailed, Code::EngineUnavailable,
     ];
     pub fn as_str(self) -> &'static str {
         match self {
@@ -134,6 +138,8 @@ impl Code {
             Code::StopFailed => "stop_failed",
             Code::RestartUnverified => "restart_unverified",
             Code::QuiesceInterrupted => "quiesce_interrupted",
+            Code::IntegrityFailed => "integrity_failed",
+            Code::EngineUnavailable => "engine_unavailable",
         }
     }
 }
@@ -200,12 +206,15 @@ pub const DEADLINE_PROBE: Duration = Duration::from_secs(2 * 60);
 pub const DEADLINE_STAGE: Duration = Duration::from_secs(30 * 60);
 pub const DEADLINE_APPLY: Duration = Duration::from_secs(60 * 60);
 pub const DEADLINE_CLEANUP: Duration = Duration::from_secs(10 * 60);
+/// W-TR: engine integrity checks of a test restore (`pg_restore -f /dev/null` reads every data block).
+pub const DEADLINE_VERIFY: Duration = Duration::from_secs(60 * 60);
 
 pub fn deadline_of(task_type: &str) -> Duration {
     match task_type {
         "restore_probe" => DEADLINE_PROBE,
         "restore_stage" => DEADLINE_STAGE,
         "restore_apply" => DEADLINE_APPLY,
+        "restore_verify" => DEADLINE_VERIFY,
         _ => DEADLINE_CLEANUP,
     }
 }
@@ -356,6 +365,25 @@ pub struct ApplyBody {
     pub networks: Vec<NetRef>,
     pub unpack: Vec<UnpackRef>,
 }
+/// W-TR: the engine a staged artifact is checked with.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum Engine {
+    Sqlite,
+    Postgresql,
+}
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct CheckRef {
+    pub index: usize,
+    pub engine: Engine,
+}
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VerifyBody {
+    pub manifest_sha256: String,
+    pub checks: Vec<CheckRef>,
+}
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CleanupBody {
@@ -422,6 +450,7 @@ pub async fn execute(env: &RestoreEnv, ops: &dyn DockerOps, pins: &[Pin], t: &Ta
         "restore_stage" => stage::run(env, ops, pins, t, payload).await,
         "restore_apply" => apply::run_apply(env, ops, pins, t, payload).await,
         "restore_cleanup" => apply::run_cleanup(env, ops, t, payload).await,
+        "restore_verify" => integrity::run(env, ops, pins, t, payload).await,
         _ => Err(Failure::from(Code::PayloadInvalid)),
     }
 }

@@ -603,8 +603,8 @@ fn detect_requires_the_host_opt_in_and_valid_config() {
 #[test]
 fn capability_is_reported_only_with_the_flag_and_types_are_targeted() {
     use crate::fork::capabilities as c;
-    assert!(!c::reported(true, true, false).iter().any(|x| x == "quiesce.v1"));
-    assert!(c::reported(false, false, true).iter().any(|x| x == "quiesce.v1"));
+    assert!(!c::reported(true, true, false, false).iter().any(|x| x == "quiesce.v1"));
+    assert!(c::reported(false, false, true, false).iter().any(|x| x == "quiesce.v1"));
     assert!(c::is_targeted("quiesce") && c::is_targeted("quiesce_start"));
     assert_eq!(c::task_requires("quiesce"), Some(&["quiesce.v1"][..]));
     assert_eq!(c::task_requires("quiesce_start"), Some(&["quiesce.v1"][..]));

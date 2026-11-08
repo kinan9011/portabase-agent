@@ -36,6 +36,8 @@ pub struct Runtime {
     pub qops: Option<Arc<dyn DockerOps>>,
     pub restore_ok: bool,
     pub compose_ok: bool,
+    /// W-TR: `test-restore.v1` (restore enabled AND the checkers exist in this image).
+    pub test_restore_ok: bool,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -60,7 +62,7 @@ impl Runtime {
         let state = state::load(&cfg.state_path, &cfg.enroll_id).map_err(|e| e.to_string())?;
         let pins = maint::effective_pins(&cfg.pins, &state).map_err(|e| e.to_string())?;
         let transport = Transport::new(&cfg.server_url, &cfg.agent_id, maint::effective_credential(&cfg.credential, &state), cfg.insecure_lab).map_err(|_| "cannot build the http client".to_string())?;
-        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false, false, false), state, state_path: cfg.state_path, transport, renv: None, ops: None, qenv: None, qops: None, restore_ok: false, compose_ok: false })
+        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false, false, false, false), state, state_path: cfg.state_path, transport, renv: None, ops: None, qenv: None, qops: None, restore_ok: false, compose_ok: false, test_restore_ok: false })
     }
 
     /// W17-i (DD20): decide, once at start-up, whether this host can be a restore target — valid `FORK_ALLOWED_PATH_ROOTS` (non-empty) AND a Docker daemon that answers.
@@ -110,7 +112,14 @@ impl Runtime {
         self.ops = Some(ops);
         self.restore_ok = true;
         self.compose_ok = compose_ok;
-        self.capabilities = capabilities::reported(true, compose_ok, self.qenv.is_some());
+        self.test_restore_ok = if restore::integrity::tools_present() {
+            info!("Fork channel: test-restore.v1 enabled (sqlite3 + pg_restore present)");
+            true
+        } else {
+            info!("Fork channel: test-restore.v1 NOT enabled: sqlite3 or pg_restore is missing from this image");
+            false
+        };
+        self.capabilities = capabilities::reported(true, compose_ok, self.qenv.is_some(), self.test_restore_ok);
     }
 
     /// W17b (D9c): `quiesce.v1` only when the host owner opted in (`FORK_QUIESCE_ENABLED=true`), Docker answers, the agent knows its own container id and
@@ -143,7 +152,7 @@ impl Runtime {
         info!("Fork channel: quiesce.v1 enabled (max stop window {} s, journal {})", q.max_stop_cap, q.journal_dir.display());
         self.qenv = Some(Arc::new(q));
         self.qops = Some(ops);
-        self.capabilities = capabilities::reported(self.restore_ok, self.compose_ok, true);
+        self.capabilities = capabilities::reported(self.restore_ok, self.compose_ok, true, self.test_restore_ok);
     }
 
     /// W17b: run a composite `quiesce` (or the journal-bound `quiesce_start`). The body runs in its own task so an executor deadline or a panic can never leave

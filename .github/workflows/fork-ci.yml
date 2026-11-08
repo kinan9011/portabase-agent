@@ -10,12 +10,28 @@ jobs:
   fork-channel:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable (2026-11-08)
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Patch registry <-> markers
         run: bash scripts/fork/check-patches.sh
       - name: Stock build still compiles without the fork feature
         run: cargo build
       - name: Fork task channel tests (unit + mock-dashboard integration)
         run: "cargo test --features fork-stacks fork::"
+
+  # W27a F-02: the agent repo had NO secret scanning. Scans the commits of the push / pull request (range from SHAs only; no PR text reaches the shell). Config: fork-owned `.gitleaks.toml`.
+  gitleaks:
+    name: gitleaks (commit range)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: scan the commits of this change
+        env:
+          RANGE: ${{ github.event_name == 'pull_request' && format('{0}..{1}', github.event.pull_request.base.sha, github.event.pull_request.head.sha) || 'HEAD~1..HEAD' }}
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.24.2 git /repo --config /repo/.gitleaks.toml --redact --log-opts="$RANGE"

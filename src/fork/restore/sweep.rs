@@ -1,4 +1,4 @@
-//! Startup sweep (DD16, SEC-14): called once before the channel loop. Removes what a crash may have left: `secret/` and `tmp/` of every owned workspace under a
+//! Startup sweep (DD16, SEC-14): called once before the channel loop. Removes what a crash may have left: `secret/`, `tmp/` and `verify/` of every owned workspace under a
 //! valid root, `stage/` when the workspace has been idle for > 24 h (by `owner.json.updated_at` against the INJECTED clock, never file mtimes), helper
 //! containers, and marks interrupted journals as aborted.
 use super::docker_ops::DockerOps;
@@ -42,6 +42,7 @@ pub async fn startup_sweep(env: &RestoreEnv, ops: Option<&dyn DockerOps>, now: i
             s.workspaces += 1;
             let _ = std::fs::remove_dir_all(w.join(".portabase/secret"));
             let _ = std::fs::remove_dir_all(w.join(".portabase/tmp"));
+            let _ = std::fs::remove_dir_all(w.join(".portabase/verify")); // W-TR: private copies of staged data for the engine check (SEC-14)
             if let Some(o) = Workspace::read_owner(&w) {
                 if now - o.updated_at > STAGE_TTL_SECS && std::fs::remove_dir_all(w.join(".portabase/stage")).is_ok() {
                     s.stage_removed += 1;

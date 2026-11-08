@@ -156,6 +156,9 @@ pub(crate) struct FakeState {
     pub(crate) containers: Vec<super::docker_ops::ContainerFacts>,
     pub(crate) removed_containers: Vec<String>,
     pub(crate) own_image: String,
+    /// W-TR: `helper_check` calls (dir, argv) and canned outputs (popped in order; empty ⇒ exit 0, stdout `ok`).
+    pub(crate) checks: Vec<(PathBuf, Vec<String>, Vec<String>)>,
+    pub(crate) check_out: std::collections::VecDeque<Result<super::docker_ops::CheckOut, Code>>,
 }
 pub(crate) struct Fake(pub(crate) Mutex<FakeState>);
 impl Fake {
@@ -230,6 +233,23 @@ impl DockerOps for Fake {
         let mut s = self.0.lock().unwrap();
         s.renders.push(spec.clone());
         s.render_out.pop_front().unwrap_or(Err(super::docker_ops::RenderError::Failed("no canned render".into())))
+    }
+    async fn helper_check(&self, dir: &Path, argv: Vec<String>, _timeout: std::time::Duration) -> Result<super::docker_ops::CheckOut, Code> {
+        let mut s = self.0.lock().unwrap();
+        // record what is inside the bound directory at call time (the real helper sees it) — sorted relative file names
+        let mut seen = Vec::new();
+        fn walk(base: &Path, p: &Path, out: &mut Vec<String>) {
+            if let Ok(rd) = std::fs::read_dir(p) {
+                for e in rd.flatten() {
+                    let q = e.path();
+                    if q.is_dir() { walk(base, &q, out); } else { out.push(q.strip_prefix(base).unwrap().display().to_string()); }
+                }
+            }
+        }
+        walk(dir, dir, &mut seen);
+        seen.sort();
+        s.checks.push((dir.to_path_buf(), argv, seen));
+        s.check_out.pop_front().unwrap_or(Ok(super::docker_ops::CheckOut { code: 0, stdout: b"ok\n".to_vec() }))
     }
     async fn containers(&self) -> Result<Vec<super::docker_ops::ContainerFacts>, Code> {
         Ok(self.0.lock().unwrap().containers.clone())
@@ -725,7 +745,7 @@ mod channel_level {
             bundle_pins: pins_of(v),
             bundle_credential: CRED.to_string(),
             task_key: key,
-            capabilities: capabilities::reported(configured, false, false),
+            capabilities: capabilities::reported(configured, false, false, false),
             state: state::load(&state_path, &v.enroll_id).unwrap(),
             state_path,
             transport: Transport::new(server_url, &v.agent_id, CRED, true).unwrap(),
@@ -735,6 +755,7 @@ mod channel_level {
             qops: None,
             restore_ok: configured,
             compose_ok: false,
+            test_restore_ok: false,
         }
     }
     fn leased(c: &EnvCase) -> Leased {
@@ -777,11 +798,11 @@ mod channel_level {
             assert_eq!(bodies(&server, "/result").await[0]["status"], "rejected", "{name}");
         }
         // an agent that is not configured for restores does not report the capability at all
-        assert!(!capabilities::reported(false, false, false).iter().any(|c| c == "restore.target.v1") && capabilities::reported(true, false, false).iter().any(|c| c == "restore.target.v1"));
+        assert!(!capabilities::reported(false, false, false, false).iter().any(|c| c == "restore.target.v1") && capabilities::reported(true, false, false, false).iter().any(|c| c == "restore.target.v1"));
         // W17-ii: compose.render.v1 only on top of a working restore target and only when compose is ok
-        assert!(!capabilities::reported(true, false, false).iter().any(|c| c == "compose.render.v1"));
-        assert!(capabilities::reported(true, true, false).iter().any(|c| c == "compose.render.v1"));
-        assert!(!capabilities::reported(false, true, false).iter().any(|c| c == "compose.render.v1"));
+        assert!(!capabilities::reported(true, false, false, false).iter().any(|c| c == "compose.render.v1"));
+        assert!(capabilities::reported(true, true, false, false).iter().any(|c| c == "compose.render.v1"));
+        assert!(!capabilities::reported(false, true, false, false).iter().any(|c| c == "compose.render.v1"));
     }
 
     #[tokio::test]
@@ -851,4 +872,245 @@ fn debug_output_hides_the_master_key_and_failures_carry_no_urls() {
     assert!(!format!("{:?}", r.env).contains(&fixtures_key()));
     let f = Failure::with(Code::ArtifactUnavailable, "https://h/x?X-Amz-Signature=abc");
     assert!(!f.detail.unwrap().contains('/') && !Failure::with(Code::RestoreFailed, "A B").detail.unwrap().contains(' '));
+}
+
+// ---- W-TR: restore_verify (engine integrity check of a data-only test restore, ADR-007 A16) -------------------------------------------------
+mod verify_tests {
+    use super::*;
+    use super::super::integrity;
+
+    const PG_BIN: &str = "/usr/lib/postgresql/17/bin/pg_restore";
+
+    fn test_header(r: &Rig, rid: &str) -> Value {
+        let mut h = header(r, rid);
+        h["purpose"] = json!("test_restore");
+        h["mode"] = json!("new_stack");
+        h
+    }
+    /// Stage the lab world as a TEST restore (everything under scratch/), return the stage world indexes.
+    async fn staged(r: &Rig, ops: &Fake) -> (MockServer, usize, usize) {
+        let w = &r.v.stage_world;
+        let srv = MockServer::start().await;
+        serve(&srv, "/vol", VOL_ENC.to_vec(), 1).await;
+        serve(&srv, "/db", PG_ENC.to_vec(), 1).await;
+        let p = merge(test_header(r, RID), json!({
+            "manifest": {"json_b64": base64::Engine::encode(&base64::engine::general_purpose::STANDARD, w.json.as_bytes()), "sig_b64": w.sig_b64, "sha256": w.sha256},
+            "artifacts": [{"index": w.volume_index, "source": "archive", "url": format!("{}/vol", srv.uri())}, {"index": w.db_index, "source": "archive", "url": format!("{}/db", srv.uri())}],
+            "paths": [{"index": w.volume_index, "dest": format!("{}/restore/app/scratch/volumes/vol", r.root.display())}],
+        }));
+        execute(&r.env, ops, &r.pins, &task("restore_stage"), &p).await.unwrap();
+        (srv, w.volume_index, w.db_index)
+    }
+    fn verify_payload(r: &Rig, h: Value, checks: Value) -> Vec<u8> {
+        merge(h, json!({"manifest_sha256": r.v.stage_world.sha256, "checks": checks}))
+    }
+    async fn run_verify(r: &Rig, ops: &Fake, payload: &[u8]) -> R<Value> {
+        integrity::run_with(&r.env, ops, &r.pins, &task("restore_verify"), payload, Some(PG_BIN.to_string())).await
+    }
+    fn out(code: i64, stdout: &str) -> Result<super::super::docker_ops::CheckOut, Code> {
+        Ok(super::super::docker_ops::CheckOut { code, stdout: stdout.as_bytes().to_vec() })
+    }
+
+    #[tokio::test]
+    async fn pg_dump_ok_runs_one_hardened_helper_and_leaves_no_private_copy() {
+        let r = rig(HostRole::Test, &["127.0.0.1"]);
+        let ops = Fake::new();
+        let (_srv, _v, db) = staged(&r, &ops).await;
+        let p = verify_payload(&r, test_header(&r, RID), json!([{"index": db, "engine": "postgresql"}]));
+        let res = run_verify(&r, &ops, &p).await.unwrap();
+        assert_eq!(res["checks"][0]["status"], "ok");
+        assert_eq!(res["checks"][0]["engine"], "postgresql");
+        let s = ops.0.lock().unwrap();
+        assert_eq!(s.checks.len(), 1);
+        let (dir, argv, seen) = &s.checks[0];
+        assert!(dir.starts_with(r.root.join("restore/app/.portabase/verify")), "the private copy lives inside the workspace metadata");
+        assert_eq!(&argv[..3], &[PG_BIN.to_string(), "-f".to_string(), "/dev/null".to_string()]);
+        assert!(argv[3].starts_with("/v/"), "the bound directory is the only path the engine sees");
+        assert!(argv.iter().all(|a| !a.contains("network") && !a.starts_with("--")), "argv never carries a network flag");
+        assert_eq!(seen.len(), 1, "the dump was extracted into the private directory");
+        assert!(!r.root.join("restore/app/.portabase/verify").exists(), "private copy removed after the check");
+    }
+
+    #[tokio::test]
+    async fn engine_failure_and_missing_engine_map_to_closed_codes_and_still_clean_up() {
+        let r = rig(HostRole::Test, &["127.0.0.1"]);
+        let ops = Fake::new();
+        let (_srv, _v, db) = staged(&r, &ops).await;
+        let p = verify_payload(&r, test_header(&r, RID), json!([{"index": db, "engine": "postgresql"}]));
+        ops.0.lock().unwrap().check_out.push_back(out(1, "pg_restore: error: could not read from input file: end of file\n"));
+        let e = run_verify(&r, &ops, &p).await.unwrap_err();
+        assert_eq!((e.code, e.detail.as_deref(), e.artifact), (Code::IntegrityFailed, Some("postgresql"), Some(db)));
+        assert!(e.result().unwrap().to_string().find("pg_restore").is_none(), "engine output never reaches the result");
+        assert!(!r.root.join("restore/app/.portabase/verify").exists(), "cleaned up on failure too");
+        ops.0.lock().unwrap().check_out.push_back(out(127, ""));
+        assert_eq!(run_verify(&r, &ops, &p).await.unwrap_err().code, Code::EngineUnavailable);
+        ops.0.lock().unwrap().check_out.push_back(out(126, ""));
+        assert_eq!(run_verify(&r, &ops, &p).await.unwrap_err().code, Code::EngineUnavailable);
+        ops.0.lock().unwrap().check_out.push_back(Err(Code::DeadlineExceeded));
+        assert_eq!(run_verify(&r, &ops, &p).await.unwrap_err().code, Code::DeadlineExceeded);
+        // no engine binary on this host's image at all
+        let res = integrity::run_with(&r.env, &ops, &r.pins, &task("restore_verify"), &p, None).await;
+        assert_eq!(res.unwrap_err().code, Code::EngineUnavailable);
+    }
+
+    #[tokio::test]
+    async fn role_mismatch_staged_hash_mismatch_and_unstaged_artifact_are_refused() {
+        let r = rig(HostRole::Test, &["127.0.0.1"]);
+        let ops = Fake::new();
+        let (_srv, vol, db) = staged(&r, &ops).await;
+        // the volume artifact is not a sqlite file
+        let p = verify_payload(&r, test_header(&r, RID), json!([{"index": vol, "engine": "sqlite"}]));
+        let e = run_verify(&r, &ops, &p).await.unwrap_err();
+        assert_eq!((e.code, e.artifact), (Code::ManifestMismatch, Some(vol)));
+        // an index the manifest does not have
+        let p = verify_payload(&r, test_header(&r, RID), json!([{"index": 9, "engine": "postgresql"}]));
+        assert_eq!(run_verify(&r, &ops, &p).await.unwrap_err().code, Code::ManifestMismatch);
+        // the staged archive was altered after stage: its plaintext hash no longer equals the signed one
+        let staged_file = r.root.join(format!("restore/app/.portabase/stage/a{db}.tar.gz"));
+        let mut bytes = std::fs::read(&staged_file).unwrap();
+        let last = bytes.len() - 1;
+        bytes[last] ^= 0xff;
+        std::fs::write(&staged_file, &bytes).unwrap();
+        let p = verify_payload(&r, test_header(&r, RID), json!([{"index": db, "engine": "postgresql"}]));
+        let e = run_verify(&r, &ops, &p).await.unwrap_err();
+        assert_eq!((e.code, e.artifact), (Code::ChecksumMismatch, Some(db)));
+        std::fs::remove_file(&staged_file).unwrap();
+        assert_eq!(run_verify(&r, &ops, &p).await.unwrap_err().code, Code::RestoreFailed);
+        assert!(ops.0.lock().unwrap().checks.is_empty(), "no helper was started for a refused check");
+    }
+
+    #[tokio::test]
+    async fn purpose_restore_host_role_bounds_unknown_keys_and_foreign_workspace_are_refused() {
+        let r = rig(HostRole::Test, &["127.0.0.1"]);
+        let ops = Fake::new();
+        let (_srv, _v, db) = staged(&r, &ops).await;
+        let ok_checks = json!([{"index": db, "engine": "postgresql"}]);
+        // purpose restore: only a test restore is engine-checked
+        let e = run_verify(&r, &ops, &verify_payload(&r, header(&r, RID), ok_checks.clone())).await.unwrap_err();
+        assert_eq!(e.code, Code::ModeUnsupported);
+        // host role mismatch (DD17)
+        let mut h = test_header(&r, RID);
+        h["host_role"] = json!("production");
+        h["approvals"] = json!(["production_target"]);
+        assert_eq!(run_verify(&r, &ops, &verify_payload(&r, h, ok_checks.clone())).await.unwrap_err().code, Code::HostRoleMismatch);
+        // bounds: empty, duplicate index, > 100, bad hash
+        for checks in [json!([]), json!([{"index": db, "engine": "postgresql"}, {"index": db, "engine": "postgresql"}]), json!((0..101).map(|i| json!({"index": i, "engine": "sqlite"})).collect::<Vec<_>>())] {
+            assert_eq!(run_verify(&r, &ops, &verify_payload(&r, test_header(&r, RID), checks)).await.unwrap_err().code, Code::PayloadInvalid);
+        }
+        let bad_hash = merge(test_header(&r, RID), json!({"manifest_sha256": "xyz", "checks": ok_checks.clone()}));
+        assert_eq!(run_verify(&r, &ops, &bad_hash).await.unwrap_err().code, Code::PayloadInvalid);
+        // unknown keys (body and check)
+        let extra = merge(test_header(&r, RID), json!({"manifest_sha256": r.v.stage_world.sha256, "checks": ok_checks, "extra": 1}));
+        assert_eq!(run_verify(&r, &ops, &extra).await.unwrap_err().code, Code::PayloadInvalid);
+        let extra2 = verify_payload(&r, test_header(&r, RID), json!([{"index": db, "engine": "postgresql", "path": "/etc"}]));
+        assert_eq!(run_verify(&r, &ops, &extra2).await.unwrap_err().code, Code::PayloadInvalid);
+        // another run's workspace
+        let p = verify_payload(&r, test_header(&r, RID2), json!([{"index": db, "engine": "postgresql"}]));
+        assert_eq!(run_verify(&r, &ops, &p).await.unwrap_err().code, Code::WorkspaceNotOwned);
+        assert!(ops.0.lock().unwrap().checks.is_empty());
+    }
+
+    fn sqlite_file(dir: &std::path::Path, name: &str) {
+        let mut b = b"SQLite format 3\0".to_vec();
+        b.extend_from_slice(&[0u8; 100]);
+        std::fs::write(dir.join(name), b).unwrap();
+    }
+
+    #[tokio::test]
+    async fn sqlite_every_database_file_is_checked_and_stdout_must_be_exactly_ok() {
+        let d = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(d.path().join("sub")).unwrap();
+        sqlite_file(d.path(), "a.db");
+        sqlite_file(&d.path().join("sub"), "b.sqlite");
+        std::fs::write(d.path().join("notes.txt"), b"not a database").unwrap();
+        let ops = Fake::new();
+        assert_eq!(integrity::check_sqlite(&ops, d.path()).await.unwrap(), 2);
+        {
+            let s = ops.0.lock().unwrap();
+            assert_eq!(s.checks.len(), 2);
+            assert_eq!(s.checks[0].1[0], "/usr/bin/sqlite3");
+            assert_eq!(s.checks[0].1[1], "/v/a.db");
+            assert_eq!(s.checks[1].1[1], "/v/sub/b.sqlite");
+            assert!(s.checks[0].1[2].contains("PRAGMA integrity_check"));
+        }
+        // anything but exactly `ok` (a corruption report) fails, even with exit 0
+        ops.0.lock().unwrap().check_out.push_back(out(0, "*** in database main ***\nPage 2: btree page corrupt\n"));
+        let e = integrity::check_sqlite(&ops, d.path()).await.unwrap_err();
+        assert_eq!((e.code, e.detail.as_deref()), (Code::IntegrityFailed, Some("sqlite")));
+        ops.0.lock().unwrap().check_out.push_back(out(1, ""));
+        assert_eq!(integrity::check_sqlite(&ops, d.path()).await.unwrap_err().code, Code::IntegrityFailed);
+        ops.0.lock().unwrap().check_out.push_back(out(127, ""));
+        assert_eq!(integrity::check_sqlite(&ops, d.path()).await.unwrap_err().code, Code::EngineUnavailable);
+        // no database inside the archive at all
+        let empty = tempfile::tempdir().unwrap();
+        std::fs::write(empty.path().join("x.txt"), b"hi").unwrap();
+        let e = integrity::check_sqlite(&ops, empty.path()).await.unwrap_err();
+        assert_eq!((e.code, e.detail.as_deref()), (Code::IntegrityFailed, Some("no_sqlite_file")));
+    }
+
+    #[test]
+    fn pg_target_custom_directory_and_unknown_layouts() {
+        // custom: one PGDMP file
+        let d = tempfile::tempdir().unwrap();
+        std::fs::write(d.path().join("db.dump"), b"PGDMP\x01\x0e rest").unwrap();
+        let (fmt, target) = integrity::pg_target(d.path()).unwrap();
+        assert!(fmt.is_empty());
+        assert_eq!(target, std::path::PathBuf::from("db.dump"));
+        // directory format: one gzip'd tar holding <dir>/toc.dat
+        let inner = gz(&raw_tar(&[("dump/toc.dat", tar::EntryType::Regular, 0o600, None, b"toc"), ("dump/1.dat.gz", tar::EntryType::Regular, 0o600, None, b"data")]));
+        let d2 = tempfile::tempdir().unwrap();
+        std::fs::write(d2.path().join("dump.tar.gz"), inner).unwrap();
+        let (fmt, target) = integrity::pg_target(d2.path()).unwrap();
+        assert_eq!(fmt, vec!["-Fd".to_string()]);
+        assert_eq!(target, std::path::PathBuf::from("inner-dir/dump"));
+        assert!(d2.path().join("inner-dir/dump/toc.dat").is_file());
+        // two files / garbage / no toc.dat
+        let d3 = tempfile::tempdir().unwrap();
+        std::fs::write(d3.path().join("a"), b"PGDMP1").unwrap();
+        std::fs::write(d3.path().join("b"), b"PGDMP1").unwrap();
+        assert_eq!(integrity::pg_target(d3.path()).unwrap_err().code, Code::IntegrityFailed);
+        let d4 = tempfile::tempdir().unwrap();
+        std::fs::write(d4.path().join("a"), b"hello world").unwrap();
+        assert_eq!(integrity::pg_target(d4.path()).unwrap_err().code, Code::IntegrityFailed);
+        let d5 = tempfile::tempdir().unwrap();
+        std::fs::write(d5.path().join("x.tar.gz"), gz(&raw_tar(&[("dump/other.dat", tar::EntryType::Regular, 0o600, None, b"x")]))).unwrap();
+        assert_eq!(integrity::pg_target(d5.path()).unwrap_err().code, Code::IntegrityFailed);
+    }
+
+    #[test]
+    fn pg_restore_binary_is_the_highest_bundled_major() {
+        let d = tempfile::tempdir().unwrap();
+        for v in ["9.6", "14", "9", "17", "junk"] {
+            std::fs::create_dir_all(d.path().join(v).join("bin")).unwrap();
+            std::fs::write(d.path().join(v).join("bin/pg_restore"), b"#!/bin/sh").unwrap();
+        }
+        std::fs::create_dir_all(d.path().join("18/bin")).unwrap(); // a major without the binary is ignored
+        assert_eq!(integrity::pg_restore_bin_in(d.path()), Some(format!("{}/17/bin/pg_restore", d.path().display())));
+        assert_eq!(integrity::pg_restore_bin_in(&d.path().join("missing")), None);
+    }
+
+    #[tokio::test]
+    async fn startup_sweep_removes_verify_directories_of_owned_workspaces() {
+        let r = rig(HostRole::Test, &[]);
+        let claim = workspace::Claim { restore_id: RID, stack_id: "s", rp_id: "r", project: "app", agent_id: &r.v.agent_id };
+        let ws = workspace::Workspace::open_or_create(&r.root.join("a/app"), &claim, NOW - 60).unwrap();
+        std::fs::create_dir_all(ws.meta().join("verify/a1")).unwrap();
+        std::fs::write(ws.meta().join("verify/a1/db.dump"), b"PGDMP").unwrap();
+        sweep::startup_sweep(&r.env, None, NOW).await;
+        assert!(!ws.meta().join("verify").exists());
+    }
+
+    #[test]
+    fn the_helper_container_is_hardened_in_source() {
+        // mutation guard: removing any of these from `make_helper_as` / `helper_check` must turn this red
+        let src = std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("src/fork/restore/docker_ops.rs")).unwrap();
+        let helper = &src[src.find("async fn make_helper_as").unwrap()..src.find("async fn drop_helper").unwrap()];
+        for needle in ["network_disabled: Some(true)", "network_mode: Some(\"none\".into())", "cap_drop: Some(vec![\"ALL\".into()])", "no-new-privileges", "LABEL_HELPER"] {
+            assert!(helper.contains(needle), "make_helper_as lost `{needle}`");
+        }
+        let check = &src[src.find("async fn helper_check(&self, dir: &Path, argv: Vec<String>, timeout: std::time::Duration) -> Result<CheckOut, Code> {").unwrap()..src.find("async fn containers(&self) -> Result<Vec<ContainerFacts>, Code> {\n            let list").unwrap()];
+        assert!(check.contains("&[], true, Some(argv), true)"), "no capabilities, read-only rootfs");
+        assert!(check.contains(":/v:rw"), "exactly one bind");
+        assert!(!check.contains("network_mode"), "the check never overrides the network settings");
+    }
 }

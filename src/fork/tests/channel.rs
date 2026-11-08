@@ -35,7 +35,7 @@ fn runtime(v: &Vectors, server_url: &str, state_path: PathBuf, insecure_lab: boo
         bundle_pins: pins(v),
         bundle_credential: AGENT_CRED.to_string(),
         task_key: task_key(v),
-        capabilities: capabilities::reported(false, false, false),
+        capabilities: capabilities::reported(false, false, false, false),
         state: state::load(&state_path, &v.enroll_id).unwrap(),
         state_path,
         transport: Transport::new(server_url, &v.agent_id, AGENT_CRED, insecure_lab).unwrap(),
@@ -45,6 +45,7 @@ fn runtime(v: &Vectors, server_url: &str, state_path: PathBuf, insecure_lab: boo
         qops: None,
         restore_ok: false,
         compose_ok: false,
+        test_restore_ok: false,
     }
 }
 async fn rig() -> Rig {

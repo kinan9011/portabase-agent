@@ -16,18 +16,25 @@ pub const COMPOSE_RENDER: &str = "compose.render.v1";
 /// owner opted in (`FORK_QUIESCE_ENABLED=true` on the agent), Docker answers, the agent knows its own container id and `FORK_PROTECTED_CONTAINERS` is valid.
 pub const QUIESCE: &str = "quiesce.v1";
 
+/// W-TR: `restore_verify` (engine integrity check of staged data in a no-network helper, ADR-007 A16). Reported only when restore is enabled AND this image
+/// has the checkers (`sqlite3`, `pg_restore`): otherwise the dashboard refuses to schedule test restores for this agent.
+pub const TEST_RESTORE: &str = "test-restore.v1";
+
 /// Task types whose envelope MUST name this agent in `target_agent_id` (ADR-007 D8b). Mirrors the dashboard's `TARGETED_TASK_TYPES`.
-pub const TARGETED: &[&str] = &["restore_probe", "restore_stage", "restore_apply", "restore_cleanup", "compose_render", "restore_db", "compose_up", "quiesce", "quiesce_start"];
+pub const TARGETED: &[&str] = &["restore_probe", "restore_stage", "restore_apply", "restore_cleanup", "compose_render", "restore_db", "compose_up", "quiesce", "quiesce_start", "restore_verify"];
 pub fn is_targeted(task_type: &str) -> bool {
     TARGETED.contains(&task_type)
 }
 
-pub fn reported(restore_ok: bool, compose_ok: bool, quiesce_ok: bool) -> Vec<String> {
+pub fn reported(restore_ok: bool, compose_ok: bool, quiesce_ok: bool, test_restore_ok: bool) -> Vec<String> {
     let mut v = vec![CHANNEL.to_string(), NOOP.to_string(), PLAINTEXT_HASH.to_string(), MAINT.to_string()];
     if restore_ok {
         v.push(RESTORE_TARGET.to_string());
         if compose_ok {
             v.push(COMPOSE_RENDER.to_string());
+        }
+        if test_restore_ok {
+            v.push(TEST_RESTORE.to_string());
         }
     }
     if quiesce_ok {
@@ -43,6 +50,7 @@ pub fn task_requires(task_type: &str) -> Option<&'static [&'static str]> {
         "pin_add" | "pin_revoke" | "rotate_credential" => Some(&[MAINT]),
         "restore_probe" | "restore_stage" | "restore_apply" | "restore_cleanup" => Some(&[RESTORE_TARGET]),
         "compose_render" | "restore_db" | "compose_up" => Some(&[RESTORE_TARGET, COMPOSE_RENDER]),
+        "restore_verify" => Some(&[RESTORE_TARGET, TEST_RESTORE]),
         "quiesce" | "quiesce_start" => Some(&[QUIESCE]),
         _ => None,
     }

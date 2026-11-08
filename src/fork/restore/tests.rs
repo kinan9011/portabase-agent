@@ -246,6 +246,15 @@ impl DockerOps for Fake {
     async fn remove_helpers(&self) -> usize {
         3
     }
+    async fn inspect_state(&self, _id: &str) -> Result<Option<super::docker_ops::CState>, Code> {
+        Err(Code::DockerUnavailable)
+    }
+    async fn stop_container(&self, _id: &str, _t: u32) -> Result<(), Code> {
+        Err(Code::DockerUnavailable)
+    }
+    async fn start_container(&self, _id: &str) -> Result<(), Code> {
+        Err(Code::DockerUnavailable)
+    }
 }
 
 // ---- rig -------------------------------------------------------------------------------------------------------------------------------
@@ -716,12 +725,16 @@ mod channel_level {
             bundle_pins: pins_of(v),
             bundle_credential: CRED.to_string(),
             task_key: key,
-            capabilities: capabilities::reported(configured, false),
+            capabilities: capabilities::reported(configured, false, false),
             state: state::load(&state_path, &v.enroll_id).unwrap(),
             state_path,
             transport: Transport::new(server_url, &v.agent_id, CRED, true).unwrap(),
             renv: configured.then(|| r.env.clone()),
             ops,
+            qenv: None,
+            qops: None,
+            restore_ok: configured,
+            compose_ok: false,
         }
     }
     fn leased(c: &EnvCase) -> Leased {
@@ -764,11 +777,11 @@ mod channel_level {
             assert_eq!(bodies(&server, "/result").await[0]["status"], "rejected", "{name}");
         }
         // an agent that is not configured for restores does not report the capability at all
-        assert!(!capabilities::reported(false, false).iter().any(|c| c == "restore.target.v1") && capabilities::reported(true, false).iter().any(|c| c == "restore.target.v1"));
+        assert!(!capabilities::reported(false, false, false).iter().any(|c| c == "restore.target.v1") && capabilities::reported(true, false, false).iter().any(|c| c == "restore.target.v1"));
         // W17-ii: compose.render.v1 only on top of a working restore target and only when compose is ok
-        assert!(!capabilities::reported(true, false).iter().any(|c| c == "compose.render.v1"));
-        assert!(capabilities::reported(true, true).iter().any(|c| c == "compose.render.v1"));
-        assert!(!capabilities::reported(false, true).iter().any(|c| c == "compose.render.v1"));
+        assert!(!capabilities::reported(true, false, false).iter().any(|c| c == "compose.render.v1"));
+        assert!(capabilities::reported(true, true, false).iter().any(|c| c == "compose.render.v1"));
+        assert!(!capabilities::reported(false, true, false).iter().any(|c| c == "compose.render.v1"));
     }
 
     #[tokio::test]

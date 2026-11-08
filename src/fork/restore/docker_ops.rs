@@ -23,6 +23,18 @@ pub struct ContainerFacts {
     pub running: bool,
 }
 
+/// W17b: what quiesce needs to know about one container (inspect, by FULL id).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CState {
+    /// running|exited|paused|restarting|created|dead|removing
+    pub status: String,
+    pub running: bool,
+    /// `None` = the image/service defines no healthcheck; else healthy|unhealthy|starting
+    pub health: Option<String>,
+    pub restart_count: i64,
+    pub stop_timeout: Option<i64>,
+}
+
 /// The sandboxed `docker-compose config` helper (W17-ii E3). `image` = the agent's OWN image id; `cmd` is the closed argument list; `env` = payload pairs only.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RenderSpec {
@@ -84,6 +96,12 @@ pub trait DockerOps: Send + Sync {
     async fn image_of_container(&self, own_id: &str) -> Result<String, Code>;
     /// Remove every helper container (startup sweep). Returns how many.
     async fn remove_helpers(&self) -> usize;
+    /// W17b: inspect one container by FULL id. `None` = no such container.
+    async fn inspect_state(&self, id: &str) -> Result<Option<CState>, Code>;
+    /// W17b: graceful stop by FULL id with an explicit timeout (seconds); 304 (already stopped) = Ok.
+    async fn stop_container(&self, id: &str, timeout_s: u32) -> Result<(), Code>;
+    /// W17b: start by FULL id; 304 (already running) = Ok; 404 = `Err(Code::ContainerChanged)`.
+    async fn start_container(&self, id: &str) -> Result<(), Code>;
 }
 
 pub struct RealDocker {
@@ -389,6 +407,36 @@ mod real {
         }
         async fn image_of_container(&self, own_id: &str) -> Result<String, Code> {
             self.docker.inspect_container(own_id, None::<bollard::query_parameters::InspectContainerOptions>).await.map_err(dk)?.image.ok_or(Code::DockerUnavailable)
+        }
+        async fn inspect_state(&self, id: &str) -> Result<Option<CState>, Code> {
+            match self.docker.inspect_container(id, None::<bollard::query_parameters::InspectContainerOptions>).await {
+                Ok(c) => {
+                    let st = c.state.unwrap_or_default();
+                    Ok(Some(CState {
+                        status: st.status.map(|s| s.to_string()).unwrap_or_default(),
+                        running: st.running.unwrap_or(false),
+                        health: st.health.and_then(|h| h.status).map(|s| s.to_string()).filter(|s| !s.is_empty() && s != "none"),
+                        restart_count: c.restart_count.unwrap_or(0),
+                        stop_timeout: c.config.and_then(|c| c.stop_timeout),
+                    }))
+                }
+                Err(bollard::errors::Error::DockerResponseServerError { status_code: 404, .. }) => Ok(None),
+                Err(_) => Err(Code::DockerUnavailable),
+            }
+        }
+        async fn stop_container(&self, id: &str, timeout_s: u32) -> Result<(), Code> {
+            match self.docker.stop_container(id, Some(bollard::query_parameters::StopContainerOptions { t: Some(timeout_s as i32), ..Default::default() })).await {
+                Ok(_) | Err(bollard::errors::Error::DockerResponseServerError { status_code: 304, .. }) => Ok(()),
+                Err(bollard::errors::Error::DockerResponseServerError { status_code: 404, .. }) => Err(Code::ContainerChanged),
+                Err(_) => Err(Code::DockerUnavailable),
+            }
+        }
+        async fn start_container(&self, id: &str) -> Result<(), Code> {
+            match self.docker.start_container(id, None::<StartContainerOptions>).await {
+                Ok(_) | Err(bollard::errors::Error::DockerResponseServerError { status_code: 304, .. }) => Ok(()),
+                Err(bollard::errors::Error::DockerResponseServerError { status_code: 404, .. }) => Err(Code::ContainerChanged),
+                Err(_) => Err(Code::DockerUnavailable),
+            }
         }
         async fn remove_helpers(&self) -> usize {
             let filters = HashMap::from([("label".to_string(), vec![format!("{LABEL_HELPER}=true")])]);

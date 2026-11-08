@@ -146,6 +146,17 @@ impl Transport {
         Err(last)
     }
 
+    /// W17b: quiesce window progress. `phase` = `stopped` (once, with the containers) | `waiting`. Returns the dashboard's `release` answer.
+    /// 404 / 409 (`NotFound` / `Conflict`) are final: the dashboard no longer knows the task; the caller treats them as "release" (fail safe).
+    pub async fn quiesce(&self, task_id: &str, lease_id: &str, phase: &str, containers: Option<serde_json::Value>) -> Result<bool, CallError> {
+        let mut body = json!({"lease_id": lease_id, "phase": phase});
+        if let Some(c) = containers {
+            body["containers"] = c;
+        }
+        let (_, bytes) = self.post(&format!("tasks/{task_id}/quiesce"), body).await?;
+        serde_json::from_slice::<serde_json::Value>(&bytes).ok().and_then(|v| v["release"].as_bool()).ok_or(CallError::BadBody)
+    }
+
     pub async fn hash_report(&self, backup_id: &str, sha256: &str, size_bytes: u64) -> Result<(), CallError> {
         self.post("hash-report", json!({"backup_id": backup_id, "sha256": sha256, "size_bytes": size_bytes})).await.map(|_| ())
     }

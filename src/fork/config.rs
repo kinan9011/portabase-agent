@@ -147,6 +147,12 @@ fn flag(v: Option<String>) -> bool {
 }
 
 /// Strict opt-in: the channel exists only when `FORK_CHANNEL_ENABLED=true` AND a valid bundle file is present. Anything else = disabled / refused.
+/// Where the channel state lives (also the parent of the W17b quiesce journal dir). Needs no bundle, so boot replay can find the journal even when the
+/// channel is disabled or its bundle is broken.
+pub fn state_path(env: &dyn Fn(&str) -> Option<String>) -> PathBuf {
+    env("FORK_CHANNEL_STATE_FILE").filter(|s| !s.is_empty()).map(PathBuf::from).unwrap_or_else(|| PathBuf::from(env("DATA_PATH").unwrap_or_else(|| "/config".into())).join("fork-channel-state.json"))
+}
+
 pub fn load(env: &dyn Fn(&str) -> Option<String>) -> Result<Startup, ConfigError> {
     if !flag(env("FORK_CHANNEL_ENABLED")) {
         return Ok(Startup::Disabled("FORK_CHANNEL_ENABLED is not true"));
@@ -163,7 +169,7 @@ pub fn load(env: &dyn Fn(&str) -> Option<String>) -> Result<Startup, ConfigError
     let text = std::fs::read_to_string(&path).map_err(|_| ConfigError::Unreadable)?;
     let (p, insecure) = parse_bundle(&text, flag(env("FORK_ALLOW_INSECURE_LOOPBACK")))?;
     let poll_seconds = env("FORK_CHANNEL_POLL_SECONDS").and_then(|s| s.trim().parse::<u64>().ok()).filter(|n| (2..=300).contains(n)).unwrap_or(5);
-    let state_path = env("FORK_CHANNEL_STATE_FILE").filter(|s| !s.is_empty()).map(PathBuf::from).unwrap_or_else(|| PathBuf::from(env("DATA_PATH").unwrap_or_else(|| "/config".into())).join("fork-channel-state.json"));
+    let state_path = state_path(env);
     Ok(Startup::Active(Box::new(ChannelConfig {
         agent_id: p.agent_id,
         enroll_id: p.enroll_id,

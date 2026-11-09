@@ -1,0 +1,10 @@
+# Fork-owned (W28, 2026-11-09). EXACTLY five findings, no path/regex allow-list.
+# File: docker-compose.yml (UPSTREAM's dev compose), rule generic-api-key, `EDGE_KEY` line.
+# Reason: upstream's public DEV edge key for a localhost dev instance (base64 JSON, serverUrl http://localhost:8887,
+# decoded and checked at all five commits); not a fork secret; the line already exists in fork-base 1.25.2.
+# These upstream commits entered this fork with the 1.26.0 sync. Any NEW finding in this file is still reported.
+c4062d796b80e0b61394f0bc7062938a678df1d1:docker-compose.yml:generic-api-key:29
+0d82f2808109e9842f33fdb65746d9df13442df1:docker-compose.yml:generic-api-key:29
+08ab07cf6a347f93c509df4849b028c30581cf8b:docker-compose.yml:generic-api-key:28
+2b4d89ce3b6ca20b68c5bd0ec751ce191a7feaf7:docker-compose.yml:generic-api-key:28
+057846d9590ff846a5c393ae2aac576072ac1899:docker-compose.yml:generic-api-key:28

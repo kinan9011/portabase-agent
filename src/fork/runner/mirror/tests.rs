@@ -12,6 +12,7 @@ use crate::fork::compose::tests::{NullSink, compose_env};
 use crate::fork::crypto::{parse_pin, sha256_hex};
 use crate::fork::restore::docker_ops::{CState, ContainerFacts, LABEL_AGENT, LABEL_RESTORE, owner_labels};
 use crate::fork::restore::tests::{Fake, NOW, RID, Rig, merge, rig, task};
+use crate::fork::runner::route::tests::FakeRoute;
 use crate::fork::restore::{HostRole, Purpose};
 use crate::fork::state::State;
 use crate::fork::verify::{Ctx as VCtx, Decision, evaluate};
@@ -24,7 +25,7 @@ use std::sync::{Mutex, OnceLock};
 const VECTORS: &str = include_str!("../../tests/restore_vectors.json");
 const MIRROR_VECTORS: &[u8] = include_bytes!("../corpus/compose-mirror-vectors.json");
 const SOURCE: &[u8] = include_bytes!("../corpus/SOURCE.json");
-const TYPES: [&str; 10] = ["mirror_probe", "mirror_stage", "mirror_apply", "mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check", "mirror_wipe", "mirror_stop"];
+const TYPES: [&str; 11] = ["mirror_probe", "mirror_stage", "mirror_apply", "mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check", "mirror_wipe", "mirror_stop", "mirror_route"];
 const CANARY: &str = "W20_CANARY_7f3a9c51d2e84b6a_pgpw";
 /// the lab compose project used by the apply vectors; tests move it under a real temp root
 const VEC_WS: &str = "/srv/mirrors/pbm-lab";
@@ -132,6 +133,14 @@ fn capability_sets_dispatch_classes_and_codes() {
     assert_eq!(TYPES.iter().filter(|t| **t == "mirror_stop").count(), 1);
     assert_eq!(capabilities::RUNNER_ONLY.iter().filter(|t| **t == "mirror_stop").count(), 1);
     assert_eq!(capabilities::TARGETED.iter().filter(|t| **t == "mirror_stop").count(), 1);
+    for t in ["mirror_route"] {
+        assert_eq!(capabilities::RUNNER_ONLY.iter().filter(|x| **x == t).count(), 1, "{t}");
+        assert_eq!(capabilities::TARGETED.iter().filter(|x| **x == t).count(), 1, "{t}");
+    }
+    for (c, name) in [(Code::RouteTargetNotRunning, "route_target_not_running"), (Code::RouteNotOwned, "route_not_owned"), (Code::RouteIncomplete, "route_incomplete"), (Code::RouteSmokeFailed, "route_smoke_failed")] {
+        assert_eq!(c.as_str(), name);
+        assert!(!v.codes.iter().any(|x| x == name), "{name} is a runner-own code outside Code::RESTORE (the shared vectors list is unchanged)");
+    }
     assert!(!v.codes.iter().any(|c| c == "wipe_incomplete") || v.codes.iter().filter(|c| *c == "wipe_incomplete").count() == 1);
 }
 
@@ -148,6 +157,7 @@ fn the_mirror_branch_is_dispatched_before_the_generic_targeted_branch() {
 #[test]
 fn deadlines_per_type() {
     assert_eq!(deadline_of("mirror_probe"), DEADLINE_PROBE);
+    assert_eq!(deadline_of("mirror_route"), DEADLINE_PROBE);
     assert_eq!(deadline_of("mirror_wipe"), DEADLINE_WIPE);
     assert_eq!(deadline_of("mirror_stop"), DEADLINE_STEP);
     assert_eq!(deadline_of("mirror_stage"), DEADLINE_STAGE);
@@ -194,14 +204,14 @@ fn a_mirror_header_never_passes_on_a_restore_env_and_a_restore_header_never_on_a
     assert_eq!(bad.check(&test_env.env).unwrap_err().code, Code::PayloadInvalid);
 }
 
-fn runtime(r: &Rig, fake: &std::sync::Arc<Fake>, sm: &std::sync::Arc<FakeSmoke>, bin: Option<PathBuf>) -> MirrorRuntime {
+fn runtime(r: &Rig, fake: &std::sync::Arc<Fake>, sm: &std::sync::Arc<FakeSmoke>, route: &std::sync::Arc<FakeRoute>, bin: Option<PathBuf>) -> MirrorRuntime {
     let mut env = r.env.clone();
     let mut ce = compose_env();
     if let Some(b) = bin {
         ce.bin = b;
     }
     env.compose = Some(ce);
-    MirrorRuntime { env, ops: fake.clone(), smoke: sm.clone() }
+    MirrorRuntime { env, ops: fake.clone(), smoke: sm.clone(), route: route.clone() }
 }
 
 #[tokio::test]
@@ -211,7 +221,7 @@ async fn payload_vectors_get_the_expected_agent_decision() {
     for c in &v.mirror.payload_cases {
         let r = mirror_rig();
         let (fake, sm) = (std::sync::Arc::new(Fake::new()), std::sync::Arc::new(FakeSmoke::default()));
-        let rt = runtime(&r, &fake, &sm, None);
+        let rt = runtime(&r, &fake, &sm, &std::sync::Arc::new(FakeRoute::default()), None);
         let text = serde_json::to_string(&c.payload).unwrap().replace(&v.mirror.root, &r.root.display().to_string());
         let got = execute(&rt, &r.pins, &NullSink, &task(&c.ty), text.as_bytes()).await;
         if c.agent == "ok" {
@@ -429,6 +439,7 @@ struct MW {
     ws: PathBuf,
     fake: std::sync::Arc<Fake>,
     smoke: std::sync::Arc<FakeSmoke>,
+    route: std::sync::Arc<FakeRoute>,
     rt: MirrorRuntime,
 }
 impl MW {
@@ -436,7 +447,8 @@ impl MW {
         let r = rig(HostRole::Runner, &[]);
         let ws = r.root.join(PROJECT);
         let (fake, smoke) = (std::sync::Arc::new(Fake::new()), std::sync::Arc::new(FakeSmoke::default()));
-        let rt = runtime(&r, &fake, &smoke, Some(mirror_bin()));
+        let route = std::sync::Arc::new(FakeRoute::default());
+        let rt = runtime(&r, &fake, &smoke, &route, Some(mirror_bin()));
         let h: Header = serde_json::from_value(Self::hdr_of(&r, &ws)).unwrap();
         let w = crate::fork::restore::workspace::Workspace::open_or_create(&ws, &crate::fork::compose::claim(&rt.env, &h), NOW).unwrap();
         std::fs::create_dir_all(w.stage()).unwrap();
@@ -444,7 +456,7 @@ impl MW {
         std::fs::write(w.stage().join("manifest.sig"), base64::Engine::decode(&base64::engine::general_purpose::STANDARD, &r.v.stage_world.sig_b64).unwrap()).unwrap();
         std::fs::create_dir_all(ws.join("compose")).unwrap();
         std::fs::write(ws.join("compose/compose.yml"), CLEAN_YML).unwrap();
-        MW { r, ws, fake, smoke, rt }
+        MW { r, ws, fake, smoke, route, rt }
     }
     fn hdr_of(r: &Rig, ws: &Path) -> Value {
         json!({"v":1,"restore_id":RID,"plan_id":r.v.ids["plan_id"],"plan_hash":"a".repeat(64),"stack_id":r.v.ids["stack_id"],"rp_id":r.v.ids["rp_id"],"purpose":"mirror","mode":"new_stack",
@@ -949,7 +961,7 @@ async fn detect_fails_closed_with_one_reason_each() {
     let env = |pairs: Vec<(&'static str, String)>| move |k: &str| pairs.iter().find(|(n, _)| *n == k).map(|(_, v)| v.clone());
     let go = |e: Box<dyn Fn(&str) -> Option<String> + Sync>, master: Option<String>| {
         let (fake, smoke, state) = (fake.clone(), smoke.clone(), state.clone());
-        async move { detect(e.as_ref(), &state, "a", fake, smoke, master, "", "").await.map(|_| ()) }
+        async move { detect(e.as_ref(), &state, "a", fake, smoke, std::sync::Arc::new(FakeRoute::default()), master, "", "").await.map(|_| ()) }
     };
     assert_eq!(go(Box::new(env(vec![])), Some("k".to_string())).await.unwrap_err(), "FORK_MIRROR_ROOT is not set");
     assert!(go(Box::new(env(vec![("FORK_MIRROR_ROOT", "/etc".into())])), Some("k".to_string())).await.unwrap_err().contains("overlaps"));

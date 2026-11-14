@@ -90,6 +90,12 @@ pub enum Code {
     WipeIncomplete,
     /// W23: `mirror_stop` re-listed and a container of the revision was still running (runner-own code, like `WipeIncomplete`; NOT part of `Code::RESTORE`).
     StopIncomplete,
+    /// W24 `mirror_route` (runner-own codes, NOT part of `Code::RESTORE`, dashboard `REASONS`): the target revision has no running access container / the route container or
+    /// directory is not ours / the route is not as asserted after the switch / the smoke THROUGH the forwarder failed.
+    RouteTargetNotRunning,
+    RouteNotOwned,
+    RouteIncomplete,
+    RouteSmokeFailed,
 }
 
 impl Code {
@@ -166,6 +172,10 @@ impl Code {
             Code::MirrorDisabled => "mirror_disabled",
             Code::WipeIncomplete => "wipe_incomplete",
             Code::StopIncomplete => "stop_incomplete",
+            Code::RouteTargetNotRunning => "route_target_not_running",
+            Code::RouteNotOwned => "route_not_owned",
+            Code::RouteIncomplete => "route_incomplete",
+            Code::RouteSmokeFailed => "route_smoke_failed",
         }
     }
 }

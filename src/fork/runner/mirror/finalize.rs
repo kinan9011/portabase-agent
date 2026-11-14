@@ -12,7 +12,8 @@ use crate::fork::policy::rules::rules_sha256_ts;
 use crate::fork::policy::view::policy_view;
 use crate::fork::restore::docker_ops::{DockerOps, LABEL_AGENT, LABEL_RESTORE};
 use crate::fork::restore::stage::write_0600;
-use crate::fork::restore::{Code, Failure, Header, R, RestoreEnv, Task, split};
+use crate::fork::restore::workspace::Workspace;
+use crate::fork::restore::{Code, Failure, Header, R, RestoreEnv, Task, paths, split};
 use base64::Engine;
 use serde_json::{Map, Value, json};
 
@@ -121,12 +122,15 @@ pub async fn run(env: &RestoreEnv, ops: &dyn DockerOps, pins: &[Pin], sink: &dyn
     if sha256_hex(canonical_json(&raw_spec).as_bytes()) != b.spec_sha256 {
         return Err(Failure::with(Code::ApplyFailed, "spec_sha256")); // well-formed but not the spec the dashboard approved: nothing is rendered or written
     }
-    let FinalizeBody { manifest_sha256, compose, spec, limits, .. } = b;
+    let FinalizeBody { manifest_sha256, compose, spec, limits, seed_from, .. } = b;
     let job = open_job(env, ops, pins, t, h, &manifest_sha256, compose).await?;
     let mut j = job.journal()?;
     j.begin(t.id, t.ty);
     let _guard = SecretGuard::new(&job.ws);
     let r = async {
+        if let Some(from) = &seed_from {
+            copy_seed(&job, from)?;
+        }
         let seed = seed::create_or_load(&job.ws.root).map_err(Failure::from)?;
         let rendered = render_full(&job).await?;
         if rendered.sha != spec.source_view_sha256 {
@@ -155,6 +159,20 @@ pub async fn run(env: &RestoreEnv, ops: &dyn DockerOps, pins: &[Pin], sink: &dyn
     .await;
     j.end(t.id, t.ty, r.is_ok());
     r
+}
+
+/// W24: copy the ACTIVE revision's seed into this (new) workspace before anything derives a value. The source workspace must be inside the allowed root AND be owned by exactly
+/// the revision the dashboard named (and this agent); a seed that already exists here stays (retry-safe). Every failure is `seed_invalid`.
+fn copy_seed(job: &crate::fork::compose::Job<'_>, from: &super::payload::SeedFrom) -> R<()> {
+    if seed::seed_path(&job.ws.root).exists() {
+        return Ok(());
+    }
+    let prev = paths::check_task_path(&job.env.roots, &job.env.state_dir, &from.workspace).map_err(|_| Failure::from(Code::SeedInvalid))?;
+    let owned = Workspace::read_owner(&prev).is_some_and(|o| o.restore_id == from.revision_id && o.agent_id == job.env.agent_id);
+    if !owned || prev == job.ws.root {
+        return Err(Code::SeedInvalid.into());
+    }
+    seed::copy_from(&prev, &job.ws.root).map_err(Failure::from)
 }
 
 fn merge(full: &Value, spec: &MirrorSpec, seed: &[u8]) -> R<Value> {

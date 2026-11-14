@@ -1,6 +1,6 @@
 //! The decision function of the channel: given what the dashboard sent and what the agent knows, accept or refuse (never partially).
 //! Pure (no I/O, injected clock) so every refusal class is a unit-test fixture, including the cross-language vectors signed by the dashboard.
-use super::capabilities::{is_targeted, task_requires};
+use super::capabilities::{self, is_common, is_runner_only, is_targeted, task_requires};
 use super::crypto::{Pin, decrypt_payload, sha256_hex, verify_signature};
 use super::envelope::{Envelope, parse};
 use super::state::{Accepted, State};
@@ -22,6 +22,8 @@ pub enum Reject {
     SeqRollback,
     UnsupportedType,
     CapabilityMissing,
+    /// W21: a runner refuses non-runner tasks and every other agent refuses runner tasks (explicit, on top of `CapabilityMissing`).
+    RoleForbidden,
     PayloadHash,
     PayloadInvalid,
     ChannelDisabled,
@@ -43,6 +45,7 @@ impl Reject {
             Reject::SeqRollback => "seq_rollback",
             Reject::UnsupportedType => "unsupported_type",
             Reject::CapabilityMissing => "capability_missing",
+            Reject::RoleForbidden => "role_forbidden",
             Reject::PayloadHash => "payload_hash",
             Reject::PayloadInvalid => "payload_invalid",
             Reject::ChannelDisabled => "channel_disabled",
@@ -110,6 +113,11 @@ pub fn evaluate(c: &Ctx, envelope_text: &str, signature_b64: &str, payload_enc: 
         return R(Reject::SeqRollback);
     }
     let Some(needs) = task_requires(&env.task_type) else { return R(Reject::UnsupportedType) };
+    // W21 (DD-3): role gating derived from the reported capabilities. A runner only runs runner-only + common tasks; any other agent never runs runner-only tasks.
+    let is_runner = c.capabilities.iter().any(|x| x == capabilities::RUNNER);
+    if !is_common(&env.task_type) && is_runner != is_runner_only(&env.task_type) {
+        return R(Reject::RoleForbidden);
+    }
     // both what the type needs and what the dashboard says it needs must be covered by what THIS agent reports
     if !needs.iter().all(|n| c.capabilities.iter().any(|x| x == n)) || !env.requires.iter().all(|n| c.capabilities.iter().any(|x| x == n)) {
         return R(Reject::CapabilityMissing);

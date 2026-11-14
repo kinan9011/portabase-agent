@@ -756,6 +756,7 @@ mod channel_level {
             restore_ok: configured,
             compose_ok: false,
             test_restore_ok: false,
+            runner: None,
         }
     }
     fn leased(c: &EnvCase) -> Leased {

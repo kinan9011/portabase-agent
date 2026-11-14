@@ -6,6 +6,7 @@ use super::exec::{self, Ended};
 use super::maint;
 use super::quiesce;
 use super::restore::{self, docker_ops::DockerOps};
+use super::runner;
 use super::state::{self, Outcome, State};
 use super::tasks;
 use super::transport::{CallError, Leased, Transport};
@@ -38,6 +39,8 @@ pub struct Runtime {
     pub compose_ok: bool,
     /// W-TR: `test-restore.v1` (restore enabled AND the checkers exist in this image).
     pub test_restore_ok: bool,
+    /// W21: runner role (`FORK_HOST_ROLE=runner`) + its Docker access. `None` ⇒ `runner.v1` is not reported and `runner_probe` cannot run.
+    pub runner: Option<Arc<dyn runner::docker::RunnerDocker>>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -62,7 +65,7 @@ impl Runtime {
         let state = state::load(&cfg.state_path, &cfg.enroll_id).map_err(|e| e.to_string())?;
         let pins = maint::effective_pins(&cfg.pins, &state).map_err(|e| e.to_string())?;
         let transport = Transport::new(&cfg.server_url, &cfg.agent_id, maint::effective_credential(&cfg.credential, &state), cfg.insecure_lab).map_err(|_| "cannot build the http client".to_string())?;
-        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false, false, false, false), state, state_path: cfg.state_path, transport, renv: None, ops: None, qenv: None, qops: None, restore_ok: false, compose_ok: false, test_restore_ok: false })
+        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false, false, false, false), state, state_path: cfg.state_path, transport, renv: None, ops: None, qenv: None, qops: None, restore_ok: false, compose_ok: false, test_restore_ok: false, runner: None })
     }
 
     /// W17-i (DD20): decide, once at start-up, whether this host can be a restore target — valid `FORK_ALLOWED_PATH_ROOTS` (non-empty) AND a Docker daemon that answers.
@@ -120,6 +123,56 @@ impl Runtime {
             false
         };
         self.capabilities = capabilities::reported(true, compose_ok, self.qenv.is_some(), self.test_restore_ok);
+    }
+
+    /// W21 (ADR-008): runner role. `runner.v1` (and ONLY the four runner capabilities) is reported when Docker answers and the helper image resolves; then every probe leftover
+    /// is swept (verified). The restore path is never entered, so the instance master key is not loaded into fork state. Misconfiguration degrades honestly: one log line, no `runner.v1`.
+    pub async fn init_runner(&mut self) {
+        match runner::docker::real::RealRunnerDocker::connect() {
+            Ok(d) => self.init_runner_with(Arc::new(d)).await,
+            Err(_) => error!("Fork channel: runner role NOT enabled: the Docker daemon is not reachable"),
+        }
+    }
+
+    pub async fn init_runner_with(&mut self, ops: Arc<dyn runner::docker::RunnerDocker>) {
+        if !ops.ping().await {
+            error!("Fork channel: runner role NOT enabled: the Docker daemon does not answer");
+            return;
+        }
+        if ops.helper_image().await.is_err() {
+            error!("Fork channel: runner role NOT enabled: the helper image cannot be resolved");
+            return;
+        }
+        match runner::wipe::wipe_owned(ops.as_ref(), runner::docker::LABEL_PROBE, None).await {
+            Ok(r) => info!("Fork channel: runner startup sweep removed {} container(s), {} network(s), {} volume(s)", r.containers, r.networks, r.volumes),
+            Err(c) => {
+                error!("Fork channel: runner role NOT enabled: the startup sweep failed ({})", c.as_str());
+                return;
+            }
+        }
+        self.runner = Some(ops);
+        self.capabilities = capabilities::runner_reported();
+        info!("Fork channel: runner.v1 enabled (probe-only role; restore, compose and quiesce are off, the master key is not loaded)");
+    }
+
+    /// W21: run one `runner_probe` under the heartbeat loop and its deadline. The probe's own verified wipe runs inside; the deadline path re-sweeps.
+    async fn run_runner_probe(&self, v: &super::verify::Verified, leased: &Leased) -> Outcome {
+        let failed = |code: &str, result: Option<serde_json::Value>| Outcome { status: "failed".into(), reason: Some(code.into()), result };
+        let Some(ops) = &self.runner else { return failed(runner::Code::DockerUnavailable.as_str(), None) };
+        let payload = match runner::probe::parse(&v.payload) {
+            Ok(p) => p,
+            Err(c) => return failed(c.as_str(), None),
+        };
+        let deadline = runner::probe::deadline_of(&payload);
+        match exec::run_with_heartbeat(&self.transport, &leased.task_id, &leased.lease_id, deadline, runner::probe::execute(ops.as_ref(), &self.agent_id, &v.payload)).await {
+            Ended::Done(Ok(result)) => Outcome { status: "succeeded".into(), reason: None, result: Some(result) },
+            Ended::Done(Err((code, result))) => failed(code.as_str(), result),
+            Ended::Deadline => {
+                // the dropped future may have left its helper / network behind: sweep this probe's objects before reporting
+                let _ = runner::wipe::wipe_owned(ops.as_ref(), runner::docker::LABEL_PROBE, Some(&payload.probe_id)).await;
+                failed(runner::Code::DeadlineExceeded.as_str(), None)
+            }
+        }
     }
 
     /// W17b (D9c): `quiesce.v1` only when the host owner opted in (`FORK_QUIESCE_ENABLED=true`), Docker answers, the agent knows its own container id and
@@ -279,6 +332,9 @@ impl Runtime {
                 } else {
                     let outcome = if matches!(ty, "quiesce" | "quiesce_start") {
                         self.run_quiesce(&v, leased).await
+                    } else if ty == "runner_probe" {
+                        // W21: BEFORE the generic targeted branch (`runner_probe` is targeted, `run_restore` would answer `execution_error` on a runner)
+                        self.run_runner_probe(&v, leased).await
                     } else if capabilities::is_targeted(ty) {
                         self.run_restore(&v, leased, now).await
                     } else {
@@ -339,8 +395,13 @@ pub async fn run(cfg: ChannelConfig) {
     if quiesce::replay::adopt(&mut rt.state, &quiesce::journal::dir(rt.state_path.parent().unwrap_or(std::path::Path::new("/config")))) {
         let _ = state::save(&rt.state_path, &rt.state);
     }
-    rt.init_restore(now_secs()).await;
-    rt.init_quiesce().await;
+    if runner::role_is_runner(&|k| std::env::var(k).ok()) {
+        // W21: a runner never enters the restore / quiesce init (so the master key is never loaded into fork state)
+        rt.init_runner().await;
+    } else {
+        rt.init_restore(now_secs()).await;
+        rt.init_quiesce().await;
+    }
     super::set_active(Arc::new(super::Active { client: rt.transport.clone(), capabilities: rt.capabilities.clone() }));
     loop {
         let wait = rt.poll_once(poll, now_secs()).await;

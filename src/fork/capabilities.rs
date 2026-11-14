@@ -20,8 +20,27 @@ pub const QUIESCE: &str = "quiesce.v1";
 /// has the checkers (`sqlite3`, `pg_restore`): otherwise the dashboard refuses to schedule test restores for this agent.
 pub const TEST_RESTORE: &str = "test-restore.v1";
 
+/// W21 (ADR-008): the mirror RUNNER role. Reported ONLY when `FORK_HOST_ROLE=runner`, Docker answers and the helper image resolves. A runner reports
+/// no restore / compose / quiesce / test-restore / plaintext-hash capability (it takes no backups and restores no production data).
+pub const RUNNER: &str = "runner.v1";
+
+/// Task types only a runner executes (W22a appends `mirror_*`). A runner refuses everything that is neither runner-only nor common, and every non-runner refuses these.
+pub const RUNNER_ONLY: &[&str] = &["runner_probe"];
+/// Task types both roles accept (channel hygiene: no data, no Docker).
+pub const COMMON: &[&str] = &["noop", "pin_add", "pin_revoke", "rotate_credential"];
+pub fn is_runner_only(task_type: &str) -> bool {
+    RUNNER_ONLY.contains(&task_type)
+}
+pub fn is_common(task_type: &str) -> bool {
+    COMMON.contains(&task_type)
+}
+/// The exact capability set of a runner agent (DD-2).
+pub fn runner_reported() -> Vec<String> {
+    vec![CHANNEL.to_string(), NOOP.to_string(), MAINT.to_string(), RUNNER.to_string()]
+}
+
 /// Task types whose envelope MUST name this agent in `target_agent_id` (ADR-007 D8b). Mirrors the dashboard's `TARGETED_TASK_TYPES`.
-pub const TARGETED: &[&str] = &["restore_probe", "restore_stage", "restore_apply", "restore_cleanup", "compose_render", "restore_db", "compose_up", "quiesce", "quiesce_start", "restore_verify"];
+pub const TARGETED: &[&str] = &["restore_probe", "restore_stage", "restore_apply", "restore_cleanup", "compose_render", "restore_db", "compose_up", "quiesce", "quiesce_start", "restore_verify", "runner_probe"];
 pub fn is_targeted(task_type: &str) -> bool {
     TARGETED.contains(&task_type)
 }
@@ -52,6 +71,7 @@ pub fn task_requires(task_type: &str) -> Option<&'static [&'static str]> {
         "compose_render" | "restore_db" | "compose_up" => Some(&[RESTORE_TARGET, COMPOSE_RENDER]),
         "restore_verify" => Some(&[RESTORE_TARGET, TEST_RESTORE]),
         "quiesce" | "quiesce_start" => Some(&[QUIESCE]),
+        "runner_probe" => Some(&[RUNNER]),
         _ => None,
     }
 }

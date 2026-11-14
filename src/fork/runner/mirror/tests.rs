@@ -283,6 +283,16 @@ fn apply_vectors() {
 fn deep_eq(a: &Value, b: &Value) -> bool {
     a == b
 }
+/// M16: only the final `blank(result) == spec.view` proof catches a skeleton whose blanked field holds a value in a shape the merge does not touch (here an env LIST).
+#[test]
+fn the_final_equality_proof_catches_a_value_in_an_untouched_shape() {
+    let c = corpus();
+    let a = &c["apply"][0];
+    let mut spec = a["spec"].clone();
+    spec["view"]["services"]["web"]["environment"] = json!(["POSTGRES_PASSWORD=smuggled"]);
+    assert_eq!(apply_mirror_spec(&a["full"], &spec_of(&spec), &seed_of(a["seed_hex"].as_str().unwrap())).unwrap_err(), ApplyError::StructureMismatch);
+}
+
 #[test]
 fn a_seed_that_is_not_32_bytes_is_refused_and_the_hash_is_keyed_by_the_seed() {
     let c = corpus();

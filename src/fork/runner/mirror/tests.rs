@@ -13,6 +13,7 @@ use crate::fork::crypto::{parse_pin, sha256_hex};
 use crate::fork::restore::docker_ops::{CState, ContainerFacts, LABEL_AGENT, LABEL_RESTORE, owner_labels};
 use crate::fork::restore::tests::{Fake, NOW, RID, Rig, merge, rig, task};
 use crate::fork::runner::route::tests::FakeRoute;
+use crate::fork::runner::route::{self, RouteFacts, route_labels};
 use crate::fork::restore::{HostRole, Purpose};
 use crate::fork::state::State;
 use crate::fork::verify::{Ctx as VCtx, Decision, evaluate};
@@ -979,4 +980,318 @@ fn the_mirror_engine_never_spawns_a_process_outside_the_one_spawner() {
             assert!(!src.contains(banned), "{name}: {banned}");
         }
     }
+}
+
+// ---- route (W24) -----------------------------------------------------------------------------------------------------------------------
+const MID: &str = "88888888-8888-4888-8888-888888888888";
+const AGENT: &str = "11111111-1111-4111-8111-111111111111";
+const RID2: &str = "66666666-6666-4666-8666-666666666666";
+const PROJECT2: &str = "pbm-lab-r2";
+
+fn route_body(action: &str) -> Value {
+    json!({"action": action, "mirror_id": MID, "route_port": 41500, "service": "web", "target": 80, "http_path": "/"})
+}
+fn route_dir_of(w: &MW) -> PathBuf {
+    w.r.root.join(format!("pbm-route-{MID}"))
+}
+/// a second revision (own owner id, project and workspace) of the same mirror inside the same rig
+struct Rev2 {
+    ws: PathBuf,
+}
+impl Rev2 {
+    fn new(w: &MW) -> Rev2 {
+        let ws = w.r.root.join(PROJECT2);
+        let h: Header = serde_json::from_value(Self::hdr(w, &ws)).unwrap();
+        crate::fork::restore::workspace::Workspace::open_or_create(&ws, &crate::fork::compose::claim(&w.rt.env, &h), NOW).unwrap();
+        Rev2 { ws }
+    }
+    fn hdr(w: &MW, ws: &Path) -> Value {
+        let mut h = MW::hdr_of(&w.r, ws);
+        h["restore_id"] = json!(RID2);
+        h["project"] = json!(PROJECT2);
+        h
+    }
+    fn payload(&self, w: &MW, body: Value) -> Vec<u8> {
+        merge(Self::hdr(w, &self.ws), body)
+    }
+}
+fn access_container(restore: &str, project: &str, id: &str, running: bool) -> ContainerFacts {
+    let mut c = mirror_container(id, "web", running);
+    c.labels.insert(LABEL_RESTORE.into(), restore.into());
+    c.labels.insert("com.docker.compose.project".into(), project.into());
+    c.names = vec![format!("{project}-web-1")];
+    c
+}
+async fn route_switch(w: &MW, payload: Vec<u8>) -> R<Value> {
+    w.smoke.result.lock().unwrap().get_or_insert(Ok((0, b"HTTP 200\nOK\n".to_vec()))); // a path check answers with a status line
+    execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_route"), &payload).await
+}
+fn upstream_of(w: &MW) -> String {
+    std::fs::read_to_string(route_dir_of(w).join("upstream")).unwrap_or_default()
+}
+fn mutations(w: &MW) -> Vec<String> {
+    w.route.0.lock().unwrap().log.clone()
+}
+
+#[tokio::test]
+async fn the_first_switch_creates_attaches_writes_the_upstream_and_smokes_through_the_forwarder() {
+    let w = MW::new();
+    w.fake.0.lock().unwrap().containers.push(access_container(RID, PROJECT, "a", true));
+    let res = route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
+    assert_eq!((res["v"].as_u64(), res["route_port"].as_u64(), res["switched"].as_bool()), (Some(1), Some(41500), Some(true)));
+    assert_eq!(res["smoke"]["status"], "ok");
+    assert_eq!(mutations(&w), vec![format!("create {PROJECT}_pbm_access")], "created on the target network, no connect / disconnect needed");
+    assert_eq!(upstream_of(&w), "pbm-lab-web-1:80\n");
+    assert_eq!(std::fs::metadata(route_dir_of(&w)).unwrap().permissions().mode() & 0o777, 0o755);
+    let marker: Value = serde_json::from_slice(&std::fs::read(route_dir_of(&w).join("route.json")).unwrap()).unwrap();
+    assert_eq!((marker["mirror_id"].as_str(), marker["agent_id"].as_str()), (Some(MID), Some(AGENT)));
+    // the smoke goes THROUGH the forwarder: host = the route container, port 8080, on the target access network, owner labels + helper
+    let calls = w.smoke.calls.lock().unwrap();
+    let (name, net, labels, args) = &calls[0];
+    assert_eq!((name.as_str(), net.as_str()), ("pbm-smoke-route-77777777", format!("{PROJECT}_pbm_access").as_str()));
+    assert_eq!(labels.get(LABEL_RESTORE).map(String::as_str), Some(RID));
+    assert_eq!(labels.get("com.portabase.fork.helper").map(String::as_str), Some("true"));
+    assert_eq!(args[args.len() - 3..].to_vec(), vec![format!("pbm-route-{MID}"), "8080".to_string(), "/".to_string()]);
+    // the forwarder is NOT a helper and carries no restore id (the startup sweep and mirror_wipe must never touch it)
+    let f = w.route.0.lock().unwrap().containers[&format!("pbm-route-{MID}")].clone();
+    assert!(!f.labels.contains_key("com.portabase.fork.helper") && !f.labels.contains_key(LABEL_RESTORE));
+    assert_eq!(f.ports, vec![("127.0.0.1".to_string(), 41500, 8080)]);
+}
+
+#[tokio::test]
+async fn the_second_switch_attaches_the_new_network_then_swaps_the_upstream_then_detaches_the_old_one() {
+    let w = MW::new();
+    let r2 = Rev2::new(&w);
+    {
+        let mut s = w.fake.0.lock().unwrap();
+        s.containers.push(access_container(RID, PROJECT, "a", true));
+        s.containers.push(access_container(RID2, PROJECT2, "b", true));
+    }
+    route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
+    assert_eq!(upstream_of(&w), "pbm-lab-web-1:80\n");
+    route_switch(&w, r2.payload(&w, route_body("switch"))).await.unwrap();
+    let log = mutations(&w);
+    assert_eq!(log, vec![format!("create {PROJECT}_pbm_access"), format!("connect {PROJECT2}_pbm_access"), format!("disconnect {PROJECT}_pbm_access upstream=pbm-lab-r2-web-1:80")], "{log:?}");
+    assert_eq!(upstream_of(&w), "pbm-lab-r2-web-1:80\n");
+    assert_eq!(w.route.0.lock().unwrap().containers[&format!("pbm-route-{MID}")].networks, vec![format!("{PROJECT2}_pbm_access")], "attached ONLY to the new revision's network");
+}
+
+#[tokio::test]
+async fn an_identical_repeat_is_idempotent_and_a_wrong_shape_is_recreated() {
+    let w = MW::new();
+    w.fake.0.lock().unwrap().containers.push(access_container(RID, PROJECT, "a", true));
+    route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
+    route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
+    assert_eq!(mutations(&w).len(), 1, "no create / remove / connect / disconnect on a repeat");
+    // someone published the forwarder on another port: recreate (remove + create), never patch in place
+    w.route.0.lock().unwrap().containers.get_mut(&format!("pbm-route-{MID}")).unwrap().ports = vec![("0.0.0.0".into(), 41500, 8080)];
+    route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
+    assert_eq!(mutations(&w), vec![format!("create {PROJECT}_pbm_access"), "remove".to_string(), format!("create {PROJECT}_pbm_access")]);
+    // a stopped forwarder is recreated too
+    w.route.0.lock().unwrap().containers.get_mut(&format!("pbm-route-{MID}")).unwrap().running = false;
+    route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
+    assert_eq!(mutations(&w).iter().filter(|m| *m == "remove").count(), 2);
+}
+
+#[tokio::test]
+async fn a_foreign_directory_or_container_is_never_used_or_touched() {
+    let w = MW::new();
+    w.fake.0.lock().unwrap().containers.push(access_container(RID, PROJECT, "a", true));
+    // a directory of that name whose marker says another mirror / agent
+    std::fs::create_dir_all(route_dir_of(&w)).unwrap();
+    std::fs::write(route_dir_of(&w).join("route.json"), json!({"mirror_id": "99999999-9999-4999-8999-999999999999", "agent_id": AGENT}).to_string()).unwrap();
+    assert_eq!(route_switch(&w, w.payload(route_body("switch"))).await.unwrap_err().code, Code::RouteNotOwned);
+    assert!(mutations(&w).is_empty() && upstream_of(&w).is_empty(), "nothing created, nothing written");
+    // no marker at all
+    std::fs::remove_file(route_dir_of(&w).join("route.json")).unwrap();
+    assert_eq!(route_switch(&w, w.payload(route_body("switch"))).await.unwrap_err().code, Code::RouteNotOwned);
+    std::fs::remove_dir_all(route_dir_of(&w)).unwrap();
+    // a container of that name with foreign labels
+    let mut foreign = RouteFacts { running: true, image: "x".into(), labels: Labels::from([("a".to_string(), "b".to_string())]), networks: vec!["bridge".into()], ports: vec![] };
+    w.route.0.lock().unwrap().containers.insert(format!("pbm-route-{MID}"), foreign.clone());
+    assert_eq!(route_switch(&w, w.payload(route_body("switch"))).await.unwrap_err().code, Code::RouteNotOwned);
+    foreign.labels = route_labels(MID, "99999999-9999-4999-8999-999999999999"); // right mirror, ANOTHER agent
+    w.route.0.lock().unwrap().containers.insert(format!("pbm-route-{MID}"), foreign);
+    assert_eq!(route_switch(&w, w.payload(route_body("switch"))).await.unwrap_err().code, Code::RouteNotOwned);
+    assert!(mutations(&w).is_empty(), "a foreign container is never removed, connected or disconnected");
+}
+
+#[tokio::test]
+async fn a_target_that_is_not_running_leaves_the_route_unchanged() {
+    let w = MW::new();
+    let r2 = Rev2::new(&w);
+    {
+        let mut s = w.fake.0.lock().unwrap();
+        s.containers.push(access_container(RID, PROJECT, "a", true));
+        s.containers.push(access_container(RID2, PROJECT2, "b", false)); // r2's access container exited
+    }
+    route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
+    let before = (mutations(&w), upstream_of(&w));
+    assert_eq!(route_switch(&w, r2.payload(&w, route_body("switch"))).await.unwrap_err().code, Code::RouteTargetNotRunning);
+    assert_eq!((mutations(&w), upstream_of(&w)), before, "upstream and networks unchanged");
+    // the right container of ANOTHER revision does not count either (owner label)
+    let w2 = MW::new();
+    w2.fake.0.lock().unwrap().containers.push(access_container(RID2, PROJECT, "z", true));
+    assert_eq!(route_switch(&w2, w2.payload(route_body("switch"))).await.unwrap_err().code, Code::RouteTargetNotRunning);
+}
+
+#[tokio::test]
+async fn a_failed_smoke_through_the_forwarder_is_route_smoke_failed_and_a_late_listener_still_passes() {
+    let w = MW::new();
+    w.fake.0.lock().unwrap().containers.push(access_container(RID, PROJECT, "a", true));
+    *w.smoke.result.lock().unwrap() = Some(Ok((3, vec![])));
+    let f = route::run_with(&w.rt.env, w.rt.ops.as_ref(), w.rt.route.as_ref(), w.rt.smoke.as_ref(), Duration::ZERO, &task("mirror_route"), &w.payload(route_body("switch"))).await.unwrap_err();
+    assert_eq!(f.code, Code::RouteSmokeFailed);
+    assert_eq!(w.smoke.calls.lock().unwrap().len(), 6, "a few tries (the forwarder may need a moment), then an honest failure");
+    // a 5xx through the forwarder is a failure too (judge_smoke), a plain closed port with a path-less check as well
+    *w.smoke.result.lock().unwrap() = Some(Ok((0, b"HTTP 502\nOK\n".to_vec())));
+    assert_eq!(route::run_with(&w.rt.env, w.rt.ops.as_ref(), w.rt.route.as_ref(), w.rt.smoke.as_ref(), Duration::ZERO, &task("mirror_route"), &w.payload(route_body("switch"))).await.unwrap_err().code, Code::RouteSmokeFailed);
+    *w.smoke.result.lock().unwrap() = Some(Err(Code::SmokeFailedInternal));
+    assert_eq!(route::run_with(&w.rt.env, w.rt.ops.as_ref(), w.rt.route.as_ref(), w.rt.smoke.as_ref(), Duration::ZERO, &task("mirror_route"), &w.payload(route_body("switch"))).await.unwrap_err().code, Code::SmokeFailedInternal);
+}
+
+#[tokio::test]
+async fn remove_deletes_only_our_container_and_directory_and_verifies() {
+    let w = MW::new();
+    w.fake.0.lock().unwrap().containers.push(access_container(RID, PROJECT, "a", true));
+    route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
+    let res = route_switch(&w, w.payload(route_body("remove"))).await.unwrap();
+    assert_eq!((res["v"].as_u64(), res["removed"]["container"].as_u64(), res["removed"]["dir"].as_bool(), res["remaining"].as_u64()), (Some(1), Some(1), Some(true), Some(0)));
+    assert!(!route_dir_of(&w).exists() && w.route.0.lock().unwrap().containers.is_empty());
+    // nothing there any more: success with zero removed (a route port was allocated but no switch ever ran)
+    let again = route_switch(&w, w.payload(route_body("remove"))).await.unwrap();
+    assert_eq!((again["removed"]["container"].as_u64(), again["removed"]["dir"].as_bool(), again["remaining"].as_u64()), (Some(0), Some(false), Some(0)));
+}
+
+#[tokio::test]
+async fn remove_leaves_a_foreign_container_and_a_foreign_directory_untouched() {
+    let w = MW::new();
+    std::fs::create_dir_all(route_dir_of(&w)).unwrap();
+    std::fs::write(route_dir_of(&w).join("route.json"), json!({"mirror_id": MID, "agent_id": "99999999-9999-4999-8999-999999999999"}).to_string()).unwrap();
+    std::fs::write(route_dir_of(&w).join("precious"), b"x").unwrap();
+    let foreign = RouteFacts { running: true, image: "x".into(), labels: route_labels(MID, "99999999-9999-4999-8999-999999999999"), networks: vec![], ports: vec![] };
+    w.route.0.lock().unwrap().containers.insert(format!("pbm-route-{MID}"), foreign);
+    let res = route_switch(&w, w.payload(route_body("remove"))).await.unwrap();
+    assert_eq!((res["removed"]["container"].as_u64(), res["removed"]["dir"].as_bool()), (Some(0), Some(false)));
+    assert!(route_dir_of(&w).join("precious").exists(), "a directory of another agent is not ours");
+    assert!(mutations(&w).is_empty() && w.route.0.lock().unwrap().containers.len() == 1, "a foreign container is not removed");
+}
+
+#[tokio::test]
+async fn remove_that_leaves_the_container_behind_is_route_incomplete_and_needs_no_workspace() {
+    let w = MW::new();
+    w.fake.0.lock().unwrap().containers.push(access_container(RID, PROJECT, "a", true));
+    route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
+    w.route.0.lock().unwrap().keep = true;
+    let f = route_switch(&w, w.payload(route_body("remove"))).await.unwrap_err();
+    assert_eq!(f.code, Code::RouteIncomplete);
+    assert_eq!(f.result().unwrap()["remaining"].as_u64(), Some(1));
+    // delete may run after the newest revision's workspace is gone: remove never opens it
+    w.route.0.lock().unwrap().keep = false;
+    std::fs::remove_dir_all(&w.ws).unwrap();
+    assert_eq!(route_switch(&w, w.payload(route_body("remove"))).await.unwrap()["remaining"], 0);
+}
+
+#[tokio::test]
+async fn a_route_task_on_a_non_runner_host_is_refused() {
+    let w = MW::new();
+    let test_env = rig(HostRole::Test, &[]);
+    let f = route::run(&test_env.env, w.rt.ops.as_ref(), w.rt.route.as_ref(), w.rt.smoke.as_ref(), &task("mirror_route"), &w.payload(route_body("remove"))).await.unwrap_err();
+    assert_eq!(f.code, Code::ModeUnsupported);
+}
+
+// ---- seed preservation (W24 DD-8) --------------------------------------------------------------------------------------------------------
+const PREV_RID: &str = "55555555-5555-4555-8555-555555555599";
+fn prev_workspace(w: &MW, with_seed: bool) -> (PathBuf, Vec<u8>) {
+    let ws = w.r.root.join("pbm-lab-r0");
+    let mut h: Header = serde_json::from_value(MW::hdr_of(&w.r, &ws)).unwrap();
+    h.restore_id = PREV_RID.into();
+    h.project = "pbm-lab-r0".into();
+    crate::fork::restore::workspace::Workspace::open_or_create(&ws, &crate::fork::compose::claim(&w.rt.env, &h), NOW).unwrap();
+    let bytes = if with_seed { seed::create_or_load(&ws).unwrap().bytes().to_vec() } else { vec![] };
+    (ws, bytes)
+}
+fn with_seed_from(w: &MW, ws: &Path, rev: &str) -> Vec<u8> {
+    let (full, spec) = w.vec_case(0);
+    w.can_render(&full, 2);
+    let mut v: Value = serde_json::from_slice(&w.finalize_payload(&full, spec, LIMITS())).unwrap();
+    v["seed_from"] = json!({"revision_id": rev, "workspace": ws.display().to_string()});
+    serde_json::to_vec(&v).unwrap()
+}
+
+#[tokio::test]
+async fn finalize_with_seed_from_starts_from_the_active_revisions_seed() {
+    let w = MW::new();
+    let (prev, bytes) = prev_workspace(&w, true);
+    assert_eq!(bytes.len(), 32);
+    execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_finalize"), &with_seed_from(&w, &prev, PREV_RID)).await.unwrap();
+    assert_eq!(std::fs::read(seed::seed_path(&w.ws)).unwrap(), bytes, "same seed ⇒ same test credentials");
+    assert_eq!(std::fs::metadata(seed::seed_path(&w.ws)).unwrap().permissions().mode() & 0o777, 0o600);
+}
+#[tokio::test]
+async fn finalize_with_seed_from_fails_closed_on_a_foreign_owner_a_missing_seed_or_a_path_outside_the_root() {
+    for (case, rev, make) in [("foreign owner", "99999999-9999-4999-8999-999999999999", true), ("no seed in the source", PREV_RID, false)] {
+        let w = MW::new();
+        let (prev, _) = prev_workspace(&w, make);
+        let f = execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_finalize"), &with_seed_from(&w, &prev, rev)).await.unwrap_err();
+        assert_eq!(f.code, Code::SeedInvalid, "{case}");
+        assert!(!seed::seed_path(&w.ws).exists(), "{case}: no silent new seed");
+    }
+    let w = MW::new();
+    let f = execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_finalize"), &with_seed_from(&w, Path::new("/etc/pbm-lab-r0"), PREV_RID)).await.unwrap_err();
+    assert_eq!(f.code, Code::SeedInvalid);
+    // a workspace of ANOTHER agent (owner.json says so) is not a source either
+    let (prev, _) = prev_workspace(&w, true);
+    let mut o: Value = serde_json::from_slice(&std::fs::read(prev.join(".portabase/owner.json")).unwrap()).unwrap();
+    o["agent_id"] = json!("99999999-9999-4999-8999-999999999999");
+    std::fs::write(prev.join(".portabase/owner.json"), o.to_string()).unwrap();
+    assert_eq!(execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_finalize"), &with_seed_from(&w, &prev, PREV_RID)).await.unwrap_err().code, Code::SeedInvalid);
+}
+#[test]
+fn copy_from_validates_the_source_and_never_overwrites_a_target_seed() {
+    let d = tempfile::tempdir().unwrap();
+    let (a, b) = (d.path().join("pbm-a"), d.path().join("pbm-b"));
+    std::fs::create_dir_all(a.join(".portabase")).unwrap();
+    std::fs::create_dir_all(b.join(".portabase")).unwrap();
+    let src = seed::create_or_load(&a).unwrap().bytes().to_vec();
+    seed::copy_from(&a, &b).unwrap();
+    assert_eq!(std::fs::read(seed::seed_path(&b)).unwrap(), src);
+    assert_eq!(std::fs::metadata(seed::seed_path(&b)).unwrap().permissions().mode() & 0o777, 0o600);
+    // M12: an existing target seed stays, even if the source differs
+    let c = d.path().join("pbm-c");
+    std::fs::create_dir_all(c.join(".portabase")).unwrap();
+    let own = seed::create_or_load(&c).unwrap().bytes().to_vec();
+    seed::copy_from(&a, &c).unwrap();
+    assert_eq!(std::fs::read(seed::seed_path(&c)).unwrap(), own);
+    // bad sources
+    let bad = |mk: &dyn Fn(&Path)| {
+        let (s, t) = (tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap());
+        std::fs::create_dir_all(s.path().join(".portabase/mirror")).unwrap();
+        mk(&seed::seed_path(s.path()));
+        std::fs::create_dir_all(t.path().join(".portabase")).unwrap();
+        let r = seed::copy_from(s.path(), t.path());
+        assert!(!seed::seed_path(t.path()).exists());
+        r
+    };
+    assert_eq!(bad(&|_| {}), Err(Code::SeedInvalid), "missing");
+    assert_eq!(bad(&|p| std::fs::write(p, [1u8; 31]).unwrap()), Err(Code::SeedInvalid), "wrong size");
+    assert_eq!(bad(&|p| { std::fs::write(p, [1u8; 32]).unwrap(); std::fs::set_permissions(p, std::fs::Permissions::from_mode(0o644)).unwrap(); }), Err(Code::SeedInvalid), "mode 0644");
+    assert_eq!(bad(&|p| { std::fs::write(p.with_extension("real"), [1u8; 32]).unwrap(); std::os::unix::fs::symlink(p.with_extension("real"), p).unwrap(); }), Err(Code::SeedInvalid), "symlink");
+}
+
+// ---- probe memory (W24 DD-7) --------------------------------------------------------------------------------------------------------------
+#[test]
+fn mem_available_is_parsed_from_proc_meminfo_in_bytes_and_unknown_on_anything_odd() {
+    use crate::fork::restore::probe::mem_available_of;
+    assert_eq!(mem_available_of("MemTotal:       16000000 kB\nMemFree:  1 kB\nMemAvailable:   12345 kB\nBuffers: 1 kB\n"), Some(12345 * 1024));
+    for bad in ["", "MemTotal: 1 kB\n", "MemAvailable: x kB\n", "MemAvailable: 12\n", "MemAvailable:  kB\n", "MemAvailable: 99999999999999999999999 kB\n", "MemAvailable: 18446744073709551615 kB\n"] {
+        assert_eq!(mem_available_of(bad), None, "{bad:?}");
+    }
+}
+#[tokio::test]
+async fn the_mirror_probe_reports_the_memory_fact_next_to_the_disk_facts() {
+    let w = MW::new();
+    let res = execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_probe"), json!({"v": 1, "workspace": w.ws.display().to_string()}).to_string().as_bytes()).await.unwrap();
+    assert!(res.get("mem_available_bytes").is_some_and(|v| v.is_u64() || v.is_null()), "{res}");
+    assert!(res["roots"][0].get("free_bytes").is_some());
 }

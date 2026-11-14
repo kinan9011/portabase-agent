@@ -71,7 +71,7 @@ fn bad_state<T>(c: Code) -> R<T> {
     Err(Failure::from(c))
 }
 
-fn route_labels(mirror_id: &str, agent_id: &str) -> Labels {
+pub(crate) fn route_labels(mirror_id: &str, agent_id: &str) -> Labels {
     Labels::from([(LABEL_ROUTE.to_string(), mirror_id.to_string()), (LABEL_AGENT.to_string(), agent_id.to_string())])
 }
 fn is_ours(l: &Labels, mirror_id: &str, agent_id: &str) -> bool {

@@ -1,10 +1,10 @@
 //! Real `RouteOps` (bollard) for the per-mirror forwarder. The container is as hardened as the smoke / probe helpers: user 65534, `cap_drop ALL`, `no-new-privileges`,
 //! read-only rootfs, 64 MiB / 64 pids, log driver `none`, restart `unless-stopped`, ONE published port `127.0.0.1:<route_port> → 8080/tcp`, attached to ONE network, the route
-//! directory bound read-only at `/route`. It carries `route=<mirror_id>` + the agent id but NOT `helper=true` and NOT a restore id (the startup sweep and `mirror_wipe` must not touch it).
+//! directory bound read-only at `/route`. (No `connect` / `disconnect`: see the module doc of `route/mod.rs`.) It carries `route=<mirror_id>` + the agent id but NOT `helper=true` and NOT a restore id (the startup sweep and `mirror_wipe` must not touch it).
 use super::{RouteFacts, RouteOps, RouteSpec};
 use crate::fork::restore::Code;
 use async_trait::async_trait;
-use bollard::models::{ContainerCreateBody, EndpointSettings, HostConfig, HostConfigLogConfig, NetworkConnectRequest, NetworkDisconnectRequest, PortBinding, RestartPolicy, RestartPolicyNameEnum};
+use bollard::models::{ContainerCreateBody, HostConfig, HostConfigLogConfig, PortBinding, RestartPolicy, RestartPolicyNameEnum};
 use bollard::query_parameters::{CreateContainerOptions, InspectContainerOptions, RemoveContainerOptions, StartContainerOptions, StopContainerOptions};
 use std::collections::HashMap;
 
@@ -76,12 +76,6 @@ impl RouteOps for RealRoute {
             return Err(Code::DockerUnavailable);
         }
         Ok(())
-    }
-    async fn connect(&self, net: &str, container: &str) -> Result<(), Code> {
-        self.docker.connect_network(net, NetworkConnectRequest { container: container.to_string(), endpoint_config: Some(EndpointSettings::default()) }).await.map_err(dk)
-    }
-    async fn disconnect(&self, net: &str, container: &str) -> Result<(), Code> {
-        self.docker.disconnect_network(net, NetworkDisconnectRequest { container: container.to_string(), force: Some(true) }).await.map_err(dk)
     }
     async fn remove(&self, name: &str) -> Result<(), Code> {
         let _ = self.docker.stop_container(name, Some(StopContainerOptions { t: Some(5), ..Default::default() })).await;

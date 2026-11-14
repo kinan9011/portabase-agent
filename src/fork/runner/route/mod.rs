@@ -1,7 +1,10 @@
 //! W24 `mirror_route` (DD-3 / DD-13): the stable per-mirror private access route. ONE runner-local forwarder container `pbm-route-<mirror_id>` (the agent's own image,
 //! entrypoint `app pbm-route /route/upstream`, see `proxy.rs`) publishes ONLY `127.0.0.1:<route_port>` and is attached to exactly ONE network: the target revision's
-//! `<project>_pbm_access`. `switch` = connect the new network → atomic `rename(2)` of the upstream file → disconnect every other network → inspect → smoke THROUGH the
-//! forwarder from a helper on the target network. `remove` (delete) detaches nothing by hand: it removes the forwarder (so the revision networks can be wiped) and its directory.
+//! `<project>_pbm_access`. `switch` = atomic `rename(2)` of the upstream file → (re)create the forwarder ON the target network when it is not already exactly there → inspect →
+//! smoke THROUGH the forwarder from a helper on the target network. A container is never re-attached with `docker network connect`: Docker refuses that once the container's
+//! CREATION-time network was removed (verified in the W24 lab: `could not find a network matching network mode …`), and a retired revision's network IS removed by `mirror_wipe`.
+//! The price is a brief (about a second) gap for NEW connections at a switch and open tunnel connections ending (deviation from DD-3, ADR-017 addendum).
+//! `remove` (delete) removes the forwarder (so the revision networks can be wiped) and its directory.
 //! Only resources carrying `route=<mirror_id>` + this agent's id (container) / a matching marker file (directory) are ever touched; a foreign object is left alone.
 pub mod docker;
 pub mod proxy;
@@ -58,8 +61,6 @@ pub trait RouteOps: Send + Sync {
     async fn inspect(&self, name: &str) -> Result<Option<RouteFacts>, Code>;
     /// create (hardened, see `docker.rs`) + start on `spec.network`
     async fn create_start(&self, spec: &RouteSpec) -> Result<(), Code>;
-    async fn connect(&self, net: &str, container: &str) -> Result<(), Code>;
-    async fn disconnect(&self, net: &str, container: &str) -> Result<(), Code>;
     /// stop + remove (volumes none)
     async fn remove(&self, name: &str) -> Result<(), Code>;
 }
@@ -148,36 +149,27 @@ async fn switch(env: &RestoreEnv, ops: &dyn DockerOps, route: &dyn RouteOps, smo
         let dir = route_dir(env, &b.mirror_id)?;
         prepare_dir(&dir, &b.mirror_id, agent)?;
         let spec = RouteSpec { name: name.clone(), image: c.ce.own_image.clone(), network: net.clone(), route_port: port, dir: dir.clone(), labels: route_labels(&b.mirror_id, agent) };
-        // ensure the forwarder: absent / not ours → create (never touch a foreign one) / wrong shape → recreate
-        let mut facts = route.inspect(&name).await?;
-        if let Some(f) = &facts {
-            if !is_ours(&f.labels, &b.mirror_id, agent) {
-                return bad_state(Code::RouteNotOwned);
-            }
-            if !f.running || !ports_exact(f, port) || f.image != spec.image {
-                route.remove(&name).await?;
-                facts = None;
-            }
-        }
-        if facts.is_none() {
-            route.create_start(&spec).await?;
-            facts = route.inspect(&name).await?;
-        }
-        let facts = facts.ok_or(Failure::from(Code::RouteIncomplete))?;
-        // 1. attach the target network  2. atomic upstream swap  3. detach every other network
-        if !facts.networks.contains(&net) {
-            route.connect(&net, &name).await?;
-        }
+        // 1. atomic upstream swap (the forwarder reads the file per NEW connection)
         write_file(&dir.join(UPSTREAM), upstream.as_bytes())?;
-        for other in facts.networks.iter().filter(|n| **n != net) {
-            route.disconnect(other, &name).await?;
+        // 2. ensure the forwarder is exactly on the target network: absent → create; not ours → refuse (never touch a foreign one); any other shape or network → recreate
+        let facts = route.inspect(&name).await?;
+        let keep = match &facts {
+            Some(f) if !is_ours(&f.labels, &b.mirror_id, agent) => return bad_state(Code::RouteNotOwned),
+            Some(f) => f.running && ports_exact(f, port) && f.image == spec.image && f.networks == [net.clone()],
+            None => false,
+        };
+        if !keep {
+            if facts.is_some() {
+                route.remove(&name).await?;
+            }
+            route.create_start(&spec).await?;
         }
-        // 4. verify what the runner actually has now
+        // 3. verify what the runner actually has now
         let after = route.inspect(&name).await?.ok_or(Failure::from(Code::RouteIncomplete))?;
         if !after.running || after.networks != [net.clone()] || !ports_exact(&after, port) || !is_ours(&after.labels, &b.mirror_id, agent) {
             return bad_state(Code::RouteIncomplete);
         }
-        // 5. smoke THROUGH the forwarder, from a helper on the target network (the forwarder may need a moment to listen: a few tries)
+        // 4. smoke THROUGH the forwarder, from a helper on the target network (the forwarder may need a moment to listen: a few tries)
         let mut labels = owner_labels(&c.h.restore_id, agent);
         labels.insert(LABEL_HELPER.into(), "true".into());
         let hname = format!("pbm-smoke-route-{}", &c.h.restore_id[..8]);

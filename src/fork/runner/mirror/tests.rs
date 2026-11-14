@@ -1038,7 +1038,7 @@ async fn the_first_switch_creates_attaches_writes_the_upstream_and_smokes_throug
     let res = route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
     assert_eq!((res["v"].as_u64(), res["route_port"].as_u64(), res["switched"].as_bool()), (Some(1), Some(41500), Some(true)));
     assert_eq!(res["smoke"]["status"], "ok");
-    assert_eq!(mutations(&w), vec![format!("create {PROJECT}_pbm_access")], "created on the target network, no connect / disconnect needed");
+    assert_eq!(mutations(&w), vec![format!("create {PROJECT}_pbm_access upstream=pbm-lab-web-1:80")], "created on the target network with the upstream already in place");
     assert_eq!(upstream_of(&w), "pbm-lab-web-1:80\n");
     assert_eq!(std::fs::metadata(route_dir_of(&w)).unwrap().permissions().mode() & 0o777, 0o755);
     let marker: Value = serde_json::from_slice(&std::fs::read(route_dir_of(&w).join("route.json")).unwrap()).unwrap();
@@ -1057,7 +1057,7 @@ async fn the_first_switch_creates_attaches_writes_the_upstream_and_smokes_throug
 }
 
 #[tokio::test]
-async fn the_second_switch_attaches_the_new_network_then_swaps_the_upstream_then_detaches_the_old_one() {
+async fn the_second_switch_swaps_the_upstream_then_recreates_the_forwarder_on_the_new_network_only() {
     let w = MW::new();
     let r2 = Rev2::new(&w);
     {
@@ -1069,7 +1069,7 @@ async fn the_second_switch_attaches_the_new_network_then_swaps_the_upstream_then
     assert_eq!(upstream_of(&w), "pbm-lab-web-1:80\n");
     route_switch(&w, r2.payload(&w, route_body("switch"))).await.unwrap();
     let log = mutations(&w);
-    assert_eq!(log, vec![format!("create {PROJECT}_pbm_access"), format!("connect {PROJECT2}_pbm_access"), format!("disconnect {PROJECT}_pbm_access upstream=pbm-lab-r2-web-1:80")], "{log:?}");
+    assert_eq!(log, vec![format!("create {PROJECT}_pbm_access upstream=pbm-lab-web-1:80"), "remove".to_string(), format!("create {PROJECT2}_pbm_access upstream=pbm-lab-r2-web-1:80")], "{log:?}");
     assert_eq!(upstream_of(&w), "pbm-lab-r2-web-1:80\n");
     assert_eq!(w.route.0.lock().unwrap().containers[&format!("pbm-route-{MID}")].networks, vec![format!("{PROJECT2}_pbm_access")], "attached ONLY to the new revision's network");
 }
@@ -1084,7 +1084,7 @@ async fn an_identical_repeat_is_idempotent_and_a_wrong_shape_is_recreated() {
     // someone published the forwarder on another port: recreate (remove + create), never patch in place
     w.route.0.lock().unwrap().containers.get_mut(&format!("pbm-route-{MID}")).unwrap().ports = vec![("0.0.0.0".into(), 41500, 8080)];
     route_switch(&w, w.payload(route_body("switch"))).await.unwrap();
-    assert_eq!(mutations(&w), vec![format!("create {PROJECT}_pbm_access"), "remove".to_string(), format!("create {PROJECT}_pbm_access")]);
+    assert_eq!(mutations(&w), vec![format!("create {PROJECT}_pbm_access upstream=pbm-lab-web-1:80"), "remove".to_string(), format!("create {PROJECT}_pbm_access upstream=pbm-lab-web-1:80")]);
     // a stopped forwarder is recreated too
     w.route.0.lock().unwrap().containers.get_mut(&format!("pbm-route-{MID}")).unwrap().running = false;
     route_switch(&w, w.payload(route_body("switch"))).await.unwrap();

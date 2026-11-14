@@ -11,7 +11,7 @@ use tokio::sync::Semaphore;
 #[derive(Default)]
 pub(crate) struct RouteState {
     pub(crate) containers: BTreeMap<String, RouteFacts>,
-    /// `create <net>` / `connect <net>` / `disconnect <net> upstream=<content>` / `remove`
+    /// `create <net> upstream=<content at that moment>` / `remove`
     pub(crate) log: Vec<String>,
     /// the upstream file the swap is observed through
     pub(crate) upstream_file: Option<PathBuf>,
@@ -29,21 +29,9 @@ impl RouteOps for FakeRoute {
     async fn create_start(&self, spec: &RouteSpec) -> Result<(), Code> {
         let mut s = self.0.lock().unwrap();
         s.upstream_file = Some(spec.dir.join(UPSTREAM));
-        s.log.push(format!("create {}", spec.network));
+        let up = std::fs::read_to_string(spec.dir.join(UPSTREAM)).unwrap_or_default();
+        s.log.push(format!("create {} upstream={}", spec.network, up.trim()));
         s.containers.insert(spec.name.clone(), RouteFacts { running: true, image: spec.image.clone(), labels: spec.labels.clone(), networks: vec![spec.network.clone()], ports: vec![("127.0.0.1".into(), spec.route_port, FORWARDER_PORT)] });
-        Ok(())
-    }
-    async fn connect(&self, net: &str, container: &str) -> Result<(), Code> {
-        let mut s = self.0.lock().unwrap();
-        s.log.push(format!("connect {net}"));
-        s.containers.get_mut(container).ok_or(Code::DockerUnavailable)?.networks.push(net.to_string());
-        Ok(())
-    }
-    async fn disconnect(&self, net: &str, container: &str) -> Result<(), Code> {
-        let mut s = self.0.lock().unwrap();
-        let up = s.upstream_file.as_ref().and_then(|p| std::fs::read_to_string(p).ok()).unwrap_or_default();
-        s.log.push(format!("disconnect {net} upstream={}", up.trim()));
-        s.containers.get_mut(container).ok_or(Code::DockerUnavailable)?.networks.retain(|n| n != net);
         Ok(())
     }
     async fn remove(&self, name: &str) -> Result<(), Code> {

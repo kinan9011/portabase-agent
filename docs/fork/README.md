@@ -82,3 +82,21 @@ Needs the Docker socket (`-v /var/run/docker.sock:/var/run/docker.sock`) and **a
 **What it refuses (whole task, nothing stopped):** a container outside the stack's compose project; the agent / Portabase / Arcane / a Docker-socket mounter anywhere in that project; an ambiguous or changed container id; a running second copy of a chosen service; paused / restarting containers; containers owned by a restore.
 
 **Manual recovery.** If the dashboard is gone and the agent cannot start a container: `docker ps -a --filter label=com.docker.compose.project=<project>`; the containers it stopped are listed (names, ids) in the journal file in the agent's state volume; `docker start <id>`. Removing the journal file afterwards clears the `quiesce_pending` block.
+
+## Mirror runner (W21 runner role, W22a-f1 mirror engine — ADR-008, ADR-007 A17)
+A host started with `FORK_HOST_ROLE=runner` reports `runner.v1` (probe-only: `runner_probe`, W21). With a valid `FORK_MIRROR_ROOT` it also reports `mirror.v1` and executes the nine signed `mirror_*` task types; it
+refuses every restore / compose / quiesce type (`role_forbidden`), and every non-runner refuses the mirror types.
+
+| Variable | Meaning |
+|---|---|
+| `FORK_HOST_ROLE=runner` | the runner role (`RestoreEnv::from_env` never accepts it: a runner never takes the production restore path) |
+| `FORK_MIRROR_ROOT` | the ONE directory mirrors live in (default on the dashboard side `/srv/portabase-mirrors`); it must be bind-mounted at the SAME path into the agent container (`root_not_shared` otherwise), canonical, not a system path, not containing the state dir |
+| `FORK_ARTIFACT_HTTP_HOSTS` | exact artifact hosts that may be fetched over plain http (lab only; https otherwise) |
+| `EDGE_KEY` | the instance master key is decoded from it **on a mirror-enabled runner** (staging production archives needs it): the realised residual R-W21-1 (ADR-008 §12, Kanzo #201) |
+
+`mirror.v1` needs: Docker answers, the pinned Compose CLI, the agent's own container id, `FORK_MIRROR_ROOT` shared with the daemon, a decodable master key. Anything missing = one log line, no capability, probe-only runner.
+Task types (payload contract = dashboard `mirror/payload-schema.ts`, shared signed vectors `src/fork/tests/restore_vectors.json`): `mirror_probe|stage|apply|render` reuse the W17 executors under a mirror header (purpose `mirror`, host role `runner`, no approvals, project `pbm-…`);
+`mirror_finalize` (the Rust port of the W20 `applyMirrorSpec`, vectors `runner/corpus/compose-mirror-vectors.json` byte-identical to the dashboard's, + seed custody `<ws>/.portabase/mirror/seed` 0600) writes `<ws>/.portabase/mirror/out.json`
+and uploads only the value-free FINAL policy view; `mirror_db` (credential resets over stdin, then the dumps), `mirror_up`, `mirror_check` (health + app smoke from the mirror's own access network) use only `out.json` and refuse
+`final_view_mismatch` when its policy view differs from the hash the dashboard approved; `mirror_wipe` removes everything of one revision (owner labels + own agent id) and re-lists (`wipe_incomplete` on any leftover).
+Lab (Flow D): `dev/fork-lab/runner/w22a.sh` + `src/fork/__tests__/e2e/w22a-mirror-lab.test.ts` in the dashboard repo. Real-VM proof (#125) is PENDING-HUMAN.

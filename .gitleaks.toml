@@ -9,5 +9,6 @@ description = "test vectors and fixtures hold fake keys/hashes on purpose"
 paths = [
   '''^src/fork/tests/''',
   '''^src/fork/policy/corpus/''',
+  '''^src/fork/runner/corpus/''',   # W22a-f1: the dashboard's mirror vectors (synthetic canary values like W20_CANARY_…_pgpw, on purpose)
   '''^src/tests/''',
 ]

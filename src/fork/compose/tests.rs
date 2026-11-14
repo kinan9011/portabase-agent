@@ -34,7 +34,7 @@ impl RenderSink for Rec {
 }
 
 /// A recording stand-in for `docker-compose`: appends argv + environment (+ the first bytes of stdin) to `$HOME/log` and keeps a copy of any `rendered.json` it is pointed at.
-fn fake_bin() -> PathBuf {
+pub(crate) fn fake_bin() -> PathBuf {
     static BIN: OnceLock<PathBuf> = OnceLock::new();
     BIN.get_or_init(|| {
         let dir = std::env::temp_dir().join(format!("w17ii-fakebin-{}", std::process::id()));

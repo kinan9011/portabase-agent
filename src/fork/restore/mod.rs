@@ -76,12 +76,24 @@ pub enum Code {
     // W-TR (ADR-007 A16), dashboard order: appended AFTER the W17b block
     IntegrityFailed,
     EngineUnavailable,
+    // W22a-f1 (ADR-007 A17), dashboard order (`MIRROR_AGENT_CODES`): appended AFTER the W-TR block
+    SeedInvalid,
+    SourceChanged,
+    ApplyFailed,
+    LimitsInvalid,
+    FinalViewMismatch,
+    CredentialResetFailed,
+    CredentialResetUnsupported,
+    SmokeFailedInternal,
+    MirrorDisabled,
+    /// W22a-f1: `mirror_wipe` found a leftover after its verified re-list (the runner's own code `wipe_incomplete`, W21 vocabulary; NOT part of `Code::RESTORE`).
+    WipeIncomplete,
 }
 
 impl Code {
     /// The restore-specific list, in the dashboard's order (the vectors assert equality).
     #[cfg_attr(not(test), allow(dead_code))]
-    pub const RESTORE: [Code; 47] = [
+    pub const RESTORE: [Code; 56] = [
         Code::PathNotAllowed, Code::SymlinkEscape, Code::RootNotShared, Code::WorkspaceNotOwned, Code::ModeUnsupported, Code::HostRoleMismatch, Code::ApprovalMissing,
         Code::ManifestInvalid, Code::ManifestUnknownKid, Code::ManifestSignature, Code::ManifestMismatch, Code::ArtifactUnavailable, Code::ChecksumMismatch, Code::ArchiveInvalid,
         Code::DumpFormatMismatch, Code::VolumeExists, Code::VolumeNotOwned, Code::DiskFull, Code::DockerUnavailable, Code::DeadlineExceeded, Code::RestoreFailed,
@@ -89,6 +101,7 @@ impl Code {
         Code::ContainerConflict, Code::ProtectedContainer, Code::NetworkExists, Code::VolumeNotInCompose, Code::DbRestoreFailed, Code::ComposeFailed,
         Code::NotInProject, Code::ProtectedInProject, Code::ContainerChanged, Code::ReplicaNotListed, Code::ContainerUnstable, Code::RestoreOwned, Code::QuiescePending,
         Code::JournalUnavailable, Code::StopFailed, Code::RestartUnverified, Code::QuiesceInterrupted, Code::IntegrityFailed, Code::EngineUnavailable,
+        Code::SeedInvalid, Code::SourceChanged, Code::ApplyFailed, Code::LimitsInvalid, Code::FinalViewMismatch, Code::CredentialResetFailed, Code::CredentialResetUnsupported, Code::SmokeFailedInternal, Code::MirrorDisabled,
     ];
     pub fn as_str(self) -> &'static str {
         match self {
@@ -140,6 +153,16 @@ impl Code {
             Code::QuiesceInterrupted => "quiesce_interrupted",
             Code::IntegrityFailed => "integrity_failed",
             Code::EngineUnavailable => "engine_unavailable",
+            Code::SeedInvalid => "seed_invalid",
+            Code::SourceChanged => "source_changed",
+            Code::ApplyFailed => "apply_failed",
+            Code::LimitsInvalid => "limits_invalid",
+            Code::FinalViewMismatch => "final_view_mismatch",
+            Code::CredentialResetFailed => "credential_reset_failed",
+            Code::CredentialResetUnsupported => "credential_reset_unsupported",
+            Code::SmokeFailedInternal => "smoke_failed_internal",
+            Code::MirrorDisabled => "mirror_disabled",
+            Code::WipeIncomplete => "wipe_incomplete",
         }
     }
 }
@@ -225,6 +248,8 @@ pub fn deadline_of(task_type: &str) -> Duration {
 pub enum HostRole {
     Production,
     Test,
+    /// W22a-f1: only ever the role of a mirror runner's own env (`mirror::MirrorEnv`); `RestoreEnv::from_env` never yields it.
+    Runner,
 }
 
 #[derive(Clone)]
@@ -269,6 +294,8 @@ impl RestoreEnv {
 pub enum Purpose {
     Restore,
     TestRestore,
+    /// W22a-f1: runner-side mirror creation (header `host_role` must be `runner`, no approvals, mode `new_stack`).
+    Mirror,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -293,7 +320,6 @@ pub struct Header {
     pub stack_id: String,
     pub rp_id: String,
     pub purpose: Purpose,
-    #[allow(dead_code)]
     pub mode: Mode,
     pub host_role: HostRole,
     pub approvals: Vec<Approval>,
@@ -423,8 +449,14 @@ impl Header {
         let ok = self.v == 1 && [&self.restore_id, &self.plan_id, &self.stack_id, &self.rp_id].iter().all(|s| is_uuid(s)) && is_hex64(&self.plan_hash) && paths::is_name(&self.project, 64)
             && self.project.bytes().all(|b| !b.is_ascii_uppercase() && b != b'.')
             && paths::canon(&self.workspace) && self.workspace.ends_with(&format!("/{}", self.project)) && self.approvals.len() <= 2;
+        // W22a-f1: a mirror header is exactly {purpose mirror ⇔ host_role runner}, new_stack, no approvals, `pbm-` project
+        let mirror = self.purpose == Purpose::Mirror;
+        let ok = ok && mirror == (self.host_role == HostRole::Runner) && (!mirror || (self.mode == Mode::NewStack && self.approvals.is_empty() && self.project.starts_with("pbm-")));
         if !ok {
             return Err(Code::PayloadInvalid.into());
+        }
+        if mirror && env.host_role != HostRole::Runner {
+            return Err(Code::ModeUnsupported.into()); // a restore-class task never carries a mirror header (and a mirror task never runs on a restore env)
         }
         if self.host_role != env.host_role {
             return Err(Code::HostRoleMismatch.into());

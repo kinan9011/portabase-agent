@@ -1,0 +1,3940 @@
+{
+ "v": 1,
+ "generated_by": "w20-compose-compiler-corpus.test.ts",
+ "env": [
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "",
+   "out": ""
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": null,
+   "out": null
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "pw",
+   "out": "pw"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "p@ss",
+   "out": "p@ss"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "postgres://app:pw@db/app",
+   "out": "postgres://app:fece37f4d061876bdaf516080379f7e0@db/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "postgres://app:p@ss@db/app",
+   "out": "postgres://app:27d4b8b2f8be684b613f7bcd4efcc100@db/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "postgres://app:p%40ss@db/app",
+   "out": "postgres://app:27d4b8b2f8be684b613f7bcd4efcc100@db/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "smtp://u:p@mail.prod.example:587/x?y",
+   "out": "smtp://u:02df50695edfd02bb0d84f1af7a54a4b@mail.prod.example:587/x?y"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "mail.prod.example",
+   "out": "mail.prod.example"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "redis://host:6379/0",
+   "out": "redis://host:6379/0"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "https://hooks.example/a#b",
+   "out": "https://hooks.example/a#b"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep",
+   "in": "ünï-cödé ✓",
+   "out": "ünï-cödé ✓"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "",
+   "out": ""
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": null,
+   "out": null
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "pw",
+   "out": "pw"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "p@ss",
+   "out": "p@ss"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "postgres://app:pw@db/app",
+   "out": "postgres://app:pw@db/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "postgres://app:p@ss@db/app",
+   "out": "postgres://app:p@ss@db/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "postgres://app:p%40ss@db/app",
+   "out": "postgres://app:p%40ss@db/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "smtp://u:p@mail.prod.example:587/x?y",
+   "out": "smtp://u:p@mail.prod.example:587/x?y"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "mail.prod.example",
+   "out": "mail.prod.example"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "redis://host:6379/0",
+   "out": "redis://host:6379/0"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "https://hooks.example/a#b",
+   "out": "https://hooks.example/a#b"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "keep_exact",
+   "in": "ünï-cödé ✓",
+   "out": "ünï-cödé ✓"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "",
+   "out": ""
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": null,
+   "out": null
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "pw",
+   "out": "fece37f4d061876bdaf516080379f7e0"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "p@ss",
+   "out": "27d4b8b2f8be684b613f7bcd4efcc100"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "postgres://app:pw@db/app",
+   "out": "postgres://app:fece37f4d061876bdaf516080379f7e0@db/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "postgres://app:p@ss@db/app",
+   "out": "postgres://app:27d4b8b2f8be684b613f7bcd4efcc100@db/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "postgres://app:p%40ss@db/app",
+   "out": "postgres://app:27d4b8b2f8be684b613f7bcd4efcc100@db/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "smtp://u:p@mail.prod.example:587/x?y",
+   "out": "smtp://u:02df50695edfd02bb0d84f1af7a54a4b@mail.prod.example:587/x?y"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "mail.prod.example",
+   "out": "ddd68ad732012b575d0b15fdb6c4e004"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "redis://host:6379/0",
+   "out": "abd7c9ee3c76d36b90f36331b64c3507"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "https://hooks.example/a#b",
+   "out": "4b1040c1e44a0a4c6c44cbfb201e4c6e"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "rotate",
+   "in": "ünï-cödé ✓",
+   "out": "ba335bfca02e07870d4820a4b21f461a"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "",
+   "out": ""
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": null,
+   "out": null
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "pw",
+   "out": "disabled.invalid"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "p@ss",
+   "out": "disabled.invalid"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "postgres://app:pw@db/app",
+   "out": "postgres://disabled.invalid/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "postgres://app:p@ss@db/app",
+   "out": "postgres://disabled.invalid/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "postgres://app:p%40ss@db/app",
+   "out": "postgres://disabled.invalid/app"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "smtp://u:p@mail.prod.example:587/x?y",
+   "out": "smtp://disabled.invalid/x?y"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "mail.prod.example",
+   "out": "disabled.invalid"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "redis://host:6379/0",
+   "out": "redis://disabled.invalid/0"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "https://hooks.example/a#b",
+   "out": "https://disabled.invalid/a#b"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "disable",
+   "in": "ünï-cödé ✓",
+   "out": "disabled.invalid"
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "",
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": null,
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "pw",
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "p@ss",
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "postgres://app:pw@db/app",
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "postgres://app:p@ss@db/app",
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "postgres://app:p%40ss@db/app",
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "smtp://u:p@mail.prod.example:587/x?y",
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "mail.prod.example",
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "redis://host:6379/0",
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "https://hooks.example/a#b",
+   "drop": true
+  },
+  {
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "action": "drop",
+   "in": "ünï-cödé ✓",
+   "drop": true
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "",
+   "out": ""
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": null,
+   "out": null
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "pw",
+   "out": "d8cb397cd6a0c8b212347f06b33caffc"
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "p@ss",
+   "out": "96c7befd0ca0ccfb5883d74f3b917768"
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "postgres://app:pw@db/app",
+   "out": "postgres://app:d8cb397cd6a0c8b212347f06b33caffc@db/app"
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "postgres://app:p@ss@db/app",
+   "out": "postgres://app:96c7befd0ca0ccfb5883d74f3b917768@db/app"
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "postgres://app:p%40ss@db/app",
+   "out": "postgres://app:96c7befd0ca0ccfb5883d74f3b917768@db/app"
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "smtp://u:p@mail.prod.example:587/x?y",
+   "out": "smtp://u:4b31db6459e9c3a7f7754b181c1f6e79@mail.prod.example:587/x?y"
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "mail.prod.example",
+   "out": "e7143422373977ab4f807c833e0bbd5a"
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "redis://host:6379/0",
+   "out": "87bcb34a0a140c96db6f83c9e5dcf1ef"
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "https://hooks.example/a#b",
+   "out": "c2a75b2f454f877df97550a6f340583f"
+  },
+  {
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "action": "rotate",
+   "in": "ünï-cödé ✓",
+   "out": "fbd31283d4506fb71d369551f1a08791"
+  }
+ ],
+ "apply": [
+  {
+   "name": "lab full render with private access",
+   "full": {
+    "name": "forklab-demo",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "labels": {
+       "forklab.role": "database",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ]
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "container_name": "lab-web",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "DATABASE_URL": "postgres://app:W20_CANARY_7f3a9c51d2e84b6a_pgpw@demo-db:5432/app",
+       "SMTP_HOST": "smtp.prod.example",
+       "APP_GREETING": "hello"
+      },
+      "extra_hosts": {
+       "db.prod": "10.9.8.7"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "traefik.enable": "true",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": null,
+       "lab_proxy": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18080",
+        "protocol": "tcp"
+       }
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "forklab-demo_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "lab_proxy",
+      "external": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "forklab-demo_pgdata"
+     },
+     "appdata": {
+      "name": "forklab-demo_appdata"
+     }
+    }
+   },
+   "spec": {
+    "v": 1,
+    "compiler": 1,
+    "project": "pbm-lab",
+    "workspace": "/srv/mirrors/pbm-lab",
+    "source_view_sha256": "74bf33b6883043389c47e461009d56052c255fc29b982fe70035e3e56700f5bf",
+    "rules_sha256": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a",
+    "access": {
+     "service": "web",
+     "target": 8080,
+     "host_port": 18099
+    },
+    "view": {
+     "name": "pbm-lab",
+     "services": {
+      "db": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "healthcheck": {
+        "test": [
+         "",
+         ""
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": ""
+       },
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "volume",
+         "source": "pgdata",
+         "target": "/var/lib/postgresql/data",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "POSTGRES_USER": "",
+        "POSTGRES_DB": "",
+        "APP_GREETING": "",
+        "PASSTHRU": null
+       },
+       "labels": {
+        "forklab.role": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "demo-db"
+         ]
+        }
+       }
+      },
+      "web": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "command": [
+        "",
+        "",
+        ""
+       ],
+       "depends_on": {
+        "db": {
+         "condition": "service_healthy",
+         "required": true
+        }
+       },
+       "entrypoint": [
+        "",
+        ""
+       ],
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "bind",
+         "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+         "target": "/app/serve.sh",
+         "read_only": true,
+         "bind": {
+          "create_host_path": true
+         }
+        },
+        {
+         "type": "volume",
+         "source": "appdata",
+         "target": "/appdata",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "DATABASE_URL": "",
+        "SMTP_HOST": "",
+        "APP_GREETING": ""
+       },
+       "labels": {
+        "forklab.role": "",
+        "canary": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "lab_proxy": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "pbm_access": null
+       },
+       "ports": [
+        {
+         "mode": "ingress",
+         "host_ip": "127.0.0.1",
+         "target": 8080,
+         "published": "18099",
+         "protocol": "tcp"
+        }
+       ]
+      }
+     },
+     "networks": {
+      "internal": {
+       "name": "pbm-lab_internal",
+       "internal": true
+      },
+      "lab_proxy": {
+       "name": "pbm-lab_lab_proxy",
+       "internal": true
+      },
+      "pbm_access": {
+       "name": "pbm-lab_pbm_access"
+      }
+     },
+     "volumes": {
+      "pgdata": {
+       "name": "pbm-lab_pgdata"
+      },
+      "appdata": {
+       "name": "pbm-lab_appdata"
+      }
+     }
+    },
+    "env": {
+     "db": {
+      "POSTGRES_PASSWORD": "rotate",
+      "POSTGRES_USER": "keep",
+      "POSTGRES_DB": "keep",
+      "APP_GREETING": "keep",
+      "PASSTHRU": "keep"
+     },
+     "web": {
+      "POSTGRES_PASSWORD": "rotate",
+      "DATABASE_URL": "keep",
+      "SMTP_HOST": "disable",
+      "APP_GREETING": "keep"
+     }
+    },
+    "credential_resets": [
+     {
+      "service": "db",
+      "engine": "postgresql",
+      "user_key": "POSTGRES_USER",
+      "password_key": "POSTGRES_PASSWORD"
+     },
+     {
+      "service": "web",
+      "engine": "postgresql",
+      "user_key": null,
+      "password_key": "POSTGRES_PASSWORD"
+     }
+    ],
+    "kept_production_secrets": []
+   },
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "out": {
+    "name": "pbm-lab",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "6d3a290677328144895907a9f6b6d911",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "labels": {
+       "forklab.role": "database"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      }
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "6d3a290677328144895907a9f6b6d911",
+       "DATABASE_URL": "postgres://app:6d3a290677328144895907a9f6b6d911@demo-db:5432/app",
+       "SMTP_HOST": "disabled.invalid",
+       "APP_GREETING": "hello"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "lab-web"
+        ]
+       },
+       "lab_proxy": {
+        "aliases": [
+         "lab-web"
+        ]
+       },
+       "pbm_access": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18099",
+        "protocol": "tcp"
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "pbm-lab_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "pbm-lab_lab_proxy",
+      "internal": true
+     },
+     "pbm_access": {
+      "name": "pbm-lab_pbm_access"
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "pbm-lab_pgdata"
+     },
+     "appdata": {
+      "name": "pbm-lab_appdata"
+     }
+    }
+   }
+  },
+  {
+   "name": "lab full render, same spec, other seed",
+   "full": {
+    "name": "forklab-demo",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "labels": {
+       "forklab.role": "database",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ]
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "container_name": "lab-web",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "DATABASE_URL": "postgres://app:W20_CANARY_7f3a9c51d2e84b6a_pgpw@demo-db:5432/app",
+       "SMTP_HOST": "smtp.prod.example",
+       "APP_GREETING": "hello"
+      },
+      "extra_hosts": {
+       "db.prod": "10.9.8.7"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "traefik.enable": "true",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": null,
+       "lab_proxy": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18080",
+        "protocol": "tcp"
+       }
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "forklab-demo_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "lab_proxy",
+      "external": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "forklab-demo_pgdata"
+     },
+     "appdata": {
+      "name": "forklab-demo_appdata"
+     }
+    }
+   },
+   "spec": {
+    "v": 1,
+    "compiler": 1,
+    "project": "pbm-lab",
+    "workspace": "/srv/mirrors/pbm-lab",
+    "source_view_sha256": "74bf33b6883043389c47e461009d56052c255fc29b982fe70035e3e56700f5bf",
+    "rules_sha256": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a",
+    "access": {
+     "service": "web",
+     "target": 8080,
+     "host_port": 18099
+    },
+    "view": {
+     "name": "pbm-lab",
+     "services": {
+      "db": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "healthcheck": {
+        "test": [
+         "",
+         ""
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": ""
+       },
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "volume",
+         "source": "pgdata",
+         "target": "/var/lib/postgresql/data",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "POSTGRES_USER": "",
+        "POSTGRES_DB": "",
+        "APP_GREETING": "",
+        "PASSTHRU": null
+       },
+       "labels": {
+        "forklab.role": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "demo-db"
+         ]
+        }
+       }
+      },
+      "web": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "command": [
+        "",
+        "",
+        ""
+       ],
+       "depends_on": {
+        "db": {
+         "condition": "service_healthy",
+         "required": true
+        }
+       },
+       "entrypoint": [
+        "",
+        ""
+       ],
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "bind",
+         "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+         "target": "/app/serve.sh",
+         "read_only": true,
+         "bind": {
+          "create_host_path": true
+         }
+        },
+        {
+         "type": "volume",
+         "source": "appdata",
+         "target": "/appdata",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "DATABASE_URL": "",
+        "SMTP_HOST": "",
+        "APP_GREETING": ""
+       },
+       "labels": {
+        "forklab.role": "",
+        "canary": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "lab_proxy": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "pbm_access": null
+       },
+       "ports": [
+        {
+         "mode": "ingress",
+         "host_ip": "127.0.0.1",
+         "target": 8080,
+         "published": "18099",
+         "protocol": "tcp"
+        }
+       ]
+      }
+     },
+     "networks": {
+      "internal": {
+       "name": "pbm-lab_internal",
+       "internal": true
+      },
+      "lab_proxy": {
+       "name": "pbm-lab_lab_proxy",
+       "internal": true
+      },
+      "pbm_access": {
+       "name": "pbm-lab_pbm_access"
+      }
+     },
+     "volumes": {
+      "pgdata": {
+       "name": "pbm-lab_pgdata"
+      },
+      "appdata": {
+       "name": "pbm-lab_appdata"
+      }
+     }
+    },
+    "env": {
+     "db": {
+      "POSTGRES_PASSWORD": "rotate",
+      "POSTGRES_USER": "keep",
+      "POSTGRES_DB": "keep",
+      "APP_GREETING": "keep",
+      "PASSTHRU": "keep"
+     },
+     "web": {
+      "POSTGRES_PASSWORD": "rotate",
+      "DATABASE_URL": "keep",
+      "SMTP_HOST": "disable",
+      "APP_GREETING": "keep"
+     }
+    },
+    "credential_resets": [
+     {
+      "service": "db",
+      "engine": "postgresql",
+      "user_key": "POSTGRES_USER",
+      "password_key": "POSTGRES_PASSWORD"
+     },
+     {
+      "service": "web",
+      "engine": "postgresql",
+      "user_key": null,
+      "password_key": "POSTGRES_PASSWORD"
+     }
+    ],
+    "kept_production_secrets": []
+   },
+   "seed_hex": "fffefdfcfbfaf9f8f7f6f5f4f3f2f1f0efeeedecebeae9e8e7e6e5e4e3e2e1e0",
+   "out": {
+    "name": "pbm-lab",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "45faa0ed2ece6bfb79c0e8c63ff0d5fc",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "labels": {
+       "forklab.role": "database"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      }
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "45faa0ed2ece6bfb79c0e8c63ff0d5fc",
+       "DATABASE_URL": "postgres://app:45faa0ed2ece6bfb79c0e8c63ff0d5fc@demo-db:5432/app",
+       "SMTP_HOST": "disabled.invalid",
+       "APP_GREETING": "hello"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "lab-web"
+        ]
+       },
+       "lab_proxy": {
+        "aliases": [
+         "lab-web"
+        ]
+       },
+       "pbm_access": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18099",
+        "protocol": "tcp"
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "pbm-lab_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "pbm-lab_lab_proxy",
+      "internal": true
+     },
+     "pbm_access": {
+      "name": "pbm-lab_pbm_access"
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "pbm-lab_pgdata"
+     },
+     "appdata": {
+      "name": "pbm-lab_appdata"
+     }
+    }
+   }
+  },
+  {
+   "name": "lab without access",
+   "full": {
+    "name": "forklab-demo",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "labels": {
+       "forklab.role": "database",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ]
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "container_name": "lab-web",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "DATABASE_URL": "postgres://app:W20_CANARY_7f3a9c51d2e84b6a_pgpw@demo-db:5432/app",
+       "SMTP_HOST": "smtp.prod.example",
+       "APP_GREETING": "hello"
+      },
+      "extra_hosts": {
+       "db.prod": "10.9.8.7"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "traefik.enable": "true",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": null,
+       "lab_proxy": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18080",
+        "protocol": "tcp"
+       }
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "forklab-demo_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "lab_proxy",
+      "external": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "forklab-demo_pgdata"
+     },
+     "appdata": {
+      "name": "forklab-demo_appdata"
+     }
+    }
+   },
+   "spec": {
+    "v": 1,
+    "compiler": 1,
+    "project": "pbm-lab",
+    "workspace": "/srv/mirrors/pbm-lab",
+    "source_view_sha256": "74bf33b6883043389c47e461009d56052c255fc29b982fe70035e3e56700f5bf",
+    "rules_sha256": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a",
+    "access": null,
+    "view": {
+     "name": "pbm-lab",
+     "services": {
+      "db": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "healthcheck": {
+        "test": [
+         "",
+         ""
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": ""
+       },
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "volume",
+         "source": "pgdata",
+         "target": "/var/lib/postgresql/data",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "POSTGRES_USER": "",
+        "POSTGRES_DB": "",
+        "APP_GREETING": "",
+        "PASSTHRU": null
+       },
+       "labels": {
+        "forklab.role": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "demo-db"
+         ]
+        }
+       }
+      },
+      "web": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "command": [
+        "",
+        "",
+        ""
+       ],
+       "depends_on": {
+        "db": {
+         "condition": "service_healthy",
+         "required": true
+        }
+       },
+       "entrypoint": [
+        "",
+        ""
+       ],
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "bind",
+         "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+         "target": "/app/serve.sh",
+         "read_only": true,
+         "bind": {
+          "create_host_path": true
+         }
+        },
+        {
+         "type": "volume",
+         "source": "appdata",
+         "target": "/appdata",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "DATABASE_URL": "",
+        "SMTP_HOST": "",
+        "APP_GREETING": ""
+       },
+       "labels": {
+        "forklab.role": "",
+        "canary": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "lab_proxy": {
+         "aliases": [
+          "lab-web"
+         ]
+        }
+       }
+      }
+     },
+     "networks": {
+      "internal": {
+       "name": "pbm-lab_internal",
+       "internal": true
+      },
+      "lab_proxy": {
+       "name": "pbm-lab_lab_proxy",
+       "internal": true
+      }
+     },
+     "volumes": {
+      "pgdata": {
+       "name": "pbm-lab_pgdata"
+      },
+      "appdata": {
+       "name": "pbm-lab_appdata"
+      }
+     }
+    },
+    "env": {
+     "db": {
+      "POSTGRES_PASSWORD": "rotate",
+      "POSTGRES_USER": "keep",
+      "POSTGRES_DB": "keep",
+      "APP_GREETING": "keep",
+      "PASSTHRU": "keep"
+     },
+     "web": {
+      "POSTGRES_PASSWORD": "rotate",
+      "DATABASE_URL": "keep",
+      "SMTP_HOST": "disable",
+      "APP_GREETING": "keep"
+     }
+    },
+    "credential_resets": [
+     {
+      "service": "db",
+      "engine": "postgresql",
+      "user_key": "POSTGRES_USER",
+      "password_key": "POSTGRES_PASSWORD"
+     },
+     {
+      "service": "web",
+      "engine": "postgresql",
+      "user_key": null,
+      "password_key": "POSTGRES_PASSWORD"
+     }
+    ],
+    "kept_production_secrets": []
+   },
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "out": {
+    "name": "pbm-lab",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "6d3a290677328144895907a9f6b6d911",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "labels": {
+       "forklab.role": "database"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      }
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "6d3a290677328144895907a9f6b6d911",
+       "DATABASE_URL": "postgres://app:6d3a290677328144895907a9f6b6d911@demo-db:5432/app",
+       "SMTP_HOST": "disabled.invalid",
+       "APP_GREETING": "hello"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "lab-web"
+        ]
+       },
+       "lab_proxy": {
+        "aliases": [
+         "lab-web"
+        ]
+       }
+      }
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "pbm-lab_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "pbm-lab_lab_proxy",
+      "internal": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "pbm-lab_pgdata"
+     },
+     "appdata": {
+      "name": "pbm-lab_appdata"
+     }
+    }
+   }
+  },
+  {
+   "name": "operator overrides: keep_exact and drop",
+   "full": {
+    "name": "forklab-demo",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "labels": {
+       "forklab.role": "database",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ]
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "container_name": "lab-web",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "DATABASE_URL": "postgres://app:W20_CANARY_7f3a9c51d2e84b6a_pgpw@demo-db:5432/app",
+       "SMTP_HOST": "smtp.prod.example",
+       "APP_GREETING": "hello"
+      },
+      "extra_hosts": {
+       "db.prod": "10.9.8.7"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "traefik.enable": "true",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": null,
+       "lab_proxy": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18080",
+        "protocol": "tcp"
+       }
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "forklab-demo_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "lab_proxy",
+      "external": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "forklab-demo_pgdata"
+     },
+     "appdata": {
+      "name": "forklab-demo_appdata"
+     }
+    }
+   },
+   "spec": {
+    "v": 1,
+    "compiler": 1,
+    "project": "pbm-lab",
+    "workspace": "/srv/mirrors/pbm-lab",
+    "source_view_sha256": "74bf33b6883043389c47e461009d56052c255fc29b982fe70035e3e56700f5bf",
+    "rules_sha256": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a",
+    "access": {
+     "service": "web",
+     "target": 8080,
+     "host_port": 18099
+    },
+    "view": {
+     "name": "pbm-lab",
+     "services": {
+      "db": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "healthcheck": {
+        "test": [
+         "",
+         ""
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": ""
+       },
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "volume",
+         "source": "pgdata",
+         "target": "/var/lib/postgresql/data",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "POSTGRES_USER": "",
+        "POSTGRES_DB": "",
+        "APP_GREETING": "",
+        "PASSTHRU": null
+       },
+       "labels": {
+        "forklab.role": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "demo-db"
+         ]
+        }
+       }
+      },
+      "web": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "command": [
+        "",
+        "",
+        ""
+       ],
+       "depends_on": {
+        "db": {
+         "condition": "service_healthy",
+         "required": true
+        }
+       },
+       "entrypoint": [
+        "",
+        ""
+       ],
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "bind",
+         "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+         "target": "/app/serve.sh",
+         "read_only": true,
+         "bind": {
+          "create_host_path": true
+         }
+        },
+        {
+         "type": "volume",
+         "source": "appdata",
+         "target": "/appdata",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "DATABASE_URL": "",
+        "APP_GREETING": ""
+       },
+       "labels": {
+        "forklab.role": "",
+        "canary": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "lab_proxy": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "pbm_access": null
+       },
+       "ports": [
+        {
+         "mode": "ingress",
+         "host_ip": "127.0.0.1",
+         "target": 8080,
+         "published": "18099",
+         "protocol": "tcp"
+        }
+       ]
+      }
+     },
+     "networks": {
+      "internal": {
+       "name": "pbm-lab_internal",
+       "internal": true
+      },
+      "lab_proxy": {
+       "name": "pbm-lab_lab_proxy",
+       "internal": true
+      },
+      "pbm_access": {
+       "name": "pbm-lab_pbm_access"
+      }
+     },
+     "volumes": {
+      "pgdata": {
+       "name": "pbm-lab_pgdata"
+      },
+      "appdata": {
+       "name": "pbm-lab_appdata"
+      }
+     }
+    },
+    "env": {
+     "db": {
+      "POSTGRES_PASSWORD": "rotate",
+      "POSTGRES_USER": "keep",
+      "POSTGRES_DB": "keep",
+      "APP_GREETING": "keep",
+      "PASSTHRU": "keep"
+     },
+     "web": {
+      "POSTGRES_PASSWORD": "keep_exact",
+      "DATABASE_URL": "keep",
+      "SMTP_HOST": "drop",
+      "APP_GREETING": "keep"
+     }
+    },
+    "credential_resets": [
+     {
+      "service": "db",
+      "engine": "postgresql",
+      "user_key": "POSTGRES_USER",
+      "password_key": "POSTGRES_PASSWORD"
+     }
+    ],
+    "kept_production_secrets": [
+     "web.POSTGRES_PASSWORD"
+    ]
+   },
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "out": {
+    "name": "pbm-lab",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "6d3a290677328144895907a9f6b6d911",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "labels": {
+       "forklab.role": "database"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      }
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "DATABASE_URL": "postgres://app:6d3a290677328144895907a9f6b6d911@demo-db:5432/app",
+       "APP_GREETING": "hello"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "lab-web"
+        ]
+       },
+       "lab_proxy": {
+        "aliases": [
+         "lab-web"
+        ]
+       },
+       "pbm_access": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18099",
+        "protocol": "tcp"
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "pbm-lab_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "pbm-lab_lab_proxy",
+      "internal": true
+     },
+     "pbm_access": {
+      "name": "pbm-lab_pbm_access"
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "pbm-lab_pgdata"
+     },
+     "appdata": {
+      "name": "pbm-lab_appdata"
+     }
+    }
+   }
+  },
+  {
+   "name": "error service_missing",
+   "full": {
+    "name": "forklab-demo",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "labels": {
+       "forklab.role": "database",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "forklab-demo_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "lab_proxy",
+      "external": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "forklab-demo_pgdata"
+     },
+     "appdata": {
+      "name": "forklab-demo_appdata"
+     }
+    }
+   },
+   "spec": {
+    "v": 1,
+    "compiler": 1,
+    "project": "pbm-lab",
+    "workspace": "/srv/mirrors/pbm-lab",
+    "source_view_sha256": "74bf33b6883043389c47e461009d56052c255fc29b982fe70035e3e56700f5bf",
+    "rules_sha256": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a",
+    "access": {
+     "service": "web",
+     "target": 8080,
+     "host_port": 18099
+    },
+    "view": {
+     "name": "pbm-lab",
+     "services": {
+      "db": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "healthcheck": {
+        "test": [
+         "",
+         ""
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": ""
+       },
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "volume",
+         "source": "pgdata",
+         "target": "/var/lib/postgresql/data",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "POSTGRES_USER": "",
+        "POSTGRES_DB": "",
+        "APP_GREETING": "",
+        "PASSTHRU": null
+       },
+       "labels": {
+        "forklab.role": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "demo-db"
+         ]
+        }
+       }
+      },
+      "web": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "command": [
+        "",
+        "",
+        ""
+       ],
+       "depends_on": {
+        "db": {
+         "condition": "service_healthy",
+         "required": true
+        }
+       },
+       "entrypoint": [
+        "",
+        ""
+       ],
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "bind",
+         "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+         "target": "/app/serve.sh",
+         "read_only": true,
+         "bind": {
+          "create_host_path": true
+         }
+        },
+        {
+         "type": "volume",
+         "source": "appdata",
+         "target": "/appdata",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "DATABASE_URL": "",
+        "SMTP_HOST": "",
+        "APP_GREETING": ""
+       },
+       "labels": {
+        "forklab.role": "",
+        "canary": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "lab_proxy": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "pbm_access": null
+       },
+       "ports": [
+        {
+         "mode": "ingress",
+         "host_ip": "127.0.0.1",
+         "target": 8080,
+         "published": "18099",
+         "protocol": "tcp"
+        }
+       ]
+      }
+     },
+     "networks": {
+      "internal": {
+       "name": "pbm-lab_internal",
+       "internal": true
+      },
+      "lab_proxy": {
+       "name": "pbm-lab_lab_proxy",
+       "internal": true
+      },
+      "pbm_access": {
+       "name": "pbm-lab_pbm_access"
+      }
+     },
+     "volumes": {
+      "pgdata": {
+       "name": "pbm-lab_pgdata"
+      },
+      "appdata": {
+       "name": "pbm-lab_appdata"
+      }
+     }
+    },
+    "env": {
+     "db": {
+      "POSTGRES_PASSWORD": "rotate",
+      "POSTGRES_USER": "keep",
+      "POSTGRES_DB": "keep",
+      "APP_GREETING": "keep",
+      "PASSTHRU": "keep"
+     },
+     "web": {
+      "POSTGRES_PASSWORD": "rotate",
+      "DATABASE_URL": "keep",
+      "SMTP_HOST": "disable",
+      "APP_GREETING": "keep"
+     }
+    },
+    "credential_resets": [
+     {
+      "service": "db",
+      "engine": "postgresql",
+      "user_key": "POSTGRES_USER",
+      "password_key": "POSTGRES_PASSWORD"
+     },
+     {
+      "service": "web",
+      "engine": "postgresql",
+      "user_key": null,
+      "password_key": "POSTGRES_PASSWORD"
+     }
+    ],
+    "kept_production_secrets": []
+   },
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "error": "service_missing"
+  },
+  {
+   "name": "error env_missing",
+   "full": {
+    "name": "forklab-demo",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "labels": {
+       "forklab.role": "database",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ]
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "container_name": "lab-web",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "DATABASE_URL": "postgres://app:W20_CANARY_7f3a9c51d2e84b6a_pgpw@demo-db:5432/app",
+       "APP_GREETING": "hello"
+      },
+      "extra_hosts": {
+       "db.prod": "10.9.8.7"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "traefik.enable": "true",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": null,
+       "lab_proxy": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18080",
+        "protocol": "tcp"
+       }
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "forklab-demo_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "lab_proxy",
+      "external": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "forklab-demo_pgdata"
+     },
+     "appdata": {
+      "name": "forklab-demo_appdata"
+     }
+    }
+   },
+   "spec": {
+    "v": 1,
+    "compiler": 1,
+    "project": "pbm-lab",
+    "workspace": "/srv/mirrors/pbm-lab",
+    "source_view_sha256": "74bf33b6883043389c47e461009d56052c255fc29b982fe70035e3e56700f5bf",
+    "rules_sha256": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a",
+    "access": {
+     "service": "web",
+     "target": 8080,
+     "host_port": 18099
+    },
+    "view": {
+     "name": "pbm-lab",
+     "services": {
+      "db": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "healthcheck": {
+        "test": [
+         "",
+         ""
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": ""
+       },
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "volume",
+         "source": "pgdata",
+         "target": "/var/lib/postgresql/data",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "POSTGRES_USER": "",
+        "POSTGRES_DB": "",
+        "APP_GREETING": "",
+        "PASSTHRU": null
+       },
+       "labels": {
+        "forklab.role": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "demo-db"
+         ]
+        }
+       }
+      },
+      "web": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "command": [
+        "",
+        "",
+        ""
+       ],
+       "depends_on": {
+        "db": {
+         "condition": "service_healthy",
+         "required": true
+        }
+       },
+       "entrypoint": [
+        "",
+        ""
+       ],
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "bind",
+         "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+         "target": "/app/serve.sh",
+         "read_only": true,
+         "bind": {
+          "create_host_path": true
+         }
+        },
+        {
+         "type": "volume",
+         "source": "appdata",
+         "target": "/appdata",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "DATABASE_URL": "",
+        "SMTP_HOST": "",
+        "APP_GREETING": ""
+       },
+       "labels": {
+        "forklab.role": "",
+        "canary": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "lab_proxy": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "pbm_access": null
+       },
+       "ports": [
+        {
+         "mode": "ingress",
+         "host_ip": "127.0.0.1",
+         "target": 8080,
+         "published": "18099",
+         "protocol": "tcp"
+        }
+       ]
+      }
+     },
+     "networks": {
+      "internal": {
+       "name": "pbm-lab_internal",
+       "internal": true
+      },
+      "lab_proxy": {
+       "name": "pbm-lab_lab_proxy",
+       "internal": true
+      },
+      "pbm_access": {
+       "name": "pbm-lab_pbm_access"
+      }
+     },
+     "volumes": {
+      "pgdata": {
+       "name": "pbm-lab_pgdata"
+      },
+      "appdata": {
+       "name": "pbm-lab_appdata"
+      }
+     }
+    },
+    "env": {
+     "db": {
+      "POSTGRES_PASSWORD": "rotate",
+      "POSTGRES_USER": "keep",
+      "POSTGRES_DB": "keep",
+      "APP_GREETING": "keep",
+      "PASSTHRU": "keep"
+     },
+     "web": {
+      "POSTGRES_PASSWORD": "rotate",
+      "DATABASE_URL": "keep",
+      "SMTP_HOST": "disable",
+      "APP_GREETING": "keep"
+     }
+    },
+    "credential_resets": [
+     {
+      "service": "db",
+      "engine": "postgresql",
+      "user_key": "POSTGRES_USER",
+      "password_key": "POSTGRES_PASSWORD"
+     },
+     {
+      "service": "web",
+      "engine": "postgresql",
+      "user_key": null,
+      "password_key": "POSTGRES_PASSWORD"
+     }
+    ],
+    "kept_production_secrets": []
+   },
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "error": "env_missing"
+  },
+  {
+   "name": "error label_missing",
+   "full": {
+    "name": "forklab-demo",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "labels": {
+       "forklab.role": "database",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ]
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "container_name": "lab-web",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "DATABASE_URL": "postgres://app:W20_CANARY_7f3a9c51d2e84b6a_pgpw@demo-db:5432/app",
+       "SMTP_HOST": "smtp.prod.example",
+       "APP_GREETING": "hello"
+      },
+      "extra_hosts": {
+       "db.prod": "10.9.8.7"
+      },
+      "labels": {
+       "traefik.enable": "true",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": null,
+       "lab_proxy": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18080",
+        "protocol": "tcp"
+       }
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "forklab-demo_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "lab_proxy",
+      "external": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "forklab-demo_pgdata"
+     },
+     "appdata": {
+      "name": "forklab-demo_appdata"
+     }
+    }
+   },
+   "spec": {
+    "v": 1,
+    "compiler": 1,
+    "project": "pbm-lab",
+    "workspace": "/srv/mirrors/pbm-lab",
+    "source_view_sha256": "74bf33b6883043389c47e461009d56052c255fc29b982fe70035e3e56700f5bf",
+    "rules_sha256": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a",
+    "access": {
+     "service": "web",
+     "target": 8080,
+     "host_port": 18099
+    },
+    "view": {
+     "name": "pbm-lab",
+     "services": {
+      "db": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "healthcheck": {
+        "test": [
+         "",
+         ""
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": ""
+       },
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "volume",
+         "source": "pgdata",
+         "target": "/var/lib/postgresql/data",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "POSTGRES_USER": "",
+        "POSTGRES_DB": "",
+        "APP_GREETING": "",
+        "PASSTHRU": null
+       },
+       "labels": {
+        "forklab.role": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "demo-db"
+         ]
+        }
+       }
+      },
+      "web": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "command": [
+        "",
+        "",
+        ""
+       ],
+       "depends_on": {
+        "db": {
+         "condition": "service_healthy",
+         "required": true
+        }
+       },
+       "entrypoint": [
+        "",
+        ""
+       ],
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "bind",
+         "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+         "target": "/app/serve.sh",
+         "read_only": true,
+         "bind": {
+          "create_host_path": true
+         }
+        },
+        {
+         "type": "volume",
+         "source": "appdata",
+         "target": "/appdata",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "DATABASE_URL": "",
+        "SMTP_HOST": "",
+        "APP_GREETING": ""
+       },
+       "labels": {
+        "forklab.role": "",
+        "canary": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "lab_proxy": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "pbm_access": null
+       },
+       "ports": [
+        {
+         "mode": "ingress",
+         "host_ip": "127.0.0.1",
+         "target": 8080,
+         "published": "18099",
+         "protocol": "tcp"
+        }
+       ]
+      }
+     },
+     "networks": {
+      "internal": {
+       "name": "pbm-lab_internal",
+       "internal": true
+      },
+      "lab_proxy": {
+       "name": "pbm-lab_lab_proxy",
+       "internal": true
+      },
+      "pbm_access": {
+       "name": "pbm-lab_pbm_access"
+      }
+     },
+     "volumes": {
+      "pgdata": {
+       "name": "pbm-lab_pgdata"
+      },
+      "appdata": {
+       "name": "pbm-lab_appdata"
+      }
+     }
+    },
+    "env": {
+     "db": {
+      "POSTGRES_PASSWORD": "rotate",
+      "POSTGRES_USER": "keep",
+      "POSTGRES_DB": "keep",
+      "APP_GREETING": "keep",
+      "PASSTHRU": "keep"
+     },
+     "web": {
+      "POSTGRES_PASSWORD": "rotate",
+      "DATABASE_URL": "keep",
+      "SMTP_HOST": "disable",
+      "APP_GREETING": "keep"
+     }
+    },
+    "credential_resets": [
+     {
+      "service": "db",
+      "engine": "postgresql",
+      "user_key": "POSTGRES_USER",
+      "password_key": "POSTGRES_PASSWORD"
+     },
+     {
+      "service": "web",
+      "engine": "postgresql",
+      "user_key": null,
+      "password_key": "POSTGRES_PASSWORD"
+     }
+    ],
+    "kept_production_secrets": []
+   },
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "error": "label_missing"
+  },
+  {
+   "name": "error structure_mismatch (command length)",
+   "full": {
+    "name": "forklab-demo",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "labels": {
+       "forklab.role": "database",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ]
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "container_name": "lab-web",
+      "command": [
+       "sh",
+       "-c"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "DATABASE_URL": "postgres://app:W20_CANARY_7f3a9c51d2e84b6a_pgpw@demo-db:5432/app",
+       "SMTP_HOST": "smtp.prod.example",
+       "APP_GREETING": "hello"
+      },
+      "extra_hosts": {
+       "db.prod": "10.9.8.7"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "traefik.enable": "true",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": null,
+       "lab_proxy": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18080",
+        "protocol": "tcp"
+       }
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "forklab-demo_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "lab_proxy",
+      "external": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "forklab-demo_pgdata"
+     },
+     "appdata": {
+      "name": "forklab-demo_appdata"
+     }
+    }
+   },
+   "spec": {
+    "v": 1,
+    "compiler": 1,
+    "project": "pbm-lab",
+    "workspace": "/srv/mirrors/pbm-lab",
+    "source_view_sha256": "74bf33b6883043389c47e461009d56052c255fc29b982fe70035e3e56700f5bf",
+    "rules_sha256": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a",
+    "access": {
+     "service": "web",
+     "target": 8080,
+     "host_port": 18099
+    },
+    "view": {
+     "name": "pbm-lab",
+     "services": {
+      "db": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "healthcheck": {
+        "test": [
+         "",
+         ""
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": ""
+       },
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "volume",
+         "source": "pgdata",
+         "target": "/var/lib/postgresql/data",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "POSTGRES_USER": "",
+        "POSTGRES_DB": "",
+        "APP_GREETING": "",
+        "PASSTHRU": null
+       },
+       "labels": {
+        "forklab.role": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "demo-db"
+         ]
+        }
+       }
+      },
+      "web": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "command": [
+        "",
+        "",
+        ""
+       ],
+       "depends_on": {
+        "db": {
+         "condition": "service_healthy",
+         "required": true
+        }
+       },
+       "entrypoint": [
+        "",
+        ""
+       ],
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "bind",
+         "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+         "target": "/app/serve.sh",
+         "read_only": true,
+         "bind": {
+          "create_host_path": true
+         }
+        },
+        {
+         "type": "volume",
+         "source": "appdata",
+         "target": "/appdata",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "DATABASE_URL": "",
+        "SMTP_HOST": "",
+        "APP_GREETING": ""
+       },
+       "labels": {
+        "forklab.role": "",
+        "canary": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "lab_proxy": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "pbm_access": null
+       },
+       "ports": [
+        {
+         "mode": "ingress",
+         "host_ip": "127.0.0.1",
+         "target": 8080,
+         "published": "18099",
+         "protocol": "tcp"
+        }
+       ]
+      }
+     },
+     "networks": {
+      "internal": {
+       "name": "pbm-lab_internal",
+       "internal": true
+      },
+      "lab_proxy": {
+       "name": "pbm-lab_lab_proxy",
+       "internal": true
+      },
+      "pbm_access": {
+       "name": "pbm-lab_pbm_access"
+      }
+     },
+     "volumes": {
+      "pgdata": {
+       "name": "pbm-lab_pgdata"
+      },
+      "appdata": {
+       "name": "pbm-lab_appdata"
+      }
+     }
+    },
+    "env": {
+     "db": {
+      "POSTGRES_PASSWORD": "rotate",
+      "POSTGRES_USER": "keep",
+      "POSTGRES_DB": "keep",
+      "APP_GREETING": "keep",
+      "PASSTHRU": "keep"
+     },
+     "web": {
+      "POSTGRES_PASSWORD": "rotate",
+      "DATABASE_URL": "keep",
+      "SMTP_HOST": "disable",
+      "APP_GREETING": "keep"
+     }
+    },
+    "credential_resets": [
+     {
+      "service": "db",
+      "engine": "postgresql",
+      "user_key": "POSTGRES_USER",
+      "password_key": "POSTGRES_PASSWORD"
+     },
+     {
+      "service": "web",
+      "engine": "postgresql",
+      "user_key": null,
+      "password_key": "POSTGRES_PASSWORD"
+     }
+    ],
+    "kept_production_secrets": []
+   },
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "error": "structure_mismatch"
+  },
+  {
+   "name": "error structure_mismatch (healthcheck missing)",
+   "full": {
+    "name": "forklab-demo",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "labels": {
+       "forklab.role": "database",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ]
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "container_name": "lab-web",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "DATABASE_URL": "postgres://app:W20_CANARY_7f3a9c51d2e84b6a_pgpw@demo-db:5432/app",
+       "SMTP_HOST": "smtp.prod.example",
+       "APP_GREETING": "hello"
+      },
+      "extra_hosts": {
+       "db.prod": "10.9.8.7"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "traefik.enable": "true",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": null,
+       "lab_proxy": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18080",
+        "protocol": "tcp"
+       }
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "forklab-demo_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "lab_proxy",
+      "external": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "forklab-demo_pgdata"
+     },
+     "appdata": {
+      "name": "forklab-demo_appdata"
+     }
+    }
+   },
+   "spec": {
+    "v": 1,
+    "compiler": 1,
+    "project": "pbm-lab",
+    "workspace": "/srv/mirrors/pbm-lab",
+    "source_view_sha256": "74bf33b6883043389c47e461009d56052c255fc29b982fe70035e3e56700f5bf",
+    "rules_sha256": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a",
+    "access": {
+     "service": "web",
+     "target": 8080,
+     "host_port": 18099
+    },
+    "view": {
+     "name": "pbm-lab",
+     "services": {
+      "db": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "healthcheck": {
+        "test": [
+         "",
+         ""
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": ""
+       },
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "volume",
+         "source": "pgdata",
+         "target": "/var/lib/postgresql/data",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "POSTGRES_USER": "",
+        "POSTGRES_DB": "",
+        "APP_GREETING": "",
+        "PASSTHRU": null
+       },
+       "labels": {
+        "forklab.role": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "demo-db"
+         ]
+        }
+       }
+      },
+      "web": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "command": [
+        "",
+        "",
+        ""
+       ],
+       "depends_on": {
+        "db": {
+         "condition": "service_healthy",
+         "required": true
+        }
+       },
+       "entrypoint": [
+        "",
+        ""
+       ],
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "bind",
+         "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+         "target": "/app/serve.sh",
+         "read_only": true,
+         "bind": {
+          "create_host_path": true
+         }
+        },
+        {
+         "type": "volume",
+         "source": "appdata",
+         "target": "/appdata",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "DATABASE_URL": "",
+        "SMTP_HOST": "",
+        "APP_GREETING": ""
+       },
+       "labels": {
+        "forklab.role": "",
+        "canary": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "lab_proxy": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "pbm_access": null
+       },
+       "ports": [
+        {
+         "mode": "ingress",
+         "host_ip": "127.0.0.1",
+         "target": 8080,
+         "published": "18099",
+         "protocol": "tcp"
+        }
+       ]
+      }
+     },
+     "networks": {
+      "internal": {
+       "name": "pbm-lab_internal",
+       "internal": true
+      },
+      "lab_proxy": {
+       "name": "pbm-lab_lab_proxy",
+       "internal": true
+      },
+      "pbm_access": {
+       "name": "pbm-lab_pbm_access"
+      }
+     },
+     "volumes": {
+      "pgdata": {
+       "name": "pbm-lab_pgdata"
+      },
+      "appdata": {
+       "name": "pbm-lab_appdata"
+      }
+     }
+    },
+    "env": {
+     "db": {
+      "POSTGRES_PASSWORD": "rotate",
+      "POSTGRES_USER": "keep",
+      "POSTGRES_DB": "keep",
+      "APP_GREETING": "keep",
+      "PASSTHRU": "keep"
+     },
+     "web": {
+      "POSTGRES_PASSWORD": "rotate",
+      "DATABASE_URL": "keep",
+      "SMTP_HOST": "disable",
+      "APP_GREETING": "keep"
+     }
+    },
+    "credential_resets": [
+     {
+      "service": "db",
+      "engine": "postgresql",
+      "user_key": "POSTGRES_USER",
+      "password_key": "POSTGRES_PASSWORD"
+     },
+     {
+      "service": "web",
+      "engine": "postgresql",
+      "user_key": null,
+      "password_key": "POSTGRES_PASSWORD"
+     }
+    ],
+    "kept_production_secrets": []
+   },
+   "seed_hex": "0102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f20",
+   "error": "structure_mismatch"
+  },
+  {
+   "name": "error seed_invalid",
+   "full": {
+    "name": "forklab-demo",
+    "services": {
+     "db": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "POSTGRES_USER": "app",
+       "POSTGRES_DB": "app",
+       "APP_GREETING": "hello",
+       "PASSTHRU": null
+      },
+      "healthcheck": {
+       "test": [
+        "CMD-SHELL",
+        "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"
+       ],
+       "interval": "3s",
+       "timeout": "3s",
+       "retries": 20
+      },
+      "labels": {
+       "forklab.role": "database",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1"
+      },
+      "networks": {
+       "internal": {
+        "aliases": [
+         "demo-db"
+        ]
+       }
+      },
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "volume",
+        "source": "pgdata",
+        "target": "/var/lib/postgresql/data",
+        "volume": {}
+       }
+      ]
+     },
+     "web": {
+      "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+      "container_name": "lab-web",
+      "command": [
+       "sh",
+       "-c",
+       "echo W20_CANARY_7f3a9c51d2e84b6a"
+      ],
+      "depends_on": {
+       "db": {
+        "condition": "service_healthy",
+        "required": true
+       }
+      },
+      "entrypoint": [
+       "/bin/sh",
+       "/app/serve.sh"
+      ],
+      "environment": {
+       "POSTGRES_PASSWORD": "W20_CANARY_7f3a9c51d2e84b6a_pgpw",
+       "DATABASE_URL": "postgres://app:W20_CANARY_7f3a9c51d2e84b6a_pgpw@demo-db:5432/app",
+       "SMTP_HOST": "smtp.prod.example",
+       "APP_GREETING": "hello"
+      },
+      "extra_hosts": {
+       "db.prod": "10.9.8.7"
+      },
+      "labels": {
+       "forklab.role": "app",
+       "traefik.enable": "true",
+       "com.portabase.fork.restore_id": "r1",
+       "com.portabase.fork.agent_id": "a1",
+       "canary": "W20_CANARY_7f3a9c51d2e84b6a"
+      },
+      "networks": {
+       "internal": null,
+       "lab_proxy": null
+      },
+      "ports": [
+       {
+        "mode": "ingress",
+        "host_ip": "127.0.0.1",
+        "target": 8080,
+        "published": "18080",
+        "protocol": "tcp"
+       }
+      ],
+      "restart": "unless-stopped",
+      "volumes": [
+       {
+        "type": "bind",
+        "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+        "target": "/app/serve.sh",
+        "read_only": true,
+        "bind": {
+         "create_host_path": true
+        }
+       },
+       {
+        "type": "volume",
+        "source": "appdata",
+        "target": "/appdata",
+        "volume": {}
+       }
+      ]
+     }
+    },
+    "networks": {
+     "internal": {
+      "name": "forklab-demo_internal",
+      "internal": true
+     },
+     "lab_proxy": {
+      "name": "lab_proxy",
+      "external": true
+     }
+    },
+    "volumes": {
+     "pgdata": {
+      "name": "forklab-demo_pgdata"
+     },
+     "appdata": {
+      "name": "forklab-demo_appdata"
+     }
+    }
+   },
+   "spec": {
+    "v": 1,
+    "compiler": 1,
+    "project": "pbm-lab",
+    "workspace": "/srv/mirrors/pbm-lab",
+    "source_view_sha256": "74bf33b6883043389c47e461009d56052c255fc29b982fe70035e3e56700f5bf",
+    "rules_sha256": "8bc218ae0bcdec9d390f0126fa70f2ec57061b7ac0f28c45f33cfc4926b9ca0a",
+    "access": {
+     "service": "web",
+     "target": 8080,
+     "host_port": 18099
+    },
+    "view": {
+     "name": "pbm-lab",
+     "services": {
+      "db": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "healthcheck": {
+        "test": [
+         "",
+         ""
+        ],
+        "interval": "",
+        "timeout": "",
+        "retries": ""
+       },
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "volume",
+         "source": "pgdata",
+         "target": "/var/lib/postgresql/data",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "POSTGRES_USER": "",
+        "POSTGRES_DB": "",
+        "APP_GREETING": "",
+        "PASSTHRU": null
+       },
+       "labels": {
+        "forklab.role": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "demo-db"
+         ]
+        }
+       }
+      },
+      "web": {
+       "image": "postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b",
+       "command": [
+        "",
+        "",
+        ""
+       ],
+       "depends_on": {
+        "db": {
+         "condition": "service_healthy",
+         "required": true
+        }
+       },
+       "entrypoint": [
+        "",
+        ""
+       ],
+       "restart": "unless-stopped",
+       "volumes": [
+        {
+         "type": "bind",
+         "source": "/srv/mirrors/pbm-lab/web/serve.sh",
+         "target": "/app/serve.sh",
+         "read_only": true,
+         "bind": {
+          "create_host_path": true
+         }
+        },
+        {
+         "type": "volume",
+         "source": "appdata",
+         "target": "/appdata",
+         "volume": {}
+        }
+       ],
+       "environment": {
+        "POSTGRES_PASSWORD": "",
+        "DATABASE_URL": "",
+        "SMTP_HOST": "",
+        "APP_GREETING": ""
+       },
+       "labels": {
+        "forklab.role": "",
+        "canary": ""
+       },
+       "networks": {
+        "internal": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "lab_proxy": {
+         "aliases": [
+          "lab-web"
+         ]
+        },
+        "pbm_access": null
+       },
+       "ports": [
+        {
+         "mode": "ingress",
+         "host_ip": "127.0.0.1",
+         "target": 8080,
+         "published": "18099",
+         "protocol": "tcp"
+        }
+       ]
+      }
+     },
+     "networks": {
+      "internal": {
+       "name": "pbm-lab_internal",
+       "internal": true
+      },
+      "lab_proxy": {
+       "name": "pbm-lab_lab_proxy",
+       "internal": true
+      },
+      "pbm_access": {
+       "name": "pbm-lab_pbm_access"
+      }
+     },
+     "volumes": {
+      "pgdata": {
+       "name": "pbm-lab_pgdata"
+      },
+      "appdata": {
+       "name": "pbm-lab_appdata"
+      }
+     }
+    },
+    "env": {
+     "db": {
+      "POSTGRES_PASSWORD": "rotate",
+      "POSTGRES_USER": "keep",
+      "POSTGRES_DB": "keep",
+      "APP_GREETING": "keep",
+      "PASSTHRU": "keep"
+     },
+     "web": {
+      "POSTGRES_PASSWORD": "rotate",
+      "DATABASE_URL": "keep",
+      "SMTP_HOST": "disable",
+      "APP_GREETING": "keep"
+     }
+    },
+    "credential_resets": [
+     {
+      "service": "db",
+      "engine": "postgresql",
+      "user_key": "POSTGRES_USER",
+      "password_key": "POSTGRES_PASSWORD"
+     },
+     {
+      "service": "web",
+      "engine": "postgresql",
+      "user_key": null,
+      "password_key": "POSTGRES_PASSWORD"
+     }
+    ],
+    "kept_production_secrets": []
+   },
+   "seed_hex": "00000000000000000000000000000000",
+   "error": "seed_invalid"
+  }
+ ]
+}

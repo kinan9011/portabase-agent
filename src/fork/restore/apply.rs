@@ -33,6 +33,10 @@ pub async fn run_apply(env: &RestoreEnv, ops: &dyn DockerOps, pins: &[Pin], t: &
     if h.purpose == Purpose::TestRestore && (!b.volumes.is_empty() || !b.networks.is_empty()) {
         return Err(Code::ModeUnsupported.into()); // a test restore creates no volumes / networks (ADR-014 D-W16-10)
     }
+    // W22a-f1: a mirror creates no network of its own (W20 replaces every network by an isolated one) and only volumes of its own project
+    if h.purpose == Purpose::Mirror && (!b.networks.is_empty() || b.volumes.iter().any(|v| !v.name.starts_with(&format!("{}_", h.project)))) {
+        return Err(Code::PayloadInvalid.into());
+    }
     let ws_path = paths::check_task_path(&env.roots, &env.state_dir, &h.workspace)?;
     let mut j = Journal::open(&env.state_dir, &h.restore_id)?;
     j.begin(t.id, t.ty);

@@ -134,10 +134,8 @@ fn capability_sets_dispatch_classes_and_codes() {
     assert_eq!(TYPES.iter().filter(|t| **t == "mirror_stop").count(), 1);
     assert_eq!(capabilities::RUNNER_ONLY.iter().filter(|t| **t == "mirror_stop").count(), 1);
     assert_eq!(capabilities::TARGETED.iter().filter(|t| **t == "mirror_stop").count(), 1);
-    for t in ["mirror_route"] {
-        assert_eq!(capabilities::RUNNER_ONLY.iter().filter(|x| **x == t).count(), 1, "{t}");
-        assert_eq!(capabilities::TARGETED.iter().filter(|x| **x == t).count(), 1, "{t}");
-    }
+    assert_eq!(capabilities::RUNNER_ONLY.iter().filter(|x| **x == "mirror_route").count(), 1);
+    assert_eq!(capabilities::TARGETED.iter().filter(|x| **x == "mirror_route").count(), 1);
     for (c, name) in [(Code::RouteTargetNotRunning, "route_target_not_running"), (Code::RouteNotOwned, "route_not_owned"), (Code::RouteIncomplete, "route_incomplete"), (Code::RouteSmokeFailed, "route_smoke_failed")] {
         assert_eq!(c.as_str(), name);
         assert!(!v.codes.iter().any(|x| x == name), "{name} is a runner-own code outside Code::RESTORE (the shared vectors list is unchanged)");

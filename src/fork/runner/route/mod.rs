@@ -165,7 +165,7 @@ async fn switch(env: &RestoreEnv, ops: &dyn DockerOps, route: &dyn RouteOps, smo
         }
         let facts = facts.ok_or(Failure::from(Code::RouteIncomplete))?;
         // 1. attach the target network  2. atomic upstream swap  3. detach every other network
-        if !facts.networks.iter().any(|n| *n == net) {
+        if !facts.networks.contains(&net) {
             route.connect(&net, &name).await?;
         }
         write_file(&dir.join(UPSTREAM), upstream.as_bytes())?;
@@ -217,11 +217,10 @@ async fn remove(env: &RestoreEnv, route: &dyn RouteOps, t: &Task<'_>, h: Header,
         let agent = env.agent_id.as_str();
         let name = route_name(&b.mirror_id);
         let mut removed_container = 0;
-        if let Some(f) = route.inspect(&name).await? {
-            if is_ours(&f.labels, &b.mirror_id, agent) {
-                route.remove(&name).await?;
-                removed_container = 1;
-            } // a foreign container of that name is left alone and is not ours to count
+        // a foreign container of that name is left alone and is not ours to count
+        if route.inspect(&name).await?.is_some_and(|f| is_ours(&f.labels, &b.mirror_id, agent)) {
+            route.remove(&name).await?;
+            removed_container = 1;
         }
         let dir = route_dir(env, &b.mirror_id)?;
         let mut removed_dir = false;

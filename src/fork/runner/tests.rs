@@ -73,7 +73,7 @@ fn expect(v: &Vecs, caps: &[String], c: &Case) {
 #[test]
 fn runner_role_matrix_with_signed_dashboard_vectors() {
     let v = vecs();
-    assert_eq!(v.runner.capabilities, capabilities::runner_reported(), "the dashboard fixture and the agent agree on the runner capability set");
+    assert_eq!(v.runner.capabilities, capabilities::runner_reported(false), "the dashboard fixture and the agent agree on the runner capability set");
     assert!(v.runner.cases.len() >= 10);
     for c in &v.runner.cases {
         expect(&v, &v.runner.capabilities, c);
@@ -105,7 +105,7 @@ fn a_runner_that_somehow_also_has_restore_capabilities_still_refuses_restore_tas
 }
 #[test]
 fn runner_reports_exactly_four_capabilities_and_none_of_the_data_ones() {
-    let r = capabilities::runner_reported();
+    let r = capabilities::runner_reported(false);
     assert_eq!(r, vec!["channel.v1", "noop.v1", "channel-maint.v1", "runner.v1"]);
     for forbidden in ["restore.target.v1", "compose.render.v1", "quiesce.v1", "test-restore.v1", "plaintext-hash.v1"] {
         assert!(!r.iter().any(|c| c == forbidden), "{forbidden}");
@@ -482,7 +482,7 @@ async fn init_runner_sweeps_leftovers_and_reports_exactly_the_runner_capabilitie
         s.containers.insert("leftover-h".into(), Labels::from([(LABEL_PROBE.to_string(), "old".to_string())]));
     }
     rt.init_runner_with(f.clone()).await;
-    assert_eq!(rt.capabilities, capabilities::runner_reported());
+    assert_eq!(rt.capabilities, capabilities::runner_reported(false));
     assert!(rt.runner.is_some());
     assert!(rt.renv.is_none() && rt.ops.is_none() && rt.qenv.is_none() && !rt.restore_ok, "the restore path is never entered, so the master key is never loaded");
     let s = f.0.lock().unwrap();

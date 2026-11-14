@@ -24,23 +24,35 @@ pub const TEST_RESTORE: &str = "test-restore.v1";
 /// no restore / compose / quiesce / test-restore / plaintext-hash capability (it takes no backups and restores no production data).
 pub const RUNNER: &str = "runner.v1";
 
-/// Task types only a runner executes (W22a appends `mirror_*`). A runner refuses everything that is neither runner-only nor common, and every non-runner refuses these.
-pub const RUNNER_ONLY: &[&str] = &["runner_probe"];
+/// W22a-f1: signed, target-addressed mirror tasks (`mirror_*`). Reported ONLY by a runner whose `FORK_MIRROR_ROOT` is valid, Docker answers, the Compose CLI is the pinned
+/// one and the instance master key decodes (realised residual R-W21-1, ADR-008 §12). A runner without it stays a probe-only runner.
+pub const MIRROR: &str = "mirror.v1";
+
+/// Task types only a runner executes. A runner refuses everything that is neither runner-only nor common, and every non-runner refuses these.
+pub const RUNNER_ONLY: &[&str] = &["runner_probe", "mirror_probe", "mirror_stage", "mirror_apply", "mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check", "mirror_wipe"];
 /// Task types both roles accept (channel hygiene: no data, no Docker).
 pub const COMMON: &[&str] = &["noop", "pin_add", "pin_revoke", "rotate_credential"];
 pub fn is_runner_only(task_type: &str) -> bool {
     RUNNER_ONLY.contains(&task_type)
 }
+/// The nine `mirror_*` task types (W22a-f1).
+pub fn is_mirror(task_type: &str) -> bool {
+    task_type.starts_with("mirror_") && is_runner_only(task_type)
+}
 pub fn is_common(task_type: &str) -> bool {
     COMMON.contains(&task_type)
 }
-/// The exact capability set of a runner agent (DD-2).
-pub fn runner_reported() -> Vec<String> {
-    vec![CHANNEL.to_string(), NOOP.to_string(), MAINT.to_string(), RUNNER.to_string()]
+/// The exact capability set of a runner agent (DD-2; ADR-008 §12 adds `mirror.v1` for a mirror-enabled runner).
+pub fn runner_reported(mirror_ok: bool) -> Vec<String> {
+    let mut v = vec![CHANNEL.to_string(), NOOP.to_string(), MAINT.to_string(), RUNNER.to_string()];
+    if mirror_ok {
+        v.push(MIRROR.to_string());
+    }
+    v
 }
 
 /// Task types whose envelope MUST name this agent in `target_agent_id` (ADR-007 D8b). Mirrors the dashboard's `TARGETED_TASK_TYPES`.
-pub const TARGETED: &[&str] = &["restore_probe", "restore_stage", "restore_apply", "restore_cleanup", "compose_render", "restore_db", "compose_up", "quiesce", "quiesce_start", "restore_verify", "runner_probe"];
+pub const TARGETED: &[&str] = &["restore_probe", "restore_stage", "restore_apply", "restore_cleanup", "compose_render", "restore_db", "compose_up", "quiesce", "quiesce_start", "restore_verify", "runner_probe", "mirror_probe", "mirror_stage", "mirror_apply", "mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check", "mirror_wipe"];
 pub fn is_targeted(task_type: &str) -> bool {
     TARGETED.contains(&task_type)
 }
@@ -72,6 +84,7 @@ pub fn task_requires(task_type: &str) -> Option<&'static [&'static str]> {
         "restore_verify" => Some(&[RESTORE_TARGET, TEST_RESTORE]),
         "quiesce" | "quiesce_start" => Some(&[QUIESCE]),
         "runner_probe" => Some(&[RUNNER]),
+        "mirror_probe" | "mirror_stage" | "mirror_apply" | "mirror_render" | "mirror_finalize" | "mirror_db" | "mirror_up" | "mirror_check" | "mirror_wipe" => Some(&[RUNNER, MIRROR]),
         _ => None,
     }
 }

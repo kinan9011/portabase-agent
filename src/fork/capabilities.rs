@@ -29,13 +29,13 @@ pub const RUNNER: &str = "runner.v1";
 pub const MIRROR: &str = "mirror.v1";
 
 /// Task types only a runner executes. A runner refuses everything that is neither runner-only nor common, and every non-runner refuses these.
-pub const RUNNER_ONLY: &[&str] = &["runner_probe", "mirror_probe", "mirror_stage", "mirror_apply", "mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check", "mirror_wipe", "mirror_stop"];
+pub const RUNNER_ONLY: &[&str] = &["runner_probe", "mirror_probe", "mirror_stage", "mirror_apply", "mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check", "mirror_wipe", "mirror_stop", "mirror_route"];
 /// Task types both roles accept (channel hygiene: no data, no Docker).
 pub const COMMON: &[&str] = &["noop", "pin_add", "pin_revoke", "rotate_credential"];
 pub fn is_runner_only(task_type: &str) -> bool {
     RUNNER_ONLY.contains(&task_type)
 }
-/// The nine `mirror_*` task types (W22a-f1).
+/// The `mirror_*` task types (W22a-f1; W23 `mirror_stop`, W24 `mirror_route`).
 pub fn is_mirror(task_type: &str) -> bool {
     task_type.starts_with("mirror_") && is_runner_only(task_type)
 }
@@ -52,7 +52,7 @@ pub fn runner_reported(mirror_ok: bool) -> Vec<String> {
 }
 
 /// Task types whose envelope MUST name this agent in `target_agent_id` (ADR-007 D8b). Mirrors the dashboard's `TARGETED_TASK_TYPES`.
-pub const TARGETED: &[&str] = &["restore_probe", "restore_stage", "restore_apply", "restore_cleanup", "compose_render", "restore_db", "compose_up", "quiesce", "quiesce_start", "restore_verify", "runner_probe", "mirror_probe", "mirror_stage", "mirror_apply", "mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check", "mirror_wipe", "mirror_stop"];
+pub const TARGETED: &[&str] = &["restore_probe", "restore_stage", "restore_apply", "restore_cleanup", "compose_render", "restore_db", "compose_up", "quiesce", "quiesce_start", "restore_verify", "runner_probe", "mirror_probe", "mirror_stage", "mirror_apply", "mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check", "mirror_wipe", "mirror_stop", "mirror_route"];
 pub fn is_targeted(task_type: &str) -> bool {
     TARGETED.contains(&task_type)
 }
@@ -84,7 +84,7 @@ pub fn task_requires(task_type: &str) -> Option<&'static [&'static str]> {
         "restore_verify" => Some(&[RESTORE_TARGET, TEST_RESTORE]),
         "quiesce" | "quiesce_start" => Some(&[QUIESCE]),
         "runner_probe" => Some(&[RUNNER]),
-        "mirror_probe" | "mirror_stage" | "mirror_apply" | "mirror_render" | "mirror_finalize" | "mirror_db" | "mirror_up" | "mirror_check" | "mirror_wipe" | "mirror_stop" => Some(&[RUNNER, MIRROR]),
+        "mirror_probe" | "mirror_stage" | "mirror_apply" | "mirror_render" | "mirror_finalize" | "mirror_db" | "mirror_up" | "mirror_check" | "mirror_wipe" | "mirror_stop" | "mirror_route" => Some(&[RUNNER, MIRROR]),
         _ => None,
     }
 }

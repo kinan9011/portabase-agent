@@ -7,3 +7,4 @@ A01|src/main.rs|crate::fork::start|2
 A02|Cargo.toml|fork-stacks|4
 A03|src/services/backup/uploader.rs|report_plaintext|1
 A04|docker/Dockerfile|CARGO_FEATURES|2
+A05|src/main.rs|crate::fork::runner::route::proxy::main_from_args|1

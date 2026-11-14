@@ -16,7 +16,7 @@ use std::time::Duration;
 use tokio::time::Instant;
 
 const PROJECT_LABEL: &str = "com.docker.compose.project";
-const SERVICE_LABEL: &str = "com.docker.compose.service";
+pub(in crate::fork::runner) const SERVICE_LABEL: &str = "com.docker.compose.service";
 pub const ACCESS_NETWORK: &str = "pbm_access";
 const CHECK_POLL: Duration = Duration::from_secs(2);
 
@@ -28,7 +28,7 @@ async fn guard(c: &Ctx<'_>, doc: &Value) -> R<()> {
 }
 
 /// the containers of THIS revision's project that carry its owner labels
-async fn mine(c: &Ctx<'_>) -> R<Vec<crate::fork::restore::docker_ops::ContainerFacts>> {
+pub(in crate::fork::runner) async fn mine(c: &Ctx<'_>) -> R<Vec<crate::fork::restore::docker_ops::ContainerFacts>> {
     Ok(c.ops.containers().await?.into_iter().filter(|x| owned_by(&x.labels, &c.h.restore_id, &c.env.agent_id) && x.labels.get(PROJECT_LABEL).map(String::as_str) == Some(c.h.project.as_str())).collect())
 }
 

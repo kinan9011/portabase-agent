@@ -4,6 +4,7 @@
 pub mod docker;
 pub mod mirror;
 pub mod probe;
+pub mod route;
 pub mod wipe;
 
 #[cfg(test)]

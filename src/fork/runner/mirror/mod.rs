@@ -34,7 +34,7 @@ pub const DEADLINE_STAGE: Duration = Duration::from_secs(60 * 60);
 
 pub fn deadline_of(task_type: &str) -> Duration {
     match task_type {
-        "mirror_probe" => DEADLINE_PROBE,
+        "mirror_probe" | "mirror_route" => DEADLINE_PROBE,
         "mirror_wipe" => DEADLINE_WIPE,
         "mirror_stage" | "mirror_apply" => DEADLINE_STAGE,
         _ => DEADLINE_STEP, // render / finalize / db / up / check
@@ -46,12 +46,14 @@ pub struct MirrorRuntime {
     pub env: RestoreEnv,
     pub ops: Arc<dyn DockerOps>,
     pub smoke: Arc<dyn smoke::Smoke>,
+    /// W24: the per-mirror private route forwarder (`mirror_route`).
+    pub route: Arc<dyn crate::fork::runner::route::RouteOps>,
 }
 
 /// Fail closed with ONE reason (the capability is then simply not reported; a probe-only runner keeps working).
 /// `master_b64` = the instance master key decoded from `EDGE_KEY` (needed to decrypt production archives, R-W21-1).
 #[allow(clippy::too_many_arguments)]
-pub async fn detect(env: &(dyn Fn(&str) -> Option<String> + Sync), state_path: &Path, agent_id: &str, ops: Arc<dyn DockerOps>, smoke: Arc<dyn smoke::Smoke>, master_b64: Option<String>, mountinfo: &str, cgroup: &str) -> Result<MirrorRuntime, String> {
+pub async fn detect(env: &(dyn Fn(&str) -> Option<String> + Sync), state_path: &Path, agent_id: &str, ops: Arc<dyn DockerOps>, smoke: Arc<dyn smoke::Smoke>, route: Arc<dyn crate::fork::runner::route::RouteOps>, master_b64: Option<String>, mountinfo: &str, cgroup: &str) -> Result<MirrorRuntime, String> {
     let root = env("FORK_MIRROR_ROOT").map(|s| s.trim().to_string()).filter(|s| !s.is_empty()).ok_or("FORK_MIRROR_ROOT is not set")?;
     let state_dir = state_path.parent().map(PathBuf::from).unwrap_or_else(|| PathBuf::from("."));
     let state_dir = std::fs::canonicalize(&state_dir).unwrap_or(state_dir);
@@ -66,7 +68,7 @@ pub async fn detect(env: &(dyn Fn(&str) -> Option<String> + Sync), state_path: &
         return Err("FORK_MIRROR_ROOT is not visible at the same path to the Docker daemon (root_not_shared)".into());
     }
     let renv = RestoreEnv { roots, host_role: crate::fork::restore::HostRole::Runner, http_hosts, state_dir, agent_id: agent_id.to_string(), master_b64: Some(Redacted(master)), compose: Some(compose) };
-    Ok(MirrorRuntime { env: renv, ops, smoke })
+    Ok(MirrorRuntime { env: renv, ops, smoke, route })
 }
 
 // ---- shared helpers ------------------------------------------------------------------------------------------------------------------------
@@ -130,7 +132,7 @@ pub async fn final_check(c: &Ctx<'_>, final_sha256: &str) -> R<Value> {
     serde_json::from_slice(&cfg).map_err(|_| Failure::with(Code::FinalViewMismatch, "not_json"))
 }
 
-/// Entry point for the ten mirror task types. The caller (`poll`) wraps this in `exec::run_with_heartbeat` with `deadline_of(type)`.
+/// Entry point for the eleven mirror task types. The caller (`poll`) wraps this in `exec::run_with_heartbeat` with `deadline_of(type)`.
 pub async fn execute(rt: &MirrorRuntime, pins: &[Pin], sink: &dyn RenderSink, t: &Task<'_>, payload: &[u8]) -> R<Value> {
     let (env, ops) = (&rt.env, rt.ops.as_ref());
     match t.ty {
@@ -155,6 +157,7 @@ pub async fn execute(rt: &MirrorRuntime, pins: &[Pin], sink: &dyn RenderSink, t:
         "mirror_check" => lifecycle::run_check(env, ops, rt.smoke.as_ref(), t, payload).await,
         "mirror_wipe" => lifecycle::run_wipe(env, ops, t, payload).await,
         "mirror_stop" => lifecycle::run_stop(env, ops, t, payload).await,
+        "mirror_route" => crate::fork::runner::route::run(env, ops, rt.route.as_ref(), rt.smoke.as_ref(), t, payload).await,
         _ => Err(Failure::from(Code::PayloadInvalid)),
     }
 }

@@ -147,7 +147,7 @@ impl Runtime {
             return;
         }
         let env = |k: &str| std::env::var(k).ok();
-        let (Ok(real), Ok(smoke)) = (restore::docker_ops::RealDocker::connect(), runner::mirror::smoke::real::RealSmoke::connect()) else {
+        let (Ok(real), Ok(smoke), Ok(route)) = (restore::docker_ops::RealDocker::connect(), runner::mirror::smoke::real::RealSmoke::connect(), runner::route::docker::RealRoute::connect()) else {
             error!("Fork channel: mirror.v1 NOT enabled: the Docker daemon is not reachable");
             return;
         };
@@ -155,7 +155,7 @@ impl Runtime {
         let master = crate::utils::edge_key::decode_edge_key(&crate::settings::CONFIG.edge_key).ok().map(|k| k.master_key_b64);
         let mountinfo = std::fs::read_to_string("/proc/self/mountinfo").unwrap_or_default();
         let cgroup = std::fs::read_to_string("/proc/self/cgroup").unwrap_or_default();
-        match runner::mirror::detect(&env, &self.state_path, &self.agent_id, ops, Arc::new(smoke), master, &mountinfo, &cgroup).await {
+        match runner::mirror::detect(&env, &self.state_path, &self.agent_id, ops, Arc::new(smoke), Arc::new(route), master, &mountinfo, &cgroup).await {
             Ok(rt) => {
                 let swept = restore::sweep::startup_sweep(&rt.env, Some(rt.ops.as_ref()), now).await;
                 info!("Fork channel: mirror.v1 enabled (root {}, master key loaded: ADR-008 §12 residual R-W21-1); startup sweep: {:?}", rt.env.roots[0].display(), swept);

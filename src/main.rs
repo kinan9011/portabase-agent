@@ -17,6 +17,8 @@ use utils::task_manager::scheduler;
 
 #[tokio::main]
 async fn main() {
+    #[cfg(feature = "fork-stacks")]
+    if let Some(code) = crate::fork::runner::route::proxy::main_from_args().await { std::process::exit(code); } // FORK(stack-recovery): A05 runner route forwarder mode (fork-only, before any upstream startup)
     let _ = rustls::crypto::aws_lc_rs::default_provider().install_default();
 
     logging::init_logger();

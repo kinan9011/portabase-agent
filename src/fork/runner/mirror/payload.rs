@@ -2,7 +2,7 @@
 //! agree row by row). The header is the W17 header (`restore::Header`, `purpose mirror`, `host_role runner`); everything after it must fit these structs exactly.
 use super::apply_spec::{CredentialReset, MirrorSpec};
 use crate::fork::compose::ComposeRef;
-use crate::fork::restore::{Code, Failure, R, is_hex64, paths};
+use crate::fork::restore::{Code, Failure, R, is_hex64, is_uuid, paths};
 use serde::Deserialize;
 
 pub const MEM_MIN: u64 = 32 << 20;
@@ -48,6 +48,16 @@ pub struct FinalizeBody {
     pub spec: MirrorSpec,
     pub spec_sha256: String,
     pub limits: Limits,
+    /// W24 (DD-8): a REFRESH revision reuses the ACTIVE revision's seed (copied on the runner, never uploaded) so the test credentials survive.
+    #[serde(default)]
+    pub seed_from: Option<SeedFrom>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct SeedFrom {
+    pub revision_id: String,
+    pub workspace: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -96,6 +106,25 @@ pub struct WipeBody {}
 #[serde(deny_unknown_fields)]
 pub struct StopBody {}
 
+/// W24 `mirror_route`: switch the per-mirror loopback forwarder to the access service of the header's revision, or remove the forwarder (delete).
+#[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum RouteAction {
+    Switch,
+    Remove,
+}
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RouteBody {
+    pub action: RouteAction,
+    pub mirror_id: String,
+    pub route_port: u32,
+    pub service: String,
+    pub target: u32,
+    pub http_path: Option<String>,
+}
+pub const ROUTE_PORTS: std::ops::RangeInclusive<u32> = 41000..=41999;
+
 fn svc_ok(s: &str) -> bool {
     paths::is_name(s, 128)
 }
@@ -130,7 +159,19 @@ impl FinalizeBody {
         if !access_ok || s.v != 1 || s.compiler != 1 || !is_hex64(&s.source_view_sha256) || !is_hex64(&s.rules_sha256) || s.credential_resets.len() > 20 || s.kept_production_secrets.len() > 100 {
             return bad();
         }
+        if let Some(f) = &self.seed_from {
+            let leaf = f.workspace.rsplit('/').next().unwrap_or("");
+            if !is_uuid(&f.revision_id) || !paths::canon(&f.workspace) || !leaf.starts_with("pbm-") {
+                return bad();
+            }
+        }
         self.limits.check()
+    }
+}
+impl RouteBody {
+    pub fn check(&self) -> R<()> {
+        let ok = is_uuid(&self.mirror_id) && ROUTE_PORTS.contains(&self.route_port) && svc_ok(&self.service) && (1..=65535).contains(&self.target) && self.http_path.as_deref().is_none_or(http_path_ok);
+        ok.then_some(()).ok_or_else(|| Failure::from(Code::PayloadInvalid))
     }
 }
 impl DbBody {

@@ -13,6 +13,16 @@ pub fn free_bytes(p: &Path) -> Option<u64> {
     (unsafe { libc::statvfs(c.as_ptr(), &mut s) } == 0).then(|| (s.f_bavail as u64).saturating_mul(s.f_frsize as u64))
 }
 
+/// `MemAvailable` of `/proc/meminfo` in bytes (W24 capacity preflight, DD-7); `None` on any read/parse problem (the dashboard then fails CLOSED for a refresh).
+/// On a VM this is the VM's value; inside docker-in-docker it is the HOST's (R-W24-2).
+pub fn mem_available() -> Option<u64> {
+    mem_available_of(&std::fs::read_to_string("/proc/meminfo").ok()?)
+}
+pub fn mem_available_of(meminfo: &str) -> Option<u64> {
+    let kb: u64 = meminfo.lines().find_map(|l| l.strip_prefix("MemAvailable:"))?.trim().strip_suffix("kB")?.trim().parse().ok()?;
+    kb.checked_mul(1024)
+}
+
 /// Root identity probe (DD4): the agent writes `<root>/.portabase-probe-<nonce>`, a helper that binds `<root>:/probe:ro` must read the same bytes back.
 /// Proves "agent view of the path == the Docker daemon's view" (compose bind sources are HOST paths).
 pub async fn root_shared(ops: &dyn DockerOps, root: &Path) -> Result<bool, Code> {
@@ -55,5 +65,5 @@ pub async fn run(env: &RestoreEnv, ops: &dyn DockerOps, _t: &Task<'_>, payload: 
         Some(c) => (json!(c.version), json!(crate::fork::policy::rules::rules_sha256_ts())),
         None => (Value::Null, Value::Null),
     };
-    Ok(json!({"roots": roots, "workspace_state": workspace_state, "arch": std::env::consts::ARCH, "compose_version": compose_version, "rules_sha256": rules_sha256}))
+    Ok(json!({"roots": roots, "workspace_state": workspace_state, "arch": std::env::consts::ARCH, "compose_version": compose_version, "rules_sha256": rules_sha256, "mem_available_bytes": mem_available()}))
 }

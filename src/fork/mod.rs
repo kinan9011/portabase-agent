@@ -16,6 +16,7 @@ pub mod poll;
 pub mod policy;
 pub mod quiesce;
 pub mod restore;
+pub mod runner;
 pub mod state;
 pub mod tasks;
 pub mod transport;

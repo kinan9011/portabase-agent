@@ -46,6 +46,7 @@ fn runtime(v: &Vectors, server_url: &str, state_path: PathBuf, insecure_lab: boo
         restore_ok: false,
         compose_ok: false,
         test_restore_ok: false,
+        runner: None,
     }
 }
 async fn rig() -> Rig {

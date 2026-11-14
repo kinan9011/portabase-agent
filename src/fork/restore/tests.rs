@@ -163,6 +163,9 @@ pub(crate) struct FakeState {
     pub(crate) states: BTreeMap<String, super::docker_ops::CState>,
     /// W22a-f1: `stop_remove` answers Ok but the container stays (a wipe leftover).
     pub(crate) keep_containers: bool,
+    /// W23: `stop_container` answers Ok but the container keeps running (a `stop_incomplete` leftover); `stopped_containers` logs the ids it was asked to stop.
+    pub(crate) keep_running: bool,
+    pub(crate) stopped_containers: Vec<String>,
 }
 pub(crate) struct Fake(pub(crate) Mutex<FakeState>);
 impl Fake {
@@ -281,8 +284,15 @@ impl DockerOps for Fake {
     async fn inspect_state(&self, id: &str) -> Result<Option<super::docker_ops::CState>, Code> {
         self.0.lock().unwrap().states.get(id).cloned().map(Some).ok_or(Code::DockerUnavailable)
     }
-    async fn stop_container(&self, _id: &str, _t: u32) -> Result<(), Code> {
-        Err(Code::DockerUnavailable)
+    async fn stop_container(&self, id: &str, _t: u32) -> Result<(), Code> {
+        let mut s = self.0.lock().unwrap();
+        s.stopped_containers.push(id.to_string());
+        if !s.keep_running {
+            if let Some(c) = s.containers.iter_mut().find(|c| c.id == id) {
+                c.running = false;
+            }
+        }
+        Ok(())
     }
     async fn start_container(&self, _id: &str) -> Result<(), Code> {
         Err(Code::DockerUnavailable)

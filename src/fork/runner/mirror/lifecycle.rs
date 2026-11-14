@@ -1,7 +1,7 @@
-//! `mirror_up`, `mirror_check` and `mirror_wipe`. `up` and `check` run only after the `final_view_mismatch` guard (the file about to run must still render to the view the
+//! `mirror_up`, `mirror_check`, `mirror_stop` and `mirror_wipe`. `up` and `check` run only after the `final_view_mismatch` guard (the file about to run must still render to the view the
 //! dashboard approved) and the D29 container guard; `check` reports honest container states + health and an app smoke from the mirror's own access network; `wipe`
 //! removes everything of THIS revision (owner labels + own agent id) and then RE-LISTS: any leftover is `wipe_incomplete`, never a silent success.
-use super::payload::{CheckBody, UpBody, WipeBody};
+use super::payload::{CheckBody, StopBody, UpBody, WipeBody};
 use super::smoke::{Smoke, smoke_cmd};
 use super::{Ctx, base_args, final_check, open_light};
 use crate::fork::compose::guard::{check_resources, check_up, protected_ids};
@@ -161,6 +161,33 @@ pub async fn run_wipe(env: &RestoreEnv, ops: &dyn DockerOps, t: &Task<'_>, paylo
             return Err(Failure::from(Code::WipeIncomplete).with_extra(json!({"remaining": left})));
         }
         Ok(json!({"v": 1, "containers": cs, "networks": ns, "volumes": vs, "workspace_removed": removed_ws, "remaining": 0}))
+    }
+    .await;
+    j.end(t.id, t.ty, r.is_ok());
+    r
+}
+
+/// W23: stop (NOT remove) the running containers of THIS revision's project (owner labels + own agent id, via `mine`) and RE-LIST: any container still running is
+/// `stop_incomplete`, never a silent success. Data (volumes, workspace) stays; `mirror_up` brings the same containers back. Foreign and production containers are never touched.
+pub async fn run_stop(env: &RestoreEnv, ops: &dyn DockerOps, t: &Task<'_>, payload: &[u8]) -> R<Value> {
+    let (h, _b): (Header, StopBody) = split(payload)?;
+    let c = open_light(env, ops, t, h)?;
+    let mut j = Journal::open(&env.state_dir, &c.h.restore_id)?;
+    j.begin(t.id, t.ty);
+    let r: R<Value> = async {
+        let mut stopped = 0usize;
+        for x in mine(&c).await?.iter().filter(|x| x.running) {
+            ops.stop_container(&x.id, 30).await?;
+            stopped += 1;
+        }
+        let after = mine(&c).await?;
+        let remaining = after.iter().filter(|x| x.running).count();
+        if remaining > 0 {
+            return Err(Failure::from(Code::StopIncomplete).with_extra(json!({"remaining": remaining})));
+        }
+        j.step(t.id, t.ty, &format!("stop:{}", c.h.project), true, None);
+        let services: Vec<Value> = after.iter().map(|x| json!({"service": x.labels.get(SERVICE_LABEL).cloned().unwrap_or_default(), "state": "exited"})).collect();
+        Ok(json!({"v": 1, "stopped": stopped, "services": services, "remaining": 0}))
     }
     .await;
     j.end(t.id, t.ty, r.is_ok());

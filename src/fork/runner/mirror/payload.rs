@@ -91,6 +91,11 @@ pub struct CheckBody {
 #[serde(deny_unknown_fields)]
 pub struct WipeBody {}
 
+/// W23 `mirror_stop`: no fields (the revision, project and workspace are in the header, like `mirror_wipe`).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct StopBody {}
+
 fn svc_ok(s: &str) -> bool {
     paths::is_name(s, 128)
 }

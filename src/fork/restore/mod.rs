@@ -88,6 +88,8 @@ pub enum Code {
     MirrorDisabled,
     /// W22a-f1: `mirror_wipe` found a leftover after its verified re-list (the runner's own code `wipe_incomplete`, W21 vocabulary; NOT part of `Code::RESTORE`).
     WipeIncomplete,
+    /// W23: `mirror_stop` re-listed and a container of the revision was still running (runner-own code, like `WipeIncomplete`; NOT part of `Code::RESTORE`).
+    StopIncomplete,
 }
 
 impl Code {
@@ -163,6 +165,7 @@ impl Code {
             Code::SmokeFailedInternal => "smoke_failed_internal",
             Code::MirrorDisabled => "mirror_disabled",
             Code::WipeIncomplete => "wipe_incomplete",
+            Code::StopIncomplete => "stop_incomplete",
         }
     }
 }

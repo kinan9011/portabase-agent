@@ -24,7 +24,7 @@ use std::sync::{Mutex, OnceLock};
 const VECTORS: &str = include_str!("../../tests/restore_vectors.json");
 const MIRROR_VECTORS: &[u8] = include_bytes!("../corpus/compose-mirror-vectors.json");
 const SOURCE: &[u8] = include_bytes!("../corpus/SOURCE.json");
-const TYPES: [&str; 9] = ["mirror_probe", "mirror_stage", "mirror_apply", "mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check", "mirror_wipe"];
+const TYPES: [&str; 10] = ["mirror_probe", "mirror_stage", "mirror_apply", "mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check", "mirror_wipe", "mirror_stop"];
 const CANARY: &str = "W20_CANARY_7f3a9c51d2e84b6a_pgpw";
 /// the lab compose project used by the apply vectors; tests move it under a real temp root
 const VEC_WS: &str = "/srv/mirrors/pbm-lab";
@@ -127,6 +127,11 @@ fn capability_sets_dispatch_classes_and_codes() {
     assert_eq!(got, v.mirror.agent_codes);
     assert_eq!(Code::RESTORE.iter().map(|c| c.as_str().to_string()).collect::<Vec<_>>(), v.codes);
     assert_eq!(Code::WipeIncomplete.as_str(), "wipe_incomplete");
+    assert_eq!(Code::StopIncomplete.as_str(), "stop_incomplete");
+    assert!(!v.codes.iter().any(|c| c == "stop_incomplete"), "stop_incomplete is a runner-own code outside Code::RESTORE (the shared vectors list is unchanged)");
+    assert_eq!(TYPES.iter().filter(|t| **t == "mirror_stop").count(), 1);
+    assert_eq!(capabilities::RUNNER_ONLY.iter().filter(|t| **t == "mirror_stop").count(), 1);
+    assert_eq!(capabilities::TARGETED.iter().filter(|t| **t == "mirror_stop").count(), 1);
     assert!(!v.codes.iter().any(|c| c == "wipe_incomplete") || v.codes.iter().filter(|c| *c == "wipe_incomplete").count() == 1);
 }
 
@@ -144,6 +149,7 @@ fn the_mirror_branch_is_dispatched_before_the_generic_targeted_branch() {
 fn deadlines_per_type() {
     assert_eq!(deadline_of("mirror_probe"), DEADLINE_PROBE);
     assert_eq!(deadline_of("mirror_wipe"), DEADLINE_WIPE);
+    assert_eq!(deadline_of("mirror_stop"), DEADLINE_STEP);
     assert_eq!(deadline_of("mirror_stage"), DEADLINE_STAGE);
     assert_eq!(deadline_of("mirror_apply"), DEADLINE_STAGE);
     for t in ["mirror_render", "mirror_finalize", "mirror_db", "mirror_up", "mirror_check"] {
@@ -863,6 +869,73 @@ async fn wipe_never_touches_a_workspace_that_is_not_this_revisions() {
     std::fs::write(w.ws.join("precious"), b"x").unwrap();
     assert_eq!(execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_wipe"), &wipe_payload(&w)).await.unwrap_err().code, Code::WorkspaceNotOwned);
     assert!(w.ws.join("precious").exists());
+}
+
+// ---- stop (W23) ------------------------------------------------------------------------------------------------------------------------
+#[tokio::test]
+async fn stop_stops_only_this_revisions_running_containers_and_keeps_data() {
+    let (w, _) = finalized().await;
+    let agent = "11111111-1111-4111-8111-111111111111";
+    let other = "99999999-9999-4999-8999-999999999999";
+    let (mine_db, mine_web, mine_off) = (mirror_container("a", "db", true), mirror_container("b", "web", true), mirror_container("c", "cache", false));
+    let mut foreign_owner = mirror_container("f", "web", true); // same project label, ANOTHER revision's owner label
+    foreign_owner.labels.insert(LABEL_RESTORE.into(), other.into());
+    let mut foreign_agent = mirror_container("g", "web", true); // same revision id but another agent
+    foreign_agent.labels.insert(LABEL_AGENT.into(), other.into());
+    let mut production = mirror_container("p", "web", true);
+    production.labels.clear();
+    {
+        let mut s = w.fake.0.lock().unwrap();
+        s.containers.extend([mine_db.clone(), mine_web.clone(), mine_off, foreign_owner.clone(), foreign_agent.clone(), production.clone()]);
+        s.volumes.insert("pbm-lab_pgdata".into(), owner_labels(RID, agent));
+    }
+    let res = execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_stop"), &w.payload(json!({}))).await.unwrap();
+    assert_eq!(res["v"], 1);
+    assert_eq!(res["stopped"], 2);
+    assert_eq!(res["remaining"], 0);
+    assert!(res["services"].as_array().unwrap().iter().all(|x| x["state"] == "exited"));
+    let s = w.fake.0.lock().unwrap();
+    let mut asked = s.stopped_containers.clone();
+    asked.sort();
+    let mut want = vec![mine_db.id.clone(), mine_web.id.clone()];
+    want.sort();
+    assert_eq!(asked, want, "exactly the two running containers of this revision were stopped");
+    for x in [&foreign_owner, &foreign_agent, &production] {
+        assert!(s.containers.iter().find(|c| c.id == x.id).unwrap().running, "a container that is not this revision's keeps running");
+    }
+    assert!(s.removed_containers.is_empty(), "stop never removes");
+    assert!(s.volumes.contains_key("pbm-lab_pgdata") && w.ws.exists(), "data and workspace stay: Start brings the mirror back");
+}
+#[tokio::test]
+async fn stop_is_idempotent_when_nothing_is_running() {
+    let (w, _) = finalized().await;
+    w.fake.0.lock().unwrap().containers.push(mirror_container("a", "db", false));
+    let res = execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_stop"), &w.payload(json!({}))).await.unwrap();
+    assert_eq!((res["stopped"].as_u64(), res["remaining"].as_u64()), (Some(0), Some(0)));
+    let none = MW::new();
+    assert_eq!(execute(&none.rt, &none.r.pins, &NullSink, &task("mirror_stop"), &none.payload(json!({}))).await.unwrap()["stopped"], 0);
+}
+#[tokio::test]
+async fn stop_leaving_a_container_running_is_stop_incomplete_never_a_silent_success() {
+    let (w, _) = finalized().await;
+    {
+        let mut s = w.fake.0.lock().unwrap();
+        s.containers.push(mirror_container("a", "db", true));
+        s.keep_running = true;
+    }
+    let f = execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_stop"), &w.payload(json!({}))).await.unwrap_err();
+    assert_eq!(f.code, Code::StopIncomplete);
+    assert_eq!(f.result().unwrap()["remaining"].as_u64(), Some(1));
+}
+#[tokio::test]
+async fn stop_refuses_unknown_body_fields_and_a_non_runner_host() {
+    let (w, _) = finalized().await;
+    let f = execute(&w.rt, &w.r.pins, &NullSink, &task("mirror_stop"), &w.payload(json!({"x": 1}))).await.unwrap_err();
+    assert_eq!(f.code, Code::PayloadInvalid);
+    // the same task on an agent whose host role is not `runner` is refused by the header check (a production agent never reports `mirror.v1` either)
+    let test_env = rig(HostRole::Test, &[]);
+    let f = lifecycle::run_stop(&test_env.env, w.rt.ops.as_ref(), &task("mirror_stop"), &w.payload(json!({}))).await.unwrap_err();
+    assert_eq!(f.code, Code::ModeUnsupported, "restore-class hosts refuse a mirror header (same rule as the other mirror steps)");
 }
 
 // ---- detect ----------------------------------------------------------------------------------------------------------------------------

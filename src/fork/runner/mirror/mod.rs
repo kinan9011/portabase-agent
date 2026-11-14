@@ -1,4 +1,4 @@
-//! Runner-side mirror engine (W22a-f1, ADR-008 §12, ADR-007 A17): `mirror_probe|stage|apply|render|finalize|db|up|check|wipe`. A mirror is created ONLY on a designated
+//! Runner-side mirror engine (W22a-f1, ADR-008 §12, ADR-007 A17): `mirror_probe|stage|apply|render|finalize|db|up|check|wipe|stop`. A mirror is created ONLY on a designated
 //! runner (`FORK_HOST_ROLE=runner` + `FORK_MIRROR_ROOT`), from a signed manifest + audited archives (the W17 executors, reused unchanged), compiled by the dashboard
 //! (W20 `MirrorSpecV1`, value-free) and finalised HERE with runner-local secrets (`apply_spec` + `seed`): the dashboard never sees an env value. Every later step
 //! (`db`, `up`, `check`) uses only `<ws>/.portabase/mirror/out.json` and refuses (`final_view_mismatch`) when the policy view of what it is about to run differs from
@@ -130,7 +130,7 @@ pub async fn final_check(c: &Ctx<'_>, final_sha256: &str) -> R<Value> {
     serde_json::from_slice(&cfg).map_err(|_| Failure::with(Code::FinalViewMismatch, "not_json"))
 }
 
-/// Entry point for the nine mirror task types. The caller (`poll`) wraps this in `exec::run_with_heartbeat` with `deadline_of(type)`.
+/// Entry point for the ten mirror task types. The caller (`poll`) wraps this in `exec::run_with_heartbeat` with `deadline_of(type)`.
 pub async fn execute(rt: &MirrorRuntime, pins: &[Pin], sink: &dyn RenderSink, t: &Task<'_>, payload: &[u8]) -> R<Value> {
     let (env, ops) = (&rt.env, rt.ops.as_ref());
     match t.ty {
@@ -154,6 +154,7 @@ pub async fn execute(rt: &MirrorRuntime, pins: &[Pin], sink: &dyn RenderSink, t:
         "mirror_up" => lifecycle::run_up(env, ops, t, payload).await,
         "mirror_check" => lifecycle::run_check(env, ops, rt.smoke.as_ref(), t, payload).await,
         "mirror_wipe" => lifecycle::run_wipe(env, ops, t, payload).await,
+        "mirror_stop" => lifecycle::run_stop(env, ops, t, payload).await,
         _ => Err(Failure::from(Code::PayloadInvalid)),
     }
 }

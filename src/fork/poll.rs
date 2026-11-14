@@ -41,6 +41,8 @@ pub struct Runtime {
     pub test_restore_ok: bool,
     /// W21: runner role (`FORK_HOST_ROLE=runner`) + its Docker access. `None` ⇒ `runner.v1` is not reported and `runner_probe` cannot run.
     pub runner: Option<Arc<dyn runner::docker::RunnerDocker>>,
+    /// W22a-f1: the mirror engine (`mirror.v1`). Only ever `Some` on a runner whose `FORK_MIRROR_ROOT` is valid AND whose master key decoded (ADR-008 §12).
+    pub mirror: Option<Arc<runner::mirror::MirrorRuntime>>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -65,7 +67,7 @@ impl Runtime {
         let state = state::load(&cfg.state_path, &cfg.enroll_id).map_err(|e| e.to_string())?;
         let pins = maint::effective_pins(&cfg.pins, &state).map_err(|e| e.to_string())?;
         let transport = Transport::new(&cfg.server_url, &cfg.agent_id, maint::effective_credential(&cfg.credential, &state), cfg.insecure_lab).map_err(|_| "cannot build the http client".to_string())?;
-        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false, false, false, false), state, state_path: cfg.state_path, transport, renv: None, ops: None, qenv: None, qops: None, restore_ok: false, compose_ok: false, test_restore_ok: false, runner: None })
+        Ok(Self { agent_id: cfg.agent_id, enroll_id: cfg.enroll_id, pins, bundle_pins: cfg.pins, bundle_credential: cfg.credential, task_key: cfg.task_key, capabilities: capabilities::reported(false, false, false, false), state, state_path: cfg.state_path, transport, renv: None, ops: None, qenv: None, qops: None, restore_ok: false, compose_ok: false, test_restore_ok: false, runner: None, mirror: None })
     }
 
     /// W17-i (DD20): decide, once at start-up, whether this host can be a restore target — valid `FORK_ALLOWED_PATH_ROOTS` (non-empty) AND a Docker daemon that answers.
@@ -129,8 +131,38 @@ impl Runtime {
     /// is swept (verified). The restore path is never entered, so the instance master key is not loaded into fork state. Misconfiguration degrades honestly: one log line, no `runner.v1`.
     pub async fn init_runner(&mut self) {
         match runner::docker::real::RealRunnerDocker::connect() {
-            Ok(d) => self.init_runner_with(Arc::new(d)).await,
+            Ok(d) => {
+                self.init_runner_with(Arc::new(d)).await;
+                self.init_mirror(now_secs()).await;
+            }
             Err(_) => error!("Fork channel: runner role NOT enabled: the Docker daemon is not reachable"),
+        }
+    }
+
+    /// W22a-f1 (ADR-008 §12): `mirror.v1` on a runner, only when `FORK_MIRROR_ROOT` is valid and visible to the daemon at the same path, the pinned Compose CLI answers and
+    /// the instance master key decodes. THE KEY IS LOADED INTO FORK STATE HERE (staging production archives needs it): the realised residual R-W21-1 (#201). A runner
+    /// that fails any of it stays a probe-only runner (one log line, no capability).
+    pub async fn init_mirror(&mut self, now: i64) {
+        if self.runner.is_none() {
+            return;
+        }
+        let env = |k: &str| std::env::var(k).ok();
+        let (Ok(real), Ok(smoke)) = (restore::docker_ops::RealDocker::connect(), runner::mirror::smoke::real::RealSmoke::connect()) else {
+            error!("Fork channel: mirror.v1 NOT enabled: the Docker daemon is not reachable");
+            return;
+        };
+        let ops: Arc<dyn DockerOps> = Arc::new(real);
+        let master = crate::utils::edge_key::decode_edge_key(&crate::settings::CONFIG.edge_key).ok().map(|k| k.master_key_b64);
+        let mountinfo = std::fs::read_to_string("/proc/self/mountinfo").unwrap_or_default();
+        let cgroup = std::fs::read_to_string("/proc/self/cgroup").unwrap_or_default();
+        match runner::mirror::detect(&env, &self.state_path, &self.agent_id, ops, Arc::new(smoke), master, &mountinfo, &cgroup).await {
+            Ok(rt) => {
+                let swept = restore::sweep::startup_sweep(&rt.env, Some(rt.ops.as_ref()), now).await;
+                info!("Fork channel: mirror.v1 enabled (root {}, master key loaded: ADR-008 §12 residual R-W21-1); startup sweep: {:?}", rt.env.roots[0].display(), swept);
+                self.capabilities = capabilities::runner_reported(true);
+                self.mirror = Some(Arc::new(rt));
+            }
+            Err(why) => info!("Fork channel: mirror.v1 NOT enabled: {why}"),
         }
     }
 
@@ -151,8 +183,8 @@ impl Runtime {
             }
         }
         self.runner = Some(ops);
-        self.capabilities = capabilities::runner_reported();
-        info!("Fork channel: runner.v1 enabled (probe-only role; restore, compose and quiesce are off, the master key is not loaded)");
+        self.capabilities = capabilities::runner_reported(false);
+        info!("Fork channel: runner.v1 enabled (restore, compose and quiesce are off; the master key is loaded only if mirror.v1 is enabled below)");
     }
 
     /// W21: run one `runner_probe` under the heartbeat loop and its deadline. The probe's own verified wipe runs inside; the deadline path re-sweeps.
@@ -172,6 +204,20 @@ impl Runtime {
                 let _ = runner::wipe::wipe_owned(ops.as_ref(), runner::docker::LABEL_PROBE, Some(&payload.probe_id)).await;
                 failed(runner::Code::DeadlineExceeded.as_str(), None)
             }
+        }
+    }
+
+    /// W22a-f1: run one `mirror_*` task under the heartbeat loop and its per-type deadline. Never panics; every failure is a closed code.
+    async fn run_mirror(&self, v: &super::verify::Verified, leased: &Leased, now: i64) -> Outcome {
+        let failed = |code: &str, result: Option<serde_json::Value>| Outcome { status: "failed".into(), reason: Some(code.into()), result };
+        let Some(m) = &self.mirror else { return failed(restore::Code::MirrorDisabled.as_str(), None) };
+        let ty = v.envelope.task_type.as_str();
+        let task = restore::Task { id: &v.envelope.task_id, ty, now };
+        let sink = Sink { transport: &self.transport, task_id: &leased.task_id, lease_id: &leased.lease_id };
+        match exec::run_with_heartbeat(&self.transport, &leased.task_id, &leased.lease_id, runner::mirror::deadline_of(ty), runner::mirror::execute(m, &self.pins, &sink, &task, &v.payload)).await {
+            Ended::Done(Ok(result)) => Outcome { status: "succeeded".into(), reason: None, result: Some(result) },
+            Ended::Done(Err(f)) => failed(f.code.as_str(), f.result()),
+            Ended::Deadline => failed(restore::Code::DeadlineExceeded.as_str(), None),
         }
     }
 
@@ -335,6 +381,9 @@ impl Runtime {
                     } else if ty == "runner_probe" {
                         // W21: BEFORE the generic targeted branch (`runner_probe` is targeted, `run_restore` would answer `execution_error` on a runner)
                         self.run_runner_probe(&v, leased).await
+                    } else if capabilities::is_mirror(ty) {
+                        // W22a-f1: BEFORE the generic targeted branch too (every `mirror_*` type is targeted; `run_restore` has no restore env on a runner)
+                        self.run_mirror(&v, leased, now).await
                     } else if capabilities::is_targeted(ty) {
                         self.run_restore(&v, leased, now).await
                     } else {

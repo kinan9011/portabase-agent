@@ -159,6 +159,10 @@ pub(crate) struct FakeState {
     /// W-TR: `helper_check` calls (dir, argv) and canned outputs (popped in order; empty ⇒ exit 0, stdout `ok`).
     pub(crate) checks: Vec<(PathBuf, Vec<String>, Vec<String>)>,
     pub(crate) check_out: std::collections::VecDeque<Result<super::docker_ops::CheckOut, Code>>,
+    /// W22a-f1: canned `inspect_state` answers by container id (absent ⇒ `Err(DockerUnavailable)` like before).
+    pub(crate) states: BTreeMap<String, super::docker_ops::CState>,
+    /// W22a-f1: `stop_remove` answers Ok but the container stays (a wipe leftover).
+    pub(crate) keep_containers: bool,
 }
 pub(crate) struct Fake(pub(crate) Mutex<FakeState>);
 impl Fake {
@@ -232,6 +236,12 @@ impl DockerOps for Fake {
     async fn render(&self, spec: &super::docker_ops::RenderSpec) -> Result<Vec<u8>, super::docker_ops::RenderError> {
         let mut s = self.0.lock().unwrap();
         s.renders.push(spec.clone());
+        // W22a-f1: with nothing canned, `compose config` of a mirror's `out.json` is the identity (the fake does not normalise)
+        if s.render_out.is_empty() {
+            if let Some(f) = spec.cmd.iter().find(|a| a.ends_with("/mirror/out.json")) {
+                return std::fs::read(f).map_err(|_| super::docker_ops::RenderError::Failed("no out.json".into()));
+            }
+        }
         s.render_out.pop_front().unwrap_or(Err(super::docker_ops::RenderError::Failed("no canned render".into())))
     }
     async fn helper_check(&self, dir: &Path, argv: Vec<String>, _timeout: std::time::Duration) -> Result<super::docker_ops::CheckOut, Code> {
@@ -257,7 +267,9 @@ impl DockerOps for Fake {
     async fn stop_remove(&self, id: &str) -> Result<(), Code> {
         let mut s = self.0.lock().unwrap();
         s.removed_containers.push(id.to_string());
-        s.containers.retain(|c| c.id != id);
+        if !s.keep_containers {
+            s.containers.retain(|c| c.id != id);
+        }
         Ok(())
     }
     async fn image_of_container(&self, _own_id: &str) -> Result<String, Code> {
@@ -266,8 +278,8 @@ impl DockerOps for Fake {
     async fn remove_helpers(&self) -> usize {
         3
     }
-    async fn inspect_state(&self, _id: &str) -> Result<Option<super::docker_ops::CState>, Code> {
-        Err(Code::DockerUnavailable)
+    async fn inspect_state(&self, id: &str) -> Result<Option<super::docker_ops::CState>, Code> {
+        self.0.lock().unwrap().states.get(id).cloned().map(Some).ok_or(Code::DockerUnavailable)
     }
     async fn stop_container(&self, _id: &str, _t: u32) -> Result<(), Code> {
         Err(Code::DockerUnavailable)
@@ -756,7 +768,7 @@ mod channel_level {
             restore_ok: configured,
             compose_ok: false,
             test_restore_ok: false,
-            runner: None,
+            runner: None, mirror: None,
         }
     }
     fn leased(c: &EnvCase) -> Leased {

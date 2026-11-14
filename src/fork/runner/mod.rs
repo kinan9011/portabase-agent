@@ -2,6 +2,7 @@
 //! (never a restore / compose / quiesce / test-restore capability), accepts only runner + common task types (`verify.rs` `role_forbidden`) and never loads the
 //! instance master key into fork state. Everything here is fork-only; no upstream file is touched.
 pub mod docker;
+pub mod mirror;
 pub mod probe;
 pub mod wipe;
 
